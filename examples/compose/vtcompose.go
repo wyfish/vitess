@@ -290,21 +290,21 @@ func writeFile (file []byte, fileName string) {
 func applyKeyspaceDependentPatches(dockerComposeFile []byte, keyspaceData keyspaceInfo) []byte {
 	tabAlias := 0 + tabletsUsed*100
 	shard := "-"
-	var masterTablets []string
+	var mainTablets []string
 	if tabletsUsed == 0 {
-		masterTablets = append(masterTablets, "101")
+		mainTablets = append(mainTablets, "101")
 	} else {
-		masterTablets = append(masterTablets, strconv.Itoa((tabletsUsed+1)*100+1))
+		mainTablets = append(mainTablets, strconv.Itoa((tabletsUsed+1)*100+1))
 	}
 	interval := int(math.Floor(256 / float64(keyspaceData.shards)))
 
 	for i:=1; i < keyspaceData.shards; i++ {
-		masterTablets = append(masterTablets, strconv.Itoa((i+1)*100+1))
+		mainTablets = append(mainTablets, strconv.Itoa((i+1)*100+1))
 	}
 
-	dockerComposeFile = applyInMemoryPatch(dockerComposeFile, generateSchemaload(masterTablets, "", keyspaceData.keyspace))
+	dockerComposeFile = applyInMemoryPatch(dockerComposeFile, generateSchemaload(mainTablets, "", keyspaceData.keyspace))
 
-	// Append Master and Replica Tablets
+	// Append Main and Replica Tablets
 	if keyspaceData.shards < 2 {
 		tabAlias = tabAlias + 100
 		dockerComposeFile = applyTabletPatches(dockerComposeFile, tabAlias, shard, keyspaceData)
@@ -323,7 +323,7 @@ func applyKeyspaceDependentPatches(dockerComposeFile []byte, keyspaceData keyspa
 		}
 	}
 
-	tabletsUsed += len(masterTablets)
+	tabletsUsed += len(mainTablets)
 	return dockerComposeFile
 }
 
@@ -345,7 +345,7 @@ func applyDockerComposePatches(dockerComposeFile []byte, keyspaceInfoMap map[str
 }
 
 func applyTabletPatches(dockerComposeFile []byte, tabAlias int, shard string, keyspaceData keyspaceInfo) []byte {
-	dockerComposeFile = applyInMemoryPatch(dockerComposeFile, generateDefaultTablet(strconv.Itoa(tabAlias+1), shard, "master", keyspaceData.keyspace))
+	dockerComposeFile = applyInMemoryPatch(dockerComposeFile, generateDefaultTablet(strconv.Itoa(tabAlias+1), shard, "main", keyspaceData.keyspace))
 	for i:=0; i < keyspaceData.replicaTablets; i++ {
 		dockerComposeFile = applyInMemoryPatch(dockerComposeFile, generateDefaultTablet(strconv.Itoa(tabAlias+ 2 + i), shard, "replica", keyspaceData.keyspace))
 	}

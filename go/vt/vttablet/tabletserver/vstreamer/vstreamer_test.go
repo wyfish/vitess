@@ -324,7 +324,7 @@ func TestDDLAddColumn(t *testing.T) {
 	})
 
 	// Record position before the next few statements.
-	pos := masterPosition(t)
+	pos := mainPosition(t)
 	execStatements(t, []string{
 		"begin",
 		"insert into ddl_test1 values(1, 'aaa')",
@@ -397,7 +397,7 @@ func TestDDLDropColumn(t *testing.T) {
 	defer execStatement(t, "drop table ddl_test2")
 
 	// Record position before the next few statements.
-	pos := masterPosition(t)
+	pos := mainPosition(t)
 	execStatements(t, []string{
 		"insert into ddl_test2 values(1, 'aaa', 'ccc')",
 		// Adding columns is allowed.
@@ -563,7 +563,7 @@ func TestBestEffortNameInFieldEvent(t *testing.T) {
 	execStatements(t, []string{
 		"create table vitess_test(id int, val varbinary(128), primary key(id))",
 	})
-	position := masterPosition(t)
+	position := mainPosition(t)
 	execStatements(t, []string{
 		"insert into vitess_test values(1, 'abc')",
 		"rename table vitess_test to vitess_test_new",
@@ -814,7 +814,7 @@ func TestMinimalMode(t *testing.T) {
 	engine.se.Reload(context.Background())
 
 	// Record position before the next few statements.
-	pos := masterPosition(t)
+	pos := mainPosition(t)
 	execStatements(t, []string{
 		"set @@session.binlog_row_image='minimal'",
 		"update t1 set val1='bbb' where id=1",
@@ -853,7 +853,7 @@ func TestStatementMode(t *testing.T) {
 	engine.se.Reload(context.Background())
 
 	// Record position before the next few statements.
-	pos := masterPosition(t)
+	pos := mainPosition(t)
 	execStatements(t, []string{
 		"set @@session.binlog_format='statement'",
 		"update t1 set val1='bbb' where id=1",
@@ -947,7 +947,7 @@ func expectLog(ctx context.Context, t *testing.T, input interface{}, ch <-chan [
 
 func startStream(ctx context.Context, t *testing.T, filter *binlogdatapb.Filter, position string) <-chan []*binlogdatapb.VEvent {
 	if position == "" {
-		position = masterPosition(t)
+		position = mainPosition(t)
 	}
 
 	ch := make(chan []*binlogdatapb.VEvent)
@@ -993,9 +993,9 @@ func execStatements(t *testing.T, queries []string) {
 	}
 }
 
-func masterPosition(t *testing.T) string {
+func mainPosition(t *testing.T) string {
 	t.Helper()
-	pos, err := env.Mysqld.MasterPosition()
+	pos, err := env.Mysqld.MainPosition()
 	if err != nil {
 		t.Fatal(err)
 	}

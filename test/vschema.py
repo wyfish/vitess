@@ -29,7 +29,7 @@ from vtdb import dbexceptions
 from vtdb import vtgate_cursor
 from vtdb import vtgate_client
 
-shard_0_master = None
+shard_0_main = None
 
 keyspace_env = None
 
@@ -47,7 +47,7 @@ primary key(id)
 
 def setUpModule():
   global keyspace_env
-  global shard_0_master
+  global shard_0_main
   
   try:
     environment.topo_server().setup()
@@ -59,12 +59,12 @@ def setUpModule():
             create_main,
             ]
         )
-    shard_0_master = keyspace_env.tablet_map['user.0.master']
+    shard_0_main = keyspace_env.tablet_map['user.0.main']
     utils.VtGate().start(
-        tablets=[shard_0_master],
+        tablets=[shard_0_main],
         extra_args=['-vschema_ddl_authorized_users','%'],
     )
-    utils.vtgate.wait_for_endpoints('user.0.master', 1)
+    utils.vtgate.wait_for_endpoints('user.0.main', 1)
 
   except:
     tearDownModule()
@@ -154,7 +154,7 @@ class TestDDLVSchema(unittest.TestCase):
   def test_unsharded_vschema(self):
     vtgate_conn = get_connection()
     cursor = vtgate_conn.cursor(
-        tablet_type='master', keyspace=None, writable=True)
+        tablet_type='main', keyspace=None, writable=True)
     # Test the blank database with no vschema
     self._test_queries(cursor)
 

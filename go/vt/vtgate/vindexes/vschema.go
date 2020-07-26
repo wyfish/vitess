@@ -35,7 +35,7 @@ import (
 // TabletTypeSuffix maps the tablet type to its suffix string.
 var TabletTypeSuffix = map[topodatapb.TabletType]string{
 	0: "@unknown",
-	1: "@master",
+	1: "@main",
 	2: "@replica",
 	3: "@rdonly",
 	4: "@spare",
@@ -500,7 +500,7 @@ func (vschema *VSchema) findTables(keyspace, tablename string, tabletType topoda
 		qualified = keyspace + "." + tablename
 	}
 	fqtn := qualified + TabletTypeSuffix[tabletType]
-	// First look for a fully qualified table name: ks.t@master.
+	// First look for a fully qualified table name: ks.t@main.
 	// Then look for one without tablet type: ks.t.
 	for _, name := range []string{fqtn, qualified} {
 		rr, ok := vschema.RoutingRules[name]

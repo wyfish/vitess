@@ -42,17 +42,17 @@ func (wr *Wrangler) GetPermissions(ctx context.Context, tabletAlias *topodatapb.
 }
 
 // diffPermissions is a helper method to asynchronously diff a permissions
-func (wr *Wrangler) diffPermissions(ctx context.Context, masterPermissions *tabletmanagerdatapb.Permissions, masterAlias *topodatapb.TabletAlias, alias *topodatapb.TabletAlias, wg *sync.WaitGroup, er concurrency.ErrorRecorder) {
+func (wr *Wrangler) diffPermissions(ctx context.Context, mainPermissions *tabletmanagerdatapb.Permissions, mainAlias *topodatapb.TabletAlias, alias *topodatapb.TabletAlias, wg *sync.WaitGroup, er concurrency.ErrorRecorder) {
 	defer wg.Done()
 	log.Infof("Gathering permissions for %v", topoproto.TabletAliasString(alias))
-	slavePermissions, err := wr.GetPermissions(ctx, alias)
+	subordinatePermissions, err := wr.GetPermissions(ctx, alias)
 	if err != nil {
 		er.RecordError(err)
 		return
 	}
 
 	log.Infof("Diffing permissions for %v", topoproto.TabletAliasString(alias))
-	tmutils.DiffPermissions(topoproto.TabletAliasString(masterAlias), masterPermissions, topoproto.TabletAliasString(alias), slavePermissions, er)
+	tmutils.DiffPermissions(topoproto.TabletAliasString(mainAlias), mainPermissions, topoproto.TabletAliasString(alias), subordinatePermissions, er)
 }
 
 // ValidatePermissionsShard validates all the permissions are the same
@@ -63,32 +63,32 @@ func (wr *Wrangler) ValidatePermissionsShard(ctx context.Context, keyspace, shar
 		return err
 	}
 
-	// get permissions from the master, or error
-	if !si.HasMaster() {
-		return fmt.Errorf("no master in shard %v/%v", keyspace, shard)
+	// get permissions from the main, or error
+	if !si.HasMain() {
+		return fmt.Errorf("no main in shard %v/%v", keyspace, shard)
 	}
-	log.Infof("Gathering permissions for master %v", topoproto.TabletAliasString(si.MasterAlias))
-	masterPermissions, err := wr.GetPermissions(ctx, si.MasterAlias)
+	log.Infof("Gathering permissions for main %v", topoproto.TabletAliasString(si.MainAlias))
+	mainPermissions, err := wr.GetPermissions(ctx, si.MainAlias)
 	if err != nil {
 		return err
 	}
 
 	// read all the aliases in the shard, that is all tablets that are
-	// replicating from the master
+	// replicating from the main
 	aliases, err := wr.ts.FindAllTabletAliasesInShard(ctx, keyspace, shard)
 	if err != nil {
 		return err
 	}
 
-	// then diff all of them, except master
+	// then diff all of them, except main
 	er := concurrency.AllErrorRecorder{}
 	wg := sync.WaitGroup{}
 	for _, alias := range aliases {
-		if topoproto.TabletAliasEqual(alias, si.MasterAlias) {
+		if topoproto.TabletAliasEqual(alias, si.MainAlias) {
 			continue
 		}
 		wg.Add(1)
-		go wr.diffPermissions(ctx, masterPermissions, si.MasterAlias, alias, &wg, &er)
+		go wr.diffPermissions(ctx, mainPermissions, si.MainAlias, alias, &wg, &er)
 	}
 	wg.Wait()
 	if er.HasErrors() {
@@ -115,22 +115,22 @@ func (wr *Wrangler) ValidatePermissionsKeyspace(ctx context.Context, keyspace st
 		return wr.ValidatePermissionsShard(ctx, keyspace, shards[0])
 	}
 
-	// find the reference permissions using the first shard's master
+	// find the reference permissions using the first shard's main
 	si, err := wr.ts.GetShard(ctx, keyspace, shards[0])
 	if err != nil {
 		return err
 	}
-	if !si.HasMaster() {
-		return fmt.Errorf("no master in shard %v/%v", keyspace, shards[0])
+	if !si.HasMain() {
+		return fmt.Errorf("no main in shard %v/%v", keyspace, shards[0])
 	}
-	referenceAlias := si.MasterAlias
-	log.Infof("Gathering permissions for reference master %v", topoproto.TabletAliasString(referenceAlias))
-	referencePermissions, err := wr.GetPermissions(ctx, si.MasterAlias)
+	referenceAlias := si.MainAlias
+	log.Infof("Gathering permissions for reference main %v", topoproto.TabletAliasString(referenceAlias))
+	referencePermissions, err := wr.GetPermissions(ctx, si.MainAlias)
 	if err != nil {
 		return err
 	}
 
-	// then diff with all tablets but master 0
+	// then diff with all tablets but main 0
 	er := concurrency.AllErrorRecorder{}
 	wg := sync.WaitGroup{}
 	for _, shard := range shards {
@@ -141,7 +141,7 @@ func (wr *Wrangler) ValidatePermissionsKeyspace(ctx context.Context, keyspace st
 		}
 
 		for _, alias := range aliases {
-			if topoproto.TabletAliasEqual(alias, si.MasterAlias) {
+			if topoproto.TabletAliasEqual(alias, si.MainAlias) {
 				continue
 			}
 

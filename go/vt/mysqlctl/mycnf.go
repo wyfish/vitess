@@ -88,9 +88,9 @@ type Mycnf struct {
 	// (used by vt software for binlog streaming)
 	BinLogPath string
 
-	// MasterInfoFile is the master.info file location.
+	// MainInfoFile is the main.info file location.
 	// (unused by vt software for now)
-	MasterInfoFile string
+	MainInfoFile string
 
 	// PidFile is the mysql.pid file location
 	// (used by vt software to check server is running)
@@ -100,9 +100,9 @@ type Mycnf struct {
 	// (unused by vt software for now)
 	TmpDir string
 
-	// SlaveLoadTmpDir is where to create tmp files for replication
+	// SubordinateLoadTmpDir is where to create tmp files for replication
 	// (unused by vt software for now)
-	SlaveLoadTmpDir string
+	SubordinateLoadTmpDir string
 
 	mycnfMap map[string]string
 	path     string // the actual path that represents this mycnf
@@ -204,10 +204,10 @@ func ReadMycnf(mycnf *Mycnf) (*Mycnf, error) {
 		"relay-log-index":           &mycnf.RelayLogIndexPath,
 		"relay-log-info-file":       &mycnf.RelayLogInfoPath,
 		"log-bin":                   &mycnf.BinLogPath,
-		"master-info-file":          &mycnf.MasterInfoFile,
+		"main-info-file":          &mycnf.MainInfoFile,
 		"pid-file":                  &mycnf.PidFile,
 		"tmpdir":                    &mycnf.TmpDir,
-		"slave_load_tmpdir":         &mycnf.SlaveLoadTmpDir,
+		"subordinate_load_tmpdir":         &mycnf.SubordinateLoadTmpDir,
 	}
 	for key, member := range mapping {
 		val, err := mycnf.lookupWithDefault(key, *member)

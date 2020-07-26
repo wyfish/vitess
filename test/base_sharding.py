@@ -174,40 +174,40 @@ class BaseShardingTest(object):
     return True
 
   def check_binlog_player_vars(self, tablet_obj, source_shards,
-                               seconds_behind_master_max=0):
+                               seconds_behind_main_max=0):
     """Checks the binlog player variables are correctly exported.
 
     Args:
       tablet_obj: the tablet to check.
       source_shards: the shards to check we are replicating from.
-      seconds_behind_master_max: if non-zero, the lag should be smaller than
+      seconds_behind_main_max: if non-zero, the lag should be smaller than
                                  this value.
     """
     v = utils.get_vars(tablet_obj.port)
     self.assertIn('VReplicationStreamCount', v)
     self.assertEquals(v['VReplicationStreamCount'], len(source_shards))
-    self.assertIn('VReplicationSecondsBehindMasterMax', v)
-    self.assertIn('VReplicationSecondsBehindMaster', v)
+    self.assertIn('VReplicationSecondsBehindMainMax', v)
+    self.assertIn('VReplicationSecondsBehindMain', v)
     self.assertIn('VReplicationSource', v)
     shards = v['VReplicationSource'].values()
     self.assertEquals(sorted(shards), sorted(source_shards))
     self.assertIn('VReplicationSourceTablet', v)
     for uid in v['VReplicationSource']:
       self.assertIn(uid, v['VReplicationSourceTablet'])
-    if seconds_behind_master_max != 0:
+    if seconds_behind_main_max != 0:
       self.assertTrue(
-          v['VReplicationSecondsBehindMasterMax'] <
-          seconds_behind_master_max,
-          'VReplicationSecondsBehindMasterMax is too high: %d > %d' % (
-              v['VReplicationSecondsBehindMasterMax'],
-              seconds_behind_master_max))
+          v['VReplicationSecondsBehindMainMax'] <
+          seconds_behind_main_max,
+          'VReplicationSecondsBehindMainMax is too high: %d > %d' % (
+              v['VReplicationSecondsBehindMainMax'],
+              seconds_behind_main_max))
       for uid in v['VReplicationSource']:
         self.assertTrue(
-            v['VReplicationSecondsBehindMaster'][uid] <
-            seconds_behind_master_max,
-            'VReplicationSecondsBehindMaster is too high: %d > %d' % (
-                v['VReplicationSecondsBehindMaster'][uid],
-                seconds_behind_master_max))
+            v['VReplicationSecondsBehindMain'][uid] <
+            seconds_behind_main_max,
+            'VReplicationSecondsBehindMain is too high: %d > %d' % (
+                v['VReplicationSecondsBehindMain'][uid],
+                seconds_behind_main_max))
 
   def check_binlog_server_vars(self, tablet_obj, horizontal=True,
                                min_statements=0, min_transactions=0):
@@ -261,12 +261,12 @@ class BaseShardingTest(object):
     self.assertIn('binlog_players_count', stream_health['realtime_stats'])
     self.assertEqual(blp_stats['VReplicationStreamCount'],
                      stream_health['realtime_stats']['binlog_players_count'])
-    self.assertEqual(blp_stats['VReplicationSecondsBehindMasterMax'],
+    self.assertEqual(blp_stats['VReplicationSecondsBehindMainMax'],
                      stream_health['realtime_stats'].get(
-                         'seconds_behind_master_filtered_replication', 0))
+                         'seconds_behind_main_filtered_replication', 0))
 
-  def check_destination_master(self, tablet_obj, source_shards):
-    """Performs multiple checks on a destination master.
+  def check_destination_main(self, tablet_obj, source_shards):
+    """Performs multiple checks on a destination main.
 
     Combines the following:
       - wait_for_binlog_player_count

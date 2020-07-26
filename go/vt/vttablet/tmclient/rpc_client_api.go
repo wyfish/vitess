@@ -110,35 +110,35 @@ type TabletManagerClient interface {
 	// Replication related methods
 	//
 
-	// SlaveStatus returns the tablet's mysql slave status.
-	SlaveStatus(ctx context.Context, tablet *topodatapb.Tablet) (*replicationdatapb.Status, error)
+	// SubordinateStatus returns the tablet's mysql subordinate status.
+	SubordinateStatus(ctx context.Context, tablet *topodatapb.Tablet) (*replicationdatapb.Status, error)
 
-	// MasterPosition returns the tablet's master position
-	MasterPosition(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
+	// MainPosition returns the tablet's main position
+	MainPosition(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
 
-	// StopSlave stops the mysql replication
-	StopSlave(ctx context.Context, tablet *topodatapb.Tablet) error
+	// StopSubordinate stops the mysql replication
+	StopSubordinate(ctx context.Context, tablet *topodatapb.Tablet) error
 
-	// StopSlaveMinimum stops the mysql replication after it reaches
+	// StopSubordinateMinimum stops the mysql replication after it reaches
 	// the provided minimum point
-	StopSlaveMinimum(ctx context.Context, tablet *topodatapb.Tablet, stopPos string, waitTime time.Duration) (string, error)
+	StopSubordinateMinimum(ctx context.Context, tablet *topodatapb.Tablet, stopPos string, waitTime time.Duration) (string, error)
 
-	// StartSlave starts the mysql replication
-	StartSlave(ctx context.Context, tablet *topodatapb.Tablet) error
+	// StartSubordinate starts the mysql replication
+	StartSubordinate(ctx context.Context, tablet *topodatapb.Tablet) error
 
-	// StartSlaveUntilAfter starts replication until after the position specified
-	StartSlaveUntilAfter(ctx context.Context, tablet *topodatapb.Tablet, position string, duration time.Duration) error
+	// StartSubordinateUntilAfter starts replication until after the position specified
+	StartSubordinateUntilAfter(ctx context.Context, tablet *topodatapb.Tablet, position string, duration time.Duration) error
 
-	// TabletExternallyReparented tells a tablet it is now the master, after an
-	// external tool has already promoted the underlying mysqld to master and
+	// TabletExternallyReparented tells a tablet it is now the main, after an
+	// external tool has already promoted the underlying mysqld to main and
 	// reparented the other mysqld servers to it.
 	//
 	// externalID is an optional string provided by the external tool that
 	// vttablet will emit in logs to facilitate cross-referencing.
 	TabletExternallyReparented(ctx context.Context, tablet *topodatapb.Tablet, externalID string) error
 
-	// GetSlaves returns the addresses of the slaves
-	GetSlaves(ctx context.Context, tablet *topodatapb.Tablet) ([]string, error)
+	// GetSubordinates returns the addresses of the subordinates
+	GetSubordinates(ctx context.Context, tablet *topodatapb.Tablet) ([]string, error)
 
 	// VReplicationExec executes a VReplication command
 	VReplicationExec(ctx context.Context, tablet *topodatapb.Tablet, query string) (*querypb.QueryResult, error)
@@ -153,55 +153,55 @@ type TabletManagerClient interface {
 	// replication positions are reset.
 	ResetReplication(ctx context.Context, tablet *topodatapb.Tablet) error
 
-	// InitMaster tells a tablet to make itself the new master,
-	// and return the replication position the slaves should use to
+	// InitMain tells a tablet to make itself the new main,
+	// and return the replication position the subordinates should use to
 	// reparent to it.
-	InitMaster(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
+	InitMain(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
 
-	// PopulateReparentJournal asks the master to insert a row in
+	// PopulateReparentJournal asks the main to insert a row in
 	// its reparent_journal table.
-	PopulateReparentJournal(ctx context.Context, tablet *topodatapb.Tablet, timeCreatedNS int64, actionName string, masterAlias *topodatapb.TabletAlias, pos string) error
+	PopulateReparentJournal(ctx context.Context, tablet *topodatapb.Tablet, timeCreatedNS int64, actionName string, mainAlias *topodatapb.TabletAlias, pos string) error
 
-	// InitSlave tells a tablet to make itself a slave to the
-	// passed in master tablet alias, and wait for the row in the
+	// InitSubordinate tells a tablet to make itself a subordinate to the
+	// passed in main tablet alias, and wait for the row in the
 	// reparent_journal table.
-	InitSlave(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error
+	InitSubordinate(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error
 
-	// DemoteMaster tells the soon-to-be-former master it's going to change,
+	// DemoteMain tells the soon-to-be-former main it's going to change,
 	// and it should go read-only and return its current position.
-	DemoteMaster(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
+	DemoteMain(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
 
-	// UndoDemoteMaster reverts all changes made by DemoteMaster
-	// To be used if we are unable to promote the chosen new master
-	UndoDemoteMaster(ctx context.Context, tablet *topodatapb.Tablet) error
+	// UndoDemoteMain reverts all changes made by DemoteMain
+	// To be used if we are unable to promote the chosen new main
+	UndoDemoteMain(ctx context.Context, tablet *topodatapb.Tablet) error
 
-	// PromoteSlaveWhenCaughtUp transforms the tablet from a slave to a master.
-	PromoteSlaveWhenCaughtUp(ctx context.Context, tablet *topodatapb.Tablet, pos string) (string, error)
+	// PromoteSubordinateWhenCaughtUp transforms the tablet from a subordinate to a main.
+	PromoteSubordinateWhenCaughtUp(ctx context.Context, tablet *topodatapb.Tablet, pos string) (string, error)
 
-	// SlaveWasPromoted tells the remote tablet it is now the master
-	SlaveWasPromoted(ctx context.Context, tablet *topodatapb.Tablet) error
+	// SubordinateWasPromoted tells the remote tablet it is now the main
+	SubordinateWasPromoted(ctx context.Context, tablet *topodatapb.Tablet) error
 
-	// SetMaster tells a tablet to make itself a slave to the
-	// passed in master tablet alias, and wait for the row in the
+	// SetMain tells a tablet to make itself a subordinate to the
+	// passed in main tablet alias, and wait for the row in the
 	// reparent_journal table (if timeCreatedNS is non-zero).
-	SetMaster(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSlave bool) error
+	SetMain(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSubordinate bool) error
 
-	// SlaveWasRestarted tells the remote tablet its master has changed
-	SlaveWasRestarted(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias) error
+	// SubordinateWasRestarted tells the remote tablet its main has changed
+	SubordinateWasRestarted(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias) error
 
 	// StopReplicationAndGetStatus stops replication and returns the
 	// current position.
 	StopReplicationAndGetStatus(ctx context.Context, tablet *topodatapb.Tablet) (*replicationdatapb.Status, error)
 
-	// PromoteSlave makes the tablet the new master
-	PromoteSlave(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
+	// PromoteSubordinate makes the tablet the new main
+	PromoteSubordinate(ctx context.Context, tablet *topodatapb.Tablet) (string, error)
 
 	//
 	// Backup / restore related methods
 	//
 
 	// Backup creates a database backup
-	Backup(ctx context.Context, tablet *topodatapb.Tablet, concurrency int, allowMaster bool) (logutil.EventStream, error)
+	Backup(ctx context.Context, tablet *topodatapb.Tablet, concurrency int, allowMain bool) (logutil.EventStream, error)
 
 	// RestoreFromBackup deletes local data and restores database from backup
 	RestoreFromBackup(ctx context.Context, tablet *topodatapb.Tablet) (logutil.EventStream, error)

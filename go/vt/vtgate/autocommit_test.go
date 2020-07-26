@@ -370,7 +370,7 @@ func TestAutocommitTransactionStarted(t *testing.T) {
 	executor, sbc1, _, _ := createExecutorEnv()
 
 	session := &vtgatepb.Session{
-		TargetString:    "@master",
+		TargetString:    "@main",
 		Autocommit:      true,
 		InTransaction:   true,
 		TransactionMode: vtgatepb.TransactionMode_MULTI,
@@ -394,7 +394,7 @@ func TestAutocommitDirectTarget(t *testing.T) {
 	executor, _, _, sbclookup := createExecutorEnv()
 
 	session := &vtgatepb.Session{
-		TargetString:    "TestUnsharded/0@master",
+		TargetString:    "TestUnsharded/0@main",
 		Autocommit:      true,
 		TransactionMode: vtgatepb.TransactionMode_MULTI,
 	}
@@ -416,7 +416,7 @@ func TestAutocommitDirectRangeTarget(t *testing.T) {
 	executor, sbc1, _, _ := createExecutorEnv()
 
 	session := &vtgatepb.Session{
-		TargetString:    "TestExecutor[-]@master",
+		TargetString:    "TestExecutor[-]@main",
 		Autocommit:      true,
 		TransactionMode: vtgatepb.TransactionMode_MULTI,
 	}
@@ -435,7 +435,7 @@ func TestAutocommitDirectRangeTarget(t *testing.T) {
 
 func autocommitExec(executor *Executor, sql string) (*sqltypes.Result, error) {
 	session := &vtgatepb.Session{
-		TargetString:    "@master",
+		TargetString:    "@main",
 		Autocommit:      true,
 		TransactionMode: vtgatepb.TransactionMode_MULTI,
 	}

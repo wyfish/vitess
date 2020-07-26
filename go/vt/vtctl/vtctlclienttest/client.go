@@ -88,7 +88,7 @@ func TestSuite(t *testing.T, ts *topo.Server, client vtctlclient.VtctlClient) {
 	if err != nil {
 		t.Fatalf("failed to get first line: %v", err)
 	}
-	expected := "cell1-0000000001 test_keyspace <null> master localhost:3333 localhost:3334 [tag: \"value\"]\n"
+	expected := "cell1-0000000001 test_keyspace <null> main localhost:3333 localhost:3334 [tag: \"value\"]\n"
 	if logutil.EventString(got) != expected {
 		t.Errorf("Got unexpected log line '%v' expected '%v'", got.String(), expected)
 	}

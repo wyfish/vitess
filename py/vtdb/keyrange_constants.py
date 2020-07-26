@@ -35,7 +35,7 @@ PROTO3_KIT_TO_STRING = {
 # (Eventually we will use the proto3 version of this)
 PROTO3_TABLET_TYPE_TO_STRING = {
     0: 'unknown',
-    1: 'master',
+    1: 'main',
     2: 'replica',
     3: 'rdonly',
     4: 'spare',

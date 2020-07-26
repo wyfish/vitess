@@ -24,22 +24,22 @@ import environment
 import tablet
 import utils
 
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica1 = tablet.Tablet()
 shard_0_replica2 = tablet.Tablet()
 shard_0_rdonly = tablet.Tablet()
 shard_0_backup = tablet.Tablet()
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 shard_1_replica1 = tablet.Tablet()
-shard_2_master = tablet.Tablet()
+shard_2_main = tablet.Tablet()
 shard_2_replica1 = tablet.Tablet()
 
 # shard_2 tablets shouldn't exist yet when _apply_initial_schema() is called.
 initial_tablets = [
-    shard_0_master, shard_0_replica1, shard_0_replica2, shard_0_rdonly,
-    shard_0_backup, shard_1_master, shard_1_replica1,
+    shard_0_main, shard_0_replica1, shard_0_replica2, shard_0_rdonly,
+    shard_0_backup, shard_1_main, shard_1_replica1,
 ]
-shard_2_tablets = [shard_2_master, shard_2_replica1]
+shard_2_tablets = [shard_2_main, shard_2_replica1]
 all_tablets = initial_tablets + shard_2_tablets
 
 test_keyspace = 'test_keyspace'
@@ -72,7 +72,7 @@ def _init_mysql(tablets):
 
 
 def _setup_shard_2():
-  shard_2_master.init_tablet('replica', test_keyspace, '2')
+  shard_2_main.init_tablet('replica', test_keyspace, '2')
   shard_2_replica1.init_tablet('replica', test_keyspace, '2')
 
   # create databases, start the tablets
@@ -81,11 +81,11 @@ def _setup_shard_2():
     t.start_vttablet(wait_for_state=None)
 
   # wait for the tablets to start
-  shard_2_master.wait_for_vttablet_state('NOT_SERVING')
+  shard_2_main.wait_for_vttablet_state('NOT_SERVING')
   shard_2_replica1.wait_for_vttablet_state('NOT_SERVING')
 
-  utils.run_vtctl(['InitShardMaster', '-force', test_keyspace + '/2',
-                   shard_2_master.tablet_alias], auto_log=True)
+  utils.run_vtctl(['InitShardMain', '-force', test_keyspace + '/2',
+                   shard_2_main.tablet_alias], auto_log=True)
   utils.run_vtctl(['ValidateKeyspace', '-ping-tablets', test_keyspace])
 
 
@@ -98,7 +98,7 @@ def _teardown_shard_2():
 
   for t in shard_2_tablets:
     t.reset_replication()
-    t.set_semi_sync_enabled(master=False)
+    t.set_semi_sync_enabled(main=False)
     t.clean_dbs()
 
 
@@ -123,12 +123,12 @@ def tearDownModule():
 class TestSchema(unittest.TestCase):
 
   def setUp(self):
-    shard_0_master.init_tablet('replica', test_keyspace, '0')
+    shard_0_main.init_tablet('replica', test_keyspace, '0')
     shard_0_replica1.init_tablet('replica', test_keyspace, '0')
     shard_0_replica2.init_tablet('replica', test_keyspace, '0')
     shard_0_rdonly.init_tablet('rdonly', test_keyspace, '0')
     shard_0_backup.init_tablet('backup', test_keyspace, '0')
-    shard_1_master.init_tablet('replica', test_keyspace, '1')
+    shard_1_main.init_tablet('replica', test_keyspace, '1')
     shard_1_replica1.init_tablet('replica', test_keyspace, '1')
 
     # create databases, start the tablets
@@ -140,10 +140,10 @@ class TestSchema(unittest.TestCase):
     for t in initial_tablets:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', test_keyspace + '/0',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', test_keyspace + '/1',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', test_keyspace + '/0',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', test_keyspace + '/1',
+                     shard_1_main.tablet_alias], auto_log=True)
 
   def tearDown(self):
     # kill all tablets
@@ -151,7 +151,7 @@ class TestSchema(unittest.TestCase):
 
     for t in initial_tablets:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False)
+      t.set_semi_sync_enabled(main=False)
       t.clean_dbs()
 
     utils.run_vtctl(['DeleteShard', '-recursive', '-even_if_serving',
@@ -203,12 +203,12 @@ class TestSchema(unittest.TestCase):
     self._apply_schema(test_keyspace, schema_changes)
 
     # check number of tables
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
     # get schema for each shard
-    shard_0_schema = self._get_schema(shard_0_master.tablet_alias)
-    shard_1_schema = self._get_schema(shard_1_master.tablet_alias)
+    shard_0_schema = self._get_schema(shard_0_main.tablet_alias)
+    shard_1_schema = self._get_schema(shard_1_main.tablet_alias)
 
     # all shards should have the same schema
     self.assertEqual(shard_0_schema, shard_1_schema)
@@ -219,8 +219,8 @@ class TestSchema(unittest.TestCase):
     self._apply_schema(
         test_keyspace, self._alter_test_table_sql('vt_select_test03', 'msg'))
 
-    shard_0_schema = self._get_schema(shard_0_master.tablet_alias)
-    shard_1_schema = self._get_schema(shard_1_master.tablet_alias)
+    shard_0_schema = self._get_schema(shard_0_main.tablet_alias)
+    shard_1_schema = self._get_schema(shard_1_main.tablet_alias)
 
     # all shards should have the same schema
     self.assertEqual(shard_0_schema, shard_1_schema)
@@ -242,8 +242,8 @@ class TestSchema(unittest.TestCase):
           timeout, sleep_time=0.2)
 
     # check number of tables
-    self._check_tables(shard_0_master, 5)
-    self._check_tables(shard_1_master, 5)
+    self._check_tables(shard_0_main, 5)
+    self._check_tables(shard_1_main, 5)
 
   def test_schema_changes_drop_and_create(self):
     """Tests that a DROP and CREATE table will pass PreflightSchema check.
@@ -255,21 +255,21 @@ class TestSchema(unittest.TestCase):
     See: https://github.com/vitessio/vitess/issues/1731#issuecomment-222914389
     """
     self._apply_initial_schema()
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
     drop_and_create = ('DROP TABLE vt_select_test01;\n' +
                        self._create_test_table_sql('vt_select_test01'))
     self._apply_schema(test_keyspace, drop_and_create)
     # check number of tables
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
   def test_schema_changes_preflight_errors_partially(self):
     """Tests that some SQL statements fail properly during PreflightSchema."""
     self._apply_initial_schema()
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
     # Second statement will fail because the table already exists.
     create_error = (self._create_test_table_sql('vt_select_test05') + ';\n' +
@@ -277,8 +277,8 @@ class TestSchema(unittest.TestCase):
     stdout = self._apply_schema(test_keyspace, create_error, expect_fail=True)
     self.assertIn('already exists', ''.join(stdout))
     # check number of tables
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
   def test_schema_changes_drop_nonexistent_tables(self):
     """Tests the PreflightSchema logic for dropping nonexistent tables.
@@ -290,8 +290,8 @@ class TestSchema(unittest.TestCase):
     is the MySQL behavior the user expects.
     """
     self._apply_initial_schema()
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
     drop_table = ('DROP TABLE nonexistent_table;')
     stdout = self._apply_schema(test_keyspace, drop_table, expect_fail=True)
@@ -301,11 +301,11 @@ class TestSchema(unittest.TestCase):
     drop_if_exists = ('DROP TABLE IF EXISTS nonexistent_table;')
     self._apply_schema(test_keyspace, drop_if_exists)
 
-    self._check_tables(shard_0_master, 4)
-    self._check_tables(shard_1_master, 4)
+    self._check_tables(shard_0_main, 4)
+    self._check_tables(shard_1_main, 4)
 
   def test_vtctl_copyschemashard_use_tablet_as_source(self):
-    self._test_vtctl_copyschemashard(shard_0_master.tablet_alias)
+    self._test_vtctl_copyschemashard(shard_0_main.tablet_alias)
 
   def test_vtctl_copyschemashard_use_shard_as_source(self):
     self._test_vtctl_copyschemashard('test_keyspace/0')
@@ -317,8 +317,8 @@ class TestSchema(unittest.TestCase):
     _setup_shard_2()
 
     try:
-      # InitShardMaster creates the db, but there shouldn't be any tables yet.
-      self._check_tables(shard_2_master, 0)
+      # InitShardMain creates the db, but there shouldn't be any tables yet.
+      self._check_tables(shard_2_main, 0)
       self._check_tables(shard_2_replica1, 0)
 
       # Run the command twice to make sure it's idempotent.
@@ -328,12 +328,12 @@ class TestSchema(unittest.TestCase):
                          'test_keyspace/2'],
                         auto_log=True)
 
-        # shard_2_master should look the same as the replica we copied from
-        self._check_tables(shard_2_master, 4)
-        utils.wait_for_replication_pos(shard_2_master, shard_2_replica1)
+        # shard_2_main should look the same as the replica we copied from
+        self._check_tables(shard_2_main, 4)
+        utils.wait_for_replication_pos(shard_2_main, shard_2_replica1)
         self._check_tables(shard_2_replica1, 4)
-        shard_0_schema = self._get_schema(shard_0_master.tablet_alias)
-        shard_2_schema = self._get_schema(shard_2_master.tablet_alias)
+        shard_0_schema = self._get_schema(shard_0_main.tablet_alias)
+        shard_2_schema = self._get_schema(shard_2_main.tablet_alias)
         self.assertEqual(shard_0_schema, shard_2_schema)
     finally:
       _teardown_shard_2()
@@ -345,8 +345,8 @@ class TestSchema(unittest.TestCase):
     _setup_shard_2()
 
     try:
-      # InitShardMaster creates the db, but there shouldn't be any tables yet.
-      self._check_tables(shard_2_master, 0)
+      # InitShardMain creates the db, but there shouldn't be any tables yet.
+      self._check_tables(shard_2_main, 0)
       self._check_tables(shard_2_replica1, 0)
 
       # Change the db charset on the destination shard from utf8 to latin1.
@@ -354,10 +354,10 @@ class TestSchema(unittest.TestCase):
       # (The different charset won't be corrected on the destination shard
       #  because we use "CREATE DATABASE IF NOT EXISTS" and this doesn't fail if
       #  there are differences in the options e.g. the character set.)
-      shard_2_schema = self._get_schema(shard_2_master.tablet_alias)
+      shard_2_schema = self._get_schema(shard_2_main.tablet_alias)
       self.assertIn('utf8', shard_2_schema['database_schema'])
       utils.run_vtctl_json(
-          ['ExecuteFetchAsDba', '-json', shard_2_master.tablet_alias,
+          ['ExecuteFetchAsDba', '-json', shard_2_main.tablet_alias,
            'ALTER DATABASE vt_test_keyspace CHARACTER SET latin1'])
 
       _, stderr = utils.run_vtctl(['CopySchemaShard',
@@ -367,9 +367,9 @@ class TestSchema(unittest.TestCase):
                                   auto_log=True)
       self.assertIn('schemas are different', stderr)
 
-      # shard_2_master should have the same number of tables. Only the db
+      # shard_2_main should have the same number of tables. Only the db
       # character set is different.
-      self._check_tables(shard_2_master, 4)
+      self._check_tables(shard_2_main, 4)
     finally:
       _teardown_shard_2()
 

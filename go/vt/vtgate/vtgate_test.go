@@ -49,8 +49,8 @@ var executeOptions = &querypb.ExecuteOptions{
 	IncludedFields: querypb.ExecuteOptions_TYPE_ONLY,
 }
 
-var masterSession = &vtgatepb.Session{
-	TargetString: "@master",
+var mainSession = &vtgatepb.Session{
+	TargetString: "@main",
 }
 
 func init() {
@@ -236,7 +236,7 @@ func TestVTGateExecute(t *testing.T) {
 		context.Background(),
 		&vtgatepb.Session{
 			Autocommit:   true,
-			TargetString: "@master",
+			TargetString: "@main",
 			Options:      executeOptions,
 		},
 		"select id from t1",
@@ -337,7 +337,7 @@ func TestVTGateExecuteWithKeyspaceShard(t *testing.T) {
 	_, qr, err = rpcVTGate.Execute(
 		context.Background(),
 		&vtgatepb.Session{
-			TargetString: KsTestUnsharded + ":0@master",
+			TargetString: KsTestUnsharded + ":0@main",
 		},
 		"select id from none",
 		nil,
@@ -353,12 +353,12 @@ func TestVTGateExecuteWithKeyspaceShard(t *testing.T) {
 	_, _, err = rpcVTGate.Execute(
 		context.Background(),
 		&vtgatepb.Session{
-			TargetString: KsTestUnsharded + ":noshard@master",
+			TargetString: KsTestUnsharded + ":noshard@main",
 		},
 		"select id from none",
 		nil,
 	)
-	want = "vtgate: : target: TestUnsharded.noshard.master, no valid tablet: node doesn't exist: TestUnsharded/noshard (MASTER)"
+	want = "vtgate: : target: TestUnsharded.noshard.main, no valid tablet: node doesn't exist: TestUnsharded/noshard (MASTER)"
 	if err == nil || err.Error() != want {
 		t.Errorf("Execute: %v, want %s", err, want)
 	}
@@ -720,10 +720,10 @@ func TestVTGateExecuteEntityIds(t *testing.T) {
 }
 
 func TestVTGateExecuteBatch(t *testing.T) {
-	// TODO(sougou): using masterSession as global has some bugs
+	// TODO(sougou): using mainSession as global has some bugs
 	// which requires us to reset it here. This needs to be fixed.
-	masterSession = &vtgatepb.Session{
-		TargetString: "@master",
+	mainSession = &vtgatepb.Session{
+		TargetString: "@main",
 	}
 
 	createSandbox(KsTestUnsharded)
@@ -750,7 +750,7 @@ func TestVTGateExecuteBatch(t *testing.T) {
 		"select id from t1",
 	}
 
-	session, qrl, err := rpcVTGate.ExecuteBatch(context.Background(), masterSession, sqlList, nil)
+	session, qrl, err := rpcVTGate.ExecuteBatch(context.Background(), mainSession, sqlList, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -836,7 +836,7 @@ func TestVTGateExecuteBatchShards(t *testing.T) {
 		t.Errorf("want 2, got %d", len(session.ShardSessions))
 	}
 
-	timingsCount := rpcVTGate.timings.Counts()["ExecuteBatchShards.TestVTGateExecuteBatchShards.master"]
+	timingsCount := rpcVTGate.timings.Counts()["ExecuteBatchShards.TestVTGateExecuteBatchShards.main"]
 	if got, want := timingsCount, int64(2); got != want {
 		t.Errorf("stats were not properly recorded: got = %d, want = %d", got, want)
 	}
@@ -910,7 +910,7 @@ func TestVTGateExecuteBatchKeyspaceIds(t *testing.T) {
 		t.Errorf("want 2, got %d", len(session.ShardSessions))
 	}
 
-	timingsCount := rpcVTGate.timings.Counts()["ExecuteBatchKeyspaceIds.TestVTGateExecuteBatchKeyspaceIds.master"]
+	timingsCount := rpcVTGate.timings.Counts()["ExecuteBatchKeyspaceIds.TestVTGateExecuteBatchKeyspaceIds.main"]
 	if got, want := timingsCount, int64(2); got != want {
 		t.Errorf("stats were not properly recorded: got = %d, want = %d", got, want)
 	}
@@ -926,7 +926,7 @@ func TestVTGateStreamExecute(t *testing.T) {
 	err := rpcVTGate.StreamExecute(
 		context.Background(),
 		&vtgatepb.Session{
-			TargetString: "@master",
+			TargetString: "@main",
 			Options:      executeOptions,
 		},
 		"select id from t1",
@@ -962,7 +962,7 @@ func TestVTGateStreamExecuteKeyspaceShard(t *testing.T) {
 	err := rpcVTGate.StreamExecute(
 		context.Background(),
 		&vtgatepb.Session{
-			TargetString: ks + "/" + shard + "@master",
+			TargetString: ks + "/" + shard + "@main",
 			Options:      executeOptions,
 		},
 		"random statement",
@@ -2039,7 +2039,7 @@ func testErrorPropagation(t *testing.T, sbcs []*sandboxconn.SandboxConn, before 
 	}
 	_, _, err := rpcVTGate.Execute(
 		context.Background(),
-		masterSession,
+		mainSession,
 		"select id from t1",
 		nil,
 	)
@@ -2194,7 +2194,7 @@ func testErrorPropagation(t *testing.T, sbcs []*sandboxconn.SandboxConn, before 
 			t.Errorf("unexpected error, got %v want %v: %v", ec, expected, err)
 		}
 	}
-	statsKey := fmt.Sprintf("%s.%s.master.%v", "ExecuteBatchShards", KsTestUnsharded, vterrors.Code(err))
+	statsKey := fmt.Sprintf("%s.%s.main.%v", "ExecuteBatchShards", KsTestUnsharded, vterrors.Code(err))
 	if got, want := errorCounts.Counts()[statsKey], int64(1); got != want {
 		t.Errorf("errorCounts not increased for '%s': got = %v, want = %v", statsKey, got, want)
 	}
@@ -2236,7 +2236,7 @@ func testErrorPropagation(t *testing.T, sbcs []*sandboxconn.SandboxConn, before 
 			t.Errorf("unexpected error, got %v want %v: %v", ec, expected, err)
 		}
 	}
-	statsKey = fmt.Sprintf("%s.%s.master.%v", "ExecuteBatchKeyspaceIds", KsTestUnsharded, vterrors.Code(err))
+	statsKey = fmt.Sprintf("%s.%s.main.%v", "ExecuteBatchKeyspaceIds", KsTestUnsharded, vterrors.Code(err))
 	if got, want := errorCounts.Counts()[statsKey], int64(1); got != want {
 		t.Errorf("errorCounts not increased for '%s': got = %v, want = %v", statsKey, got, want)
 	}
@@ -2250,7 +2250,7 @@ func testErrorPropagation(t *testing.T, sbcs []*sandboxconn.SandboxConn, before 
 	}
 	err = rpcVTGate.StreamExecute(
 		context.Background(),
-		masterSession,
+		mainSession,
 		"select id from t1",
 		nil,
 		func(r *sqltypes.Result) error {
@@ -2405,7 +2405,7 @@ func testErrorPropagation(t *testing.T, sbcs []*sandboxconn.SandboxConn, before 
 }
 
 // TestErrorPropagation tests an error returned by sandboxconn is
-// properly propagated through vtgate layers.  We need both a master
+// properly propagated through vtgate layers.  We need both a main
 // tablet and a rdonly tablet because we don't control the routing of
 // Commit nor SplitQuery{,V2}.
 func TestErrorPropagation(t *testing.T) {

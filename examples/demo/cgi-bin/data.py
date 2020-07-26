@@ -35,12 +35,12 @@ def exec_query(conn, title, query, response, keyspace=None, kr=None):  # pylint:
   if kr:
     # v2 cursor to address individual shards directly, for debug display
     cursor = conn.cursor(
-        tablet_type="master", keyspace=keyspace,
+        tablet_type="main", keyspace=keyspace,
         keyranges=[keyrange.KeyRange(kr)])
   else:
     # v3 cursor is automated
     cursor = conn.cursor(
-        tablet_type="master", keyspace=keyspace, writable=True)
+        tablet_type="main", keyspace=keyspace, writable=True)
 
   try:
     if not query or query == "undefined":

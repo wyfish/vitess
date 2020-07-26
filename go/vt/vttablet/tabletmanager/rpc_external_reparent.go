@@ -39,7 +39,7 @@ import (
 var (
 	finalizeReparentTimeout = flag.Duration("finalize_external_reparent_timeout", 30*time.Second, "Timeout for the finalize stage of a fast external reparent reconciliation.")
 
-	externalReparentStats = stats.NewTimings("ExternalReparents", "External reparenting time", "stage", "NewMasterVisible", "FullRebuild")
+	externalReparentStats = stats.NewTimings("ExternalReparents", "External reparenting time", "stage", "NewMainVisible", "FullRebuild")
 )
 
 // SetReparentFlags changes flag values. It should only be used in tests.
@@ -48,7 +48,7 @@ func SetReparentFlags(timeout time.Duration) {
 }
 
 // TabletExternallyReparented updates all topo records so the current
-// tablet is the new master for this shard.
+// tablet is the new main for this shard.
 func (agent *ActionAgent) TabletExternallyReparented(ctx context.Context, externalID string) error {
 	if err := agent.lock(ctx); err != nil {
 		return err
@@ -84,9 +84,9 @@ func (agent *ActionAgent) TabletExternallyReparented(ctx context.Context, extern
 	// Create a reusable Reparent event with available info.
 	ev := &events.Reparent{
 		ShardInfo: *si,
-		NewMaster: *tablet,
-		OldMaster: topodatapb.Tablet{
-			Alias: si.MasterAlias,
+		NewMain: *tablet,
+		OldMain: topodatapb.Tablet{
+			Alias: si.MainAlias,
 			Type:  topodatapb.TabletType_MASTER,
 		},
 		ExternalID: externalID,
@@ -98,11 +98,11 @@ func (agent *ActionAgent) TabletExternallyReparented(ctx context.Context, extern
 	}()
 	event.DispatchUpdate(ev, "starting external from tablet (fast)")
 
-	// We may get called on the current master multiple times in order to fix incomplete external reparents.
-	// We update the tablet here only if it is not currently master
+	// We may get called on the current main multiple times in order to fix incomplete external reparents.
+	// We update the tablet here only if it is not currently main
 	if tablet.Type != topodatapb.TabletType_MASTER {
 		log.Infof("fastTabletExternallyReparented: executing change callback for state change to MASTER")
-		// Execute state change to master by force-updating only the local copy of the
+		// Execute state change to main by force-updating only the local copy of the
 		// tablet record. The actual record in topo will be updated later.
 		newTablet := proto.Clone(tablet).(*topodatapb.Tablet)
 		newTablet.Type = topodatapb.TabletType_MASTER
@@ -132,25 +132,25 @@ func (agent *ActionAgent) TabletExternallyReparented(ctx context.Context, extern
 
 // finalizeTabletExternallyReparented performs slow, synchronized reconciliation
 // tasks that ensure topology is self-consistent.
-// It first updates new and old master tablet records, then updates
-// the global shard record, then refreshes the old master.
-// After that it attempts to detect and clean up any lingering old masters.
+// It first updates new and old main tablet records, then updates
+// the global shard record, then refreshes the old main.
+// After that it attempts to detect and clean up any lingering old mains.
 // Note that an up-to-date shard record does not necessarily mean that
 // the reparent completed all the actions successfully
 func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context, si *topo.ShardInfo, ev *events.Reparent) (err error) {
 	var wg sync.WaitGroup
 	var errs concurrency.AllErrorRecorder
-	var oldMasterTablet *topodatapb.Tablet
-	oldMasterAlias := si.MasterAlias
+	var oldMainTablet *topodatapb.Tablet
+	oldMainAlias := si.MainAlias
 
-	// Update the new and old master tablet records concurrently.
-	event.DispatchUpdate(ev, "updating old and new master tablet records")
+	// Update the new and old main tablet records concurrently.
+	event.DispatchUpdate(ev, "updating old and new main tablet records")
 	log.Infof("finalizeTabletExternallyReparented: updating tablet records")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Infof("finalizeTabletExternallyReparented: updating tablet record for new master: %v", agent.TabletAlias)
-		// Update our own record to master if needed
+		log.Infof("finalizeTabletExternallyReparented: updating tablet record for new main: %v", agent.TabletAlias)
+		// Update our own record to main if needed
 		_, err := agent.TopoServer.UpdateTabletFields(ctx, agent.TabletAlias,
 			func(tablet *topodatapb.Tablet) error {
 				if tablet.Type != topodatapb.TabletType_MASTER {
@@ -165,70 +165,70 @@ func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context
 		}
 	}()
 
-	// If TER is called twice, then oldMasterAlias is the same as agent.TabletAlias
-	if !topoproto.TabletAliasIsZero(oldMasterAlias) && !topoproto.TabletAliasEqual(oldMasterAlias, agent.TabletAlias) {
+	// If TER is called twice, then oldMainAlias is the same as agent.TabletAlias
+	if !topoproto.TabletAliasIsZero(oldMainAlias) && !topoproto.TabletAliasEqual(oldMainAlias, agent.TabletAlias) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			log.Infof("finalizeTabletExternallyReparented: updating tablet record for old master: %v", oldMasterAlias)
+			log.Infof("finalizeTabletExternallyReparented: updating tablet record for old main: %v", oldMainAlias)
 
-			// Forcibly demote the old master in topology, since we can't rely on the
-			// old master to be up to change its own record.
+			// Forcibly demote the old main in topology, since we can't rely on the
+			// old main to be up to change its own record.
 			var err error
-			oldMasterTablet, err = agent.TopoServer.UpdateTabletFields(ctx, oldMasterAlias,
+			oldMainTablet, err = agent.TopoServer.UpdateTabletFields(ctx, oldMainAlias,
 				func(tablet *topodatapb.Tablet) error {
 					if tablet.Type == topodatapb.TabletType_MASTER {
 						tablet.Type = topodatapb.TabletType_REPLICA
 						return nil
 					}
 					// returning NoUpdateNeeded avoids unnecessary calls to UpdateTablet
-					return topo.NewError(topo.NoUpdateNeeded, oldMasterAlias.String())
+					return topo.NewError(topo.NoUpdateNeeded, oldMainAlias.String())
 				})
 			if err != nil {
 				errs.RecordError(err)
 				return
 			}
 
-			// We now know more about the old master, so add it to event data.
-			// oldMasterTablet will be nil if no update was needed
-			if oldMasterTablet != nil {
-				ev.OldMaster = *oldMasterTablet
+			// We now know more about the old main, so add it to event data.
+			// oldMainTablet will be nil if no update was needed
+			if oldMainTablet != nil {
+				ev.OldMain = *oldMainTablet
 			}
 		}()
 	}
 	// Wait for the tablet records to be updated. At that point, any rebuild will
-	// see the new master, so we're ready to mark the reparent as done in the
+	// see the new main, so we're ready to mark the reparent as done in the
 	// global shard record.
 	wg.Wait()
 	if errs.HasErrors() {
 		return errs.Error()
 	}
 
-	masterTablet := agent.Tablet()
+	mainTablet := agent.Tablet()
 
 	event.DispatchUpdate(ev, "updating global shard record")
 	log.Infof("finalizeTabletExternallyReparented: updating global shard record if needed")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// Update the master field in the global shard record. We don't use a lock
+		// Update the main field in the global shard record. We don't use a lock
 		// here anymore. The lock was only to ensure that the global shard record
 		// didn't get modified between the time when we read it and the time when we
 		// write it back. Now we use an update loop pattern to do that instead.
-		_, err = agent.TopoServer.UpdateShardFields(ctx, masterTablet.Keyspace, masterTablet.Shard, func(currentSi *topo.ShardInfo) error {
-			if topoproto.TabletAliasEqual(currentSi.MasterAlias, masterTablet.Alias) {
+		_, err = agent.TopoServer.UpdateShardFields(ctx, mainTablet.Keyspace, mainTablet.Shard, func(currentSi *topo.ShardInfo) error {
+			if topoproto.TabletAliasEqual(currentSi.MainAlias, mainTablet.Alias) {
 				// returning NoUpdateNeeded avoids unnecessary calls to UpdateTablet
-				return topo.NewError(topo.NoUpdateNeeded, masterTablet.Alias.String())
+				return topo.NewError(topo.NoUpdateNeeded, mainTablet.Alias.String())
 			}
-			if !topoproto.TabletAliasEqual(currentSi.MasterAlias, oldMasterAlias) {
-				log.Warningf("old master alias (%v) not found in the global Shard record i.e. it has changed in the meantime."+
-					" We're not overwriting the value with the new master (%v) because the current value is probably newer."+
+			if !topoproto.TabletAliasEqual(currentSi.MainAlias, oldMainAlias) {
+				log.Warningf("old main alias (%v) not found in the global Shard record i.e. it has changed in the meantime."+
+					" We're not overwriting the value with the new main (%v) because the current value is probably newer."+
 					" (initial Shard record = %#v, current Shard record = %#v)",
-					oldMasterAlias, masterTablet.Alias, si, currentSi)
+					oldMainAlias, mainTablet.Alias, si, currentSi)
 				// returning NoUpdateNeeded avoids unnecessary calls to UpdateTablet
-				return topo.NewError(topo.NoUpdateNeeded, oldMasterAlias.String())
+				return topo.NewError(topo.NoUpdateNeeded, oldMainAlias.String())
 			}
-			currentSi.MasterAlias = masterTablet.Alias
+			currentSi.MainAlias = mainTablet.Alias
 			return nil
 		})
 		if err != nil {
@@ -238,16 +238,16 @@ func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context
 
 	tmc := tmclient.NewTabletManagerClient()
 	defer tmc.Close()
-	if !topoproto.TabletAliasIsZero(oldMasterAlias) && !topoproto.TabletAliasEqual(oldMasterAlias, agent.TabletAlias) && oldMasterTablet != nil {
+	if !topoproto.TabletAliasIsZero(oldMainAlias) && !topoproto.TabletAliasEqual(oldMainAlias, agent.TabletAlias) && oldMainTablet != nil {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			// Tell the old master to re-read its tablet record and change its state.
+			// Tell the old main to re-read its tablet record and change its state.
 			// We don't need to put error into errs if this fails, but we need to wait
-			// for it to make sure that old master tablet is not stuck in the MASTER
+			// for it to make sure that old main tablet is not stuck in the MASTER
 			// state.
-			if err := tmc.RefreshState(ctx, oldMasterTablet); err != nil {
-				log.Warningf("Error calling RefreshState on old master %v: %v", topoproto.TabletAliasString(oldMasterTablet.Alias), err)
+			if err := tmc.RefreshState(ctx, oldMainTablet); err != nil {
+				log.Warningf("Error calling RefreshState on old main %v: %v", topoproto.TabletAliasString(oldMainTablet.Alias), err)
 			}
 		}()
 	}
@@ -257,16 +257,16 @@ func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context
 		return errs.Error()
 	}
 
-	// Look for any other tablets claiming to be master and fix them up on a best-effort basis
-	tabletMap, err := agent.TopoServer.GetTabletMapForShard(ctx, masterTablet.Keyspace, masterTablet.Shard)
+	// Look for any other tablets claiming to be main and fix them up on a best-effort basis
+	tabletMap, err := agent.TopoServer.GetTabletMapForShard(ctx, mainTablet.Keyspace, mainTablet.Shard)
 	if err != nil {
 		log.Errorf("ignoring error %v from GetTabletMapForShard so that we can process any partial results", err)
 	}
 
 	for _, tabletInfo := range tabletMap {
 		alias := tabletInfo.Tablet.Alias
-		if !topoproto.TabletAliasEqual(alias, agent.TabletAlias) && !topoproto.TabletAliasEqual(alias, oldMasterAlias) && tabletInfo.Tablet.Type == topodatapb.TabletType_MASTER {
-			log.Infof("finalizeTabletExternallyReparented: updating tablet record for another old master: %v", alias)
+		if !topoproto.TabletAliasEqual(alias, agent.TabletAlias) && !topoproto.TabletAliasEqual(alias, oldMainAlias) && tabletInfo.Tablet.Type == topodatapb.TabletType_MASTER {
+			log.Infof("finalizeTabletExternallyReparented: updating tablet record for another old main: %v", alias)
 			wg.Add(1)
 			go func(alias *topodatapb.TabletAlias) {
 				defer wg.Done()
@@ -287,7 +287,7 @@ func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context
 				if tab != nil {
 					log.Infof("finalizeTabletExternallyReparented: Refresh state for tablet: %v", topoproto.TabletAliasString(tab.Alias))
 					if err := tmc.RefreshState(ctx, tab); err != nil {
-						log.Warningf("Error calling RefreshState on old master %v: %v", topoproto.TabletAliasString(tab.Alias), err)
+						log.Warningf("Error calling RefreshState on old main %v: %v", topoproto.TabletAliasString(tab.Alias), err)
 					}
 				}
 			}(alias)
@@ -303,8 +303,8 @@ func (agent *ActionAgent) finalizeTabletExternallyReparented(ctx context.Context
 }
 
 // setExternallyReparentedTime remembers the last time when we were told we're
-// the master.
-// If another tablet claims to be master and offers a more recent time,
+// the main.
+// If another tablet claims to be main and offers a more recent time,
 // that tablet will be trusted over us.
 func (agent *ActionAgent) setExternallyReparentedTime(t time.Time) {
 	agent.mutex.Lock()

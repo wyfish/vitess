@@ -58,9 +58,9 @@ class DrainTest(base_cluster_test.BaseClusterTest):
 
   def insert_rows(self, keyspace, num_rows, starting_index=0):
     logging.info('Inserting %d rows into %s', num_rows, self.table_name)
-    master_cell = self.env.get_current_master_cell(keyspace)
-    conn = self.env.get_vtgate_conn(master_cell)
-    cursor = conn.cursor(tablet_type='master', keyspace=keyspace,
+    main_cell = self.env.get_current_main_cell(keyspace)
+    conn = self.env.get_vtgate_conn(main_cell)
+    cursor = conn.cursor(tablet_type='main', keyspace=keyspace,
                          keyranges=[keyrange.KeyRange('')], writable=True)
 
     for i in xrange(starting_index, starting_index + num_rows):

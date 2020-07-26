@@ -100,7 +100,7 @@ func TestMySQLProtocolExecuteUseStatement(t *testing.T) {
 	hcVTGateTest.Reset()
 	hcVTGateTest.AddTestTablet("aa", "1.1.1.1", 1001, KsTestUnsharded, "0", topodatapb.TabletType_MASTER, true, 1, nil)
 
-	c, err := mysqlConnect(&mysql.ConnParams{DbName: "@master"})
+	c, err := mysqlConnect(&mysql.ConnParams{DbName: "@main"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestMySQLProtocolExecuteUseStatement(t *testing.T) {
 
 	qr, err = c.ExecuteFetch("show vitess_target", 1, false)
 	require.NoError(t, err)
-	assert.Equal(t, "VARCHAR(\"@master\")", qr.Rows[0][0].String())
+	assert.Equal(t, "VARCHAR(\"@main\")", qr.Rows[0][0].String())
 
 	_, err = c.ExecuteFetch("use TestUnsharded", 0, false)
 	require.NoError(t, err)

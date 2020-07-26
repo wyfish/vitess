@@ -122,7 +122,7 @@ type fakeHealthCheck struct {
 	reportError            error
 }
 
-func (fhc *fakeHealthCheck) Report(isSlaveType, shouldQueryServiceBeRunning bool) (replicationDelay time.Duration, err error) {
+func (fhc *fakeHealthCheck) Report(isSubordinateType, shouldQueryServiceBeRunning bool) (replicationDelay time.Duration, err error) {
 	return fhc.reportReplicationDelay, fhc.reportError
 }
 
@@ -276,10 +276,10 @@ func TestHealthCheckControlsQueryService(t *testing.T) {
 	}
 }
 
-// TestErrSlaveNotRunningIsHealthy verifies that a tablet whose
-// healthcheck reports health.ErrSlaveNotRunning is still considered
+// TestErrSubordinateNotRunningIsHealthy verifies that a tablet whose
+// healthcheck reports health.ErrSubordinateNotRunning is still considered
 // healthy with high replication lag.
-func TestErrSlaveNotRunningIsHealthy(t *testing.T) {
+func TestErrSubordinateNotRunningIsHealthy(t *testing.T) {
 	*unhealthyThreshold = 10 * time.Minute
 	ctx := context.Background()
 	agent := createTestAgent(ctx, t, nil)
@@ -300,11 +300,11 @@ func TestErrSlaveNotRunningIsHealthy(t *testing.T) {
 		t.Errorf("UpdateStream should be running")
 	}
 
-	// health check returning health.ErrSlaveNotRunning, should
+	// health check returning health.ErrSubordinateNotRunning, should
 	// keep us as replica and serving
 	before := time.Now()
 	agent.HealthReporter.(*fakeHealthCheck).reportReplicationDelay = 12 * time.Second
-	agent.HealthReporter.(*fakeHealthCheck).reportError = health.ErrSlaveNotRunning
+	agent.HealthReporter.(*fakeHealthCheck).reportError = health.ErrSubordinateNotRunning
 	agent.runHealthCheck()
 	if !agent.QueryServiceControl.IsServing() {
 		t.Errorf("Query service should be running")
@@ -717,7 +717,7 @@ func TestStateChangeImmediateHealthBroadcast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Run TER to turn us into a proper master, wait for it to finish.
+	// Run TER to turn us into a proper main, wait for it to finish.
 	agent.HealthReporter.(*fakeHealthCheck).reportReplicationDelay = 19 * time.Second
 	if err := agent.TabletExternallyReparented(ctx, "unused_id"); err != nil {
 		t.Fatalf("TabletExternallyReparented failed: %v", err)
@@ -728,7 +728,7 @@ func TestStateChangeImmediateHealthBroadcast(t *testing.T) {
 		t.Fatalf("GetTablet failed: %v", err)
 	}
 	if ti.Type != topodatapb.TabletType_MASTER {
-		t.Errorf("TER failed to go to master: %v", ti.Type)
+		t.Errorf("TER failed to go to main: %v", ti.Type)
 	}
 	if !agent.QueryServiceControl.IsServing() {
 		t.Errorf("Query service should be running")
@@ -737,7 +737,7 @@ func TestStateChangeImmediateHealthBroadcast(t *testing.T) {
 		t.Errorf("invalid tabletserver target: got = %v, want = %v", got, topodatapb.TabletType_MASTER)
 	}
 
-	// Consume the health broadcast (no replication delay as we are master)
+	// Consume the health broadcast (no replication delay as we are main)
 	if _, err := expectBroadcastData(agent.QueryServiceControl, true, "", 0); err != nil {
 		t.Fatal(err)
 	}
@@ -753,7 +753,7 @@ func TestStateChangeImmediateHealthBroadcast(t *testing.T) {
 		t.Fatalf("GetTablet failed: %v", err)
 	}
 	if ti.Type != topodatapb.TabletType_MASTER {
-		t.Errorf("First health check failed to go to master: %v", ti.Type)
+		t.Errorf("First health check failed to go to main: %v", ti.Type)
 	}
 	if !agent.QueryServiceControl.IsServing() {
 		t.Errorf("Query service should be running")
@@ -825,7 +825,7 @@ func TestStateChangeImmediateHealthBroadcast(t *testing.T) {
 	}
 	// NOTE: No state change here since nothing has changed.
 
-	// Simulate migration to destination master i.e. remove SourceShards.
+	// Simulate migration to destination main i.e. remove SourceShards.
 	_, err = agent.TopoServer.UpdateShardFields(ctx, "test_keyspace", "0", func(si *topo.ShardInfo) error {
 		si.SourceShards = nil
 		return nil
@@ -997,8 +997,8 @@ func TestRestoreStateChange(t *testing.T) {
 }
 
 // expectBroadcastData checks that runHealthCheck() broadcasted the expected
-// stats (going the value for secondsBehindMaster).
-func expectBroadcastData(qsc tabletserver.Controller, serving bool, healthError string, secondsBehindMaster uint32) (*tabletservermock.BroadcastData, error) {
+// stats (going the value for secondsBehindMain).
+func expectBroadcastData(qsc tabletserver.Controller, serving bool, healthError string, secondsBehindMain uint32) (*tabletservermock.BroadcastData, error) {
 	bd := <-qsc.(*tabletservermock.Controller).BroadcastData
 	if got := bd.Serving; got != serving {
 		return nil, fmt.Errorf("unexpected BroadcastData.Serving, got: %v want: %v with bd: %+v", got, serving, bd)
@@ -1006,8 +1006,8 @@ func expectBroadcastData(qsc tabletserver.Controller, serving bool, healthError 
 	if got := bd.RealtimeStats.HealthError; got != healthError {
 		return nil, fmt.Errorf("unexpected BroadcastData.HealthError, got: %v want: %v with bd: %+v", got, healthError, bd)
 	}
-	if got := bd.RealtimeStats.SecondsBehindMaster; got != secondsBehindMaster {
-		return nil, fmt.Errorf("unexpected BroadcastData.SecondsBehindMaster, got: %v want: %v with bd: %+v", got, secondsBehindMaster, bd)
+	if got := bd.RealtimeStats.SecondsBehindMain; got != secondsBehindMain {
+		return nil, fmt.Errorf("unexpected BroadcastData.SecondsBehindMain, got: %v want: %v with bd: %+v", got, secondsBehindMain, bd)
 	}
 	return bd, nil
 }

@@ -18,14 +18,14 @@ package mysql
 
 import "testing"
 
-func TestMysql56SetMasterCommands(t *testing.T) {
+func TestMysql56SetMainCommands(t *testing.T) {
 	params := &ConnParams{
 		Uname: "username",
 		Pass:  "password",
 	}
-	masterHost := "localhost"
-	masterPort := 123
-	masterConnectRetry := 1234
+	mainHost := "localhost"
+	mainPort := 123
+	mainConnectRetry := 1234
 	want := `CHANGE MASTER TO
   MASTER_HOST = 'localhost',
   MASTER_PORT = 123,
@@ -35,13 +35,13 @@ func TestMysql56SetMasterCommands(t *testing.T) {
   MASTER_AUTO_POSITION = 1`
 
 	conn := &Conn{flavor: mysqlFlavor{}}
-	got := conn.SetMasterCommand(params, masterHost, masterPort, masterConnectRetry)
+	got := conn.SetMainCommand(params, mainHost, mainPort, mainConnectRetry)
 	if got != want {
-		t.Errorf("mysqlFlavor.SetMasterCommand(%#v, %#v, %#v, %#v) = %#v, want %#v", params, masterHost, masterPort, masterConnectRetry, got, want)
+		t.Errorf("mysqlFlavor.SetMainCommand(%#v, %#v, %#v, %#v) = %#v, want %#v", params, mainHost, mainPort, mainConnectRetry, got, want)
 	}
 }
 
-func TestMysql56SetMasterCommandsSSL(t *testing.T) {
+func TestMysql56SetMainCommandsSSL(t *testing.T) {
 	params := &ConnParams{
 		Uname:     "username",
 		Pass:      "password",
@@ -51,9 +51,9 @@ func TestMysql56SetMasterCommandsSSL(t *testing.T) {
 		SslKey:    "ssl-key",
 	}
 	params.EnableSSL()
-	masterHost := "localhost"
-	masterPort := 123
-	masterConnectRetry := 1234
+	mainHost := "localhost"
+	mainPort := 123
+	mainConnectRetry := 1234
 	want := `CHANGE MASTER TO
   MASTER_HOST = 'localhost',
   MASTER_PORT = 123,
@@ -68,8 +68,8 @@ func TestMysql56SetMasterCommandsSSL(t *testing.T) {
   MASTER_AUTO_POSITION = 1`
 
 	conn := &Conn{flavor: mysqlFlavor{}}
-	got := conn.SetMasterCommand(params, masterHost, masterPort, masterConnectRetry)
+	got := conn.SetMainCommand(params, mainHost, mainPort, mainConnectRetry)
 	if got != want {
-		t.Errorf("mysqlFlavor.SetMasterCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, masterHost, masterPort, masterConnectRetry, got, want)
+		t.Errorf("mysqlFlavor.SetMainCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, mainHost, mainPort, mainConnectRetry, got, want)
 	}
 }

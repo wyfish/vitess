@@ -694,124 +694,124 @@ func agentRPCTestExecuteFetchPanic(ctx context.Context, t *testing.T, client tmc
 
 var testReplicationStatus = &replicationdatapb.Status{
 	Position:            "MariaDB/1-345-789",
-	SlaveIoRunning:      true,
-	SlaveSqlRunning:     true,
-	SecondsBehindMaster: 654,
-	MasterHost:          "master.host",
-	MasterPort:          3366,
-	MasterConnectRetry:  12,
+	SubordinateIoRunning:      true,
+	SubordinateSqlRunning:     true,
+	SecondsBehindMain: 654,
+	MainHost:          "main.host",
+	MainPort:          3366,
+	MainConnectRetry:  12,
 }
 
-func (fra *fakeRPCAgent) SlaveStatus(ctx context.Context) (*replicationdatapb.Status, error) {
+func (fra *fakeRPCAgent) SubordinateStatus(ctx context.Context) (*replicationdatapb.Status, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return testReplicationStatus, nil
 }
 
-func agentRPCTestSlaveStatus(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rs, err := client.SlaveStatus(ctx, tablet)
-	compareError(t, "SlaveStatus", err, rs, testReplicationStatus)
+func agentRPCTestSubordinateStatus(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rs, err := client.SubordinateStatus(ctx, tablet)
+	compareError(t, "SubordinateStatus", err, rs, testReplicationStatus)
 }
 
-func agentRPCTestSlaveStatusPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.SlaveStatus(ctx, tablet)
-	expectHandleRPCPanic(t, "SlaveStatus", false /*verbose*/, err)
+func agentRPCTestSubordinateStatusPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.SubordinateStatus(ctx, tablet)
+	expectHandleRPCPanic(t, "SubordinateStatus", false /*verbose*/, err)
 }
 
 var testReplicationPosition = "MariaDB/5-456-890"
 
-func (fra *fakeRPCAgent) MasterPosition(ctx context.Context) (string, error) {
+func (fra *fakeRPCAgent) MainPosition(ctx context.Context) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return testReplicationPosition, nil
 }
 
-func agentRPCTestMasterPosition(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rs, err := client.MasterPosition(ctx, tablet)
-	compareError(t, "MasterPosition", err, rs, testReplicationPosition)
+func agentRPCTestMainPosition(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rs, err := client.MainPosition(ctx, tablet)
+	compareError(t, "MainPosition", err, rs, testReplicationPosition)
 }
 
-func agentRPCTestMasterPositionPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.MasterPosition(ctx, tablet)
-	expectHandleRPCPanic(t, "MasterPosition", false /*verbose*/, err)
+func agentRPCTestMainPositionPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.MainPosition(ctx, tablet)
+	expectHandleRPCPanic(t, "MainPosition", false /*verbose*/, err)
 }
 
-var testStopSlaveCalled = false
+var testStopSubordinateCalled = false
 
-func (fra *fakeRPCAgent) StopSlave(ctx context.Context) error {
+func (fra *fakeRPCAgent) StopSubordinate(ctx context.Context) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	testStopSlaveCalled = true
+	testStopSubordinateCalled = true
 	return nil
 }
 
-func agentRPCTestStopSlave(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.StopSlave(ctx, tablet)
-	compareError(t, "StopSlave", err, true, testStopSlaveCalled)
+func agentRPCTestStopSubordinate(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.StopSubordinate(ctx, tablet)
+	compareError(t, "StopSubordinate", err, true, testStopSubordinateCalled)
 }
 
-func agentRPCTestStopSlavePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.StopSlave(ctx, tablet)
-	expectHandleRPCPanic(t, "StopSlave", true /*verbose*/, err)
+func agentRPCTestStopSubordinatePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.StopSubordinate(ctx, tablet)
+	expectHandleRPCPanic(t, "StopSubordinate", true /*verbose*/, err)
 }
 
-var testStopSlaveMinimumWaitTime = time.Hour
+var testStopSubordinateMinimumWaitTime = time.Hour
 
-func (fra *fakeRPCAgent) StopSlaveMinimum(ctx context.Context, position string, waitTime time.Duration) (string, error) {
+func (fra *fakeRPCAgent) StopSubordinateMinimum(ctx context.Context, position string, waitTime time.Duration) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	compare(fra.t, "StopSlaveMinimum position", position, testReplicationPosition)
-	compare(fra.t, "StopSlaveMinimum waitTime", waitTime, testStopSlaveMinimumWaitTime)
+	compare(fra.t, "StopSubordinateMinimum position", position, testReplicationPosition)
+	compare(fra.t, "StopSubordinateMinimum waitTime", waitTime, testStopSubordinateMinimumWaitTime)
 	return testReplicationPositionReturned, nil
 }
 
-func agentRPCTestStopSlaveMinimum(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	pos, err := client.StopSlaveMinimum(ctx, tablet, testReplicationPosition, testStopSlaveMinimumWaitTime)
-	compareError(t, "StopSlaveMinimum", err, pos, testReplicationPositionReturned)
+func agentRPCTestStopSubordinateMinimum(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	pos, err := client.StopSubordinateMinimum(ctx, tablet, testReplicationPosition, testStopSubordinateMinimumWaitTime)
+	compareError(t, "StopSubordinateMinimum", err, pos, testReplicationPositionReturned)
 }
 
-func agentRPCTestStopSlaveMinimumPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.StopSlaveMinimum(ctx, tablet, testReplicationPosition, testStopSlaveMinimumWaitTime)
-	expectHandleRPCPanic(t, "StopSlaveMinimum", true /*verbose*/, err)
+func agentRPCTestStopSubordinateMinimumPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.StopSubordinateMinimum(ctx, tablet, testReplicationPosition, testStopSubordinateMinimumWaitTime)
+	expectHandleRPCPanic(t, "StopSubordinateMinimum", true /*verbose*/, err)
 }
 
-var testStartSlaveCalled = false
+var testStartSubordinateCalled = false
 
-func (fra *fakeRPCAgent) StartSlave(ctx context.Context) error {
+func (fra *fakeRPCAgent) StartSubordinate(ctx context.Context) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	testStartSlaveCalled = true
+	testStartSubordinateCalled = true
 	return nil
 }
 
-var testStartSlaveUntilAfterCalledWith = ""
+var testStartSubordinateUntilAfterCalledWith = ""
 
-func (fra *fakeRPCAgent) StartSlaveUntilAfter(ctx context.Context, position string, waitTime time.Duration) error {
+func (fra *fakeRPCAgent) StartSubordinateUntilAfter(ctx context.Context, position string, waitTime time.Duration) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	testStartSlaveUntilAfterCalledWith = position
+	testStartSubordinateUntilAfterCalledWith = position
 	return nil
 }
 
-func agentRPCTestStartSlave(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.StartSlave(ctx, tablet)
-	compareError(t, "StartSlave", err, true, testStartSlaveCalled)
+func agentRPCTestStartSubordinate(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.StartSubordinate(ctx, tablet)
+	compareError(t, "StartSubordinate", err, true, testStartSubordinateCalled)
 }
 
-func agentRPCTestStartSlaveUntilAfter(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.StartSlaveUntilAfter(ctx, tablet, "test-position", time.Minute)
-	compareError(t, "StartSlaveUntilAfter", err, "test-position", testStartSlaveUntilAfterCalledWith)
+func agentRPCTestStartSubordinateUntilAfter(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.StartSubordinateUntilAfter(ctx, tablet, "test-position", time.Minute)
+	compareError(t, "StartSubordinateUntilAfter", err, "test-position", testStartSubordinateUntilAfterCalledWith)
 }
 
-func agentRPCTestStartSlavePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.StartSlave(ctx, tablet)
-	expectHandleRPCPanic(t, "StartSlave", true /*verbose*/, err)
+func agentRPCTestStartSubordinatePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.StartSubordinate(ctx, tablet)
+	expectHandleRPCPanic(t, "StartSubordinate", true /*verbose*/, err)
 }
 
 var testTabletExternallyReparentedCalled = false
@@ -834,23 +834,23 @@ func agentRPCTestTabletExternallyReparentedPanic(ctx context.Context, t *testing
 	expectHandleRPCPanic(t, "TabletExternallyReparented", false /*verbose*/, err)
 }
 
-var testGetSlavesResult = []string{"slave1", "slave2"}
+var testGetSubordinatesResult = []string{"subordinate1", "subordinate2"}
 
-func (fra *fakeRPCAgent) GetSlaves(ctx context.Context) ([]string, error) {
+func (fra *fakeRPCAgent) GetSubordinates(ctx context.Context) ([]string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	return testGetSlavesResult, nil
+	return testGetSubordinatesResult, nil
 }
 
-func agentRPCTestGetSlaves(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	s, err := client.GetSlaves(ctx, tablet)
-	compareError(t, "GetSlaves", err, s, testGetSlavesResult)
+func agentRPCTestGetSubordinates(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	s, err := client.GetSubordinates(ctx, tablet)
+	compareError(t, "GetSubordinates", err, s, testGetSubordinatesResult)
 }
 
-func agentRPCTestGetSlavesPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.GetSlaves(ctx, tablet)
-	expectHandleRPCPanic(t, "GetSlaves", false /*verbose*/, err)
+func agentRPCTestGetSubordinatesPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.GetSubordinates(ctx, tablet)
+	expectHandleRPCPanic(t, "GetSubordinates", false /*verbose*/, err)
 }
 
 var testVRQuery = "query"
@@ -921,200 +921,200 @@ func agentRPCTestResetReplicationPanic(ctx context.Context, t *testing.T, client
 	expectHandleRPCPanic(t, "ResetReplication", true /*verbose*/, err)
 }
 
-func (fra *fakeRPCAgent) InitMaster(ctx context.Context) (string, error) {
+func (fra *fakeRPCAgent) InitMain(ctx context.Context) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return testReplicationPosition, nil
 }
 
-func agentRPCTestInitMaster(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rp, err := client.InitMaster(ctx, tablet)
-	compareError(t, "InitMaster", err, rp, testReplicationPosition)
+func agentRPCTestInitMain(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rp, err := client.InitMain(ctx, tablet)
+	compareError(t, "InitMain", err, rp, testReplicationPosition)
 }
 
-func agentRPCTestInitMasterPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.InitMaster(ctx, tablet)
-	expectHandleRPCPanic(t, "InitMaster", true /*verbose*/, err)
+func agentRPCTestInitMainPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.InitMain(ctx, tablet)
+	expectHandleRPCPanic(t, "InitMain", true /*verbose*/, err)
 }
 
 var testPopulateReparentJournalCalled = false
 var testTimeCreatedNS int64 = 4569900
 var testActionName = "TestActionName"
-var testMasterAlias = &topodatapb.TabletAlias{
+var testMainAlias = &topodatapb.TabletAlias{
 	Cell: "ce",
 	Uid:  372,
 }
 
-func (fra *fakeRPCAgent) PopulateReparentJournal(ctx context.Context, timeCreatedNS int64, actionName string, masterAlias *topodatapb.TabletAlias, position string) error {
+func (fra *fakeRPCAgent) PopulateReparentJournal(ctx context.Context, timeCreatedNS int64, actionName string, mainAlias *topodatapb.TabletAlias, position string) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	compare(fra.t, "PopulateReparentJournal timeCreatedNS", timeCreatedNS, testTimeCreatedNS)
 	compare(fra.t, "PopulateReparentJournal actionName", actionName, testActionName)
-	compare(fra.t, "PopulateReparentJournal masterAlias", masterAlias, testMasterAlias)
+	compare(fra.t, "PopulateReparentJournal mainAlias", mainAlias, testMainAlias)
 	compare(fra.t, "PopulateReparentJournal pos", position, testReplicationPosition)
 	testPopulateReparentJournalCalled = true
 	return nil
 }
 
 func agentRPCTestPopulateReparentJournal(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.PopulateReparentJournal(ctx, tablet, testTimeCreatedNS, testActionName, testMasterAlias, testReplicationPosition)
+	err := client.PopulateReparentJournal(ctx, tablet, testTimeCreatedNS, testActionName, testMainAlias, testReplicationPosition)
 	compareError(t, "PopulateReparentJournal", err, true, testPopulateReparentJournalCalled)
 }
 
 func agentRPCTestPopulateReparentJournalPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.PopulateReparentJournal(ctx, tablet, testTimeCreatedNS, testActionName, testMasterAlias, testReplicationPosition)
+	err := client.PopulateReparentJournal(ctx, tablet, testTimeCreatedNS, testActionName, testMainAlias, testReplicationPosition)
 	expectHandleRPCPanic(t, "PopulateReparentJournal", false /*verbose*/, err)
 }
 
-var testInitSlaveCalled = false
+var testInitSubordinateCalled = false
 
-func (fra *fakeRPCAgent) InitSlave(ctx context.Context, parent *topodatapb.TabletAlias, position string, timeCreatedNS int64) error {
+func (fra *fakeRPCAgent) InitSubordinate(ctx context.Context, parent *topodatapb.TabletAlias, position string, timeCreatedNS int64) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	compare(fra.t, "InitSlave parent", parent, testMasterAlias)
-	compare(fra.t, "InitSlave pos", position, testReplicationPosition)
-	compare(fra.t, "InitSlave timeCreatedNS", timeCreatedNS, testTimeCreatedNS)
-	testInitSlaveCalled = true
+	compare(fra.t, "InitSubordinate parent", parent, testMainAlias)
+	compare(fra.t, "InitSubordinate pos", position, testReplicationPosition)
+	compare(fra.t, "InitSubordinate timeCreatedNS", timeCreatedNS, testTimeCreatedNS)
+	testInitSubordinateCalled = true
 	return nil
 }
 
-func agentRPCTestInitSlave(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.InitSlave(ctx, tablet, testMasterAlias, testReplicationPosition, testTimeCreatedNS)
-	compareError(t, "InitSlave", err, true, testInitSlaveCalled)
+func agentRPCTestInitSubordinate(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.InitSubordinate(ctx, tablet, testMainAlias, testReplicationPosition, testTimeCreatedNS)
+	compareError(t, "InitSubordinate", err, true, testInitSubordinateCalled)
 }
 
-func agentRPCTestInitSlavePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.InitSlave(ctx, tablet, testMasterAlias, testReplicationPosition, testTimeCreatedNS)
-	expectHandleRPCPanic(t, "InitSlave", true /*verbose*/, err)
+func agentRPCTestInitSubordinatePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.InitSubordinate(ctx, tablet, testMainAlias, testReplicationPosition, testTimeCreatedNS)
+	expectHandleRPCPanic(t, "InitSubordinate", true /*verbose*/, err)
 }
 
-func (fra *fakeRPCAgent) DemoteMaster(ctx context.Context) (string, error) {
+func (fra *fakeRPCAgent) DemoteMain(ctx context.Context) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return testReplicationPosition, nil
 }
 
-func agentRPCTestDemoteMaster(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rp, err := client.DemoteMaster(ctx, tablet)
-	compareError(t, "DemoteMaster", err, rp, testReplicationPosition)
+func agentRPCTestDemoteMain(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rp, err := client.DemoteMain(ctx, tablet)
+	compareError(t, "DemoteMain", err, rp, testReplicationPosition)
 }
 
-func agentRPCTestDemoteMasterPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.DemoteMaster(ctx, tablet)
-	expectHandleRPCPanic(t, "DemoteMaster", true /*verbose*/, err)
+func agentRPCTestDemoteMainPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.DemoteMain(ctx, tablet)
+	expectHandleRPCPanic(t, "DemoteMain", true /*verbose*/, err)
 }
 
-var testUndoDemoteMasterCalled = false
+var testUndoDemoteMainCalled = false
 
-func (fra *fakeRPCAgent) UndoDemoteMaster(ctx context.Context) error {
+func (fra *fakeRPCAgent) UndoDemoteMain(ctx context.Context) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return nil
 }
 
-func agentRPCTestUndoDemoteMaster(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.UndoDemoteMaster(ctx, tablet)
-	testUndoDemoteMasterCalled = true
-	compareError(t, "UndoDemoteMaster", err, true, testUndoDemoteMasterCalled)
+func agentRPCTestUndoDemoteMain(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.UndoDemoteMain(ctx, tablet)
+	testUndoDemoteMainCalled = true
+	compareError(t, "UndoDemoteMain", err, true, testUndoDemoteMainCalled)
 }
 
-func agentRPCTestUndoDemoteMasterPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.UndoDemoteMaster(ctx, tablet)
-	expectHandleRPCPanic(t, "UndoDemoteMaster", true /*verbose*/, err)
+func agentRPCTestUndoDemoteMainPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.UndoDemoteMain(ctx, tablet)
+	expectHandleRPCPanic(t, "UndoDemoteMain", true /*verbose*/, err)
 }
 
 var testReplicationPositionReturned = "MariaDB/5-567-3456"
 
-func (fra *fakeRPCAgent) PromoteSlaveWhenCaughtUp(ctx context.Context, position string) (string, error) {
+func (fra *fakeRPCAgent) PromoteSubordinateWhenCaughtUp(ctx context.Context, position string) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	compare(fra.t, "PromoteSlaveWhenCaughtUp pos", position, testReplicationPosition)
+	compare(fra.t, "PromoteSubordinateWhenCaughtUp pos", position, testReplicationPosition)
 	return testReplicationPositionReturned, nil
 }
 
-func agentRPCTestPromoteSlaveWhenCaughtUp(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rp, err := client.PromoteSlaveWhenCaughtUp(ctx, tablet, testReplicationPosition)
-	compareError(t, "PromoteSlaveWhenCaughtUp", err, rp, testReplicationPositionReturned)
+func agentRPCTestPromoteSubordinateWhenCaughtUp(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rp, err := client.PromoteSubordinateWhenCaughtUp(ctx, tablet, testReplicationPosition)
+	compareError(t, "PromoteSubordinateWhenCaughtUp", err, rp, testReplicationPositionReturned)
 }
 
-func agentRPCTestPromoteSlaveWhenCaughtUpPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.PromoteSlaveWhenCaughtUp(ctx, tablet, testReplicationPosition)
-	expectHandleRPCPanic(t, "PromoteSlaveWhenCaughtUp", true /*verbose*/, err)
+func agentRPCTestPromoteSubordinateWhenCaughtUpPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.PromoteSubordinateWhenCaughtUp(ctx, tablet, testReplicationPosition)
+	expectHandleRPCPanic(t, "PromoteSubordinateWhenCaughtUp", true /*verbose*/, err)
 }
 
-var testSlaveWasPromotedCalled = false
+var testSubordinateWasPromotedCalled = false
 
-func (fra *fakeRPCAgent) SlaveWasPromoted(ctx context.Context) error {
+func (fra *fakeRPCAgent) SubordinateWasPromoted(ctx context.Context) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	testSlaveWasPromotedCalled = true
+	testSubordinateWasPromotedCalled = true
 	return nil
 }
 
-func agentRPCTestSlaveWasPromoted(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SlaveWasPromoted(ctx, tablet)
-	compareError(t, "SlaveWasPromoted", err, true, testSlaveWasPromotedCalled)
+func agentRPCTestSubordinateWasPromoted(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SubordinateWasPromoted(ctx, tablet)
+	compareError(t, "SubordinateWasPromoted", err, true, testSubordinateWasPromotedCalled)
 }
 
-func agentRPCTestSlaveWasPromotedPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SlaveWasPromoted(ctx, tablet)
-	expectHandleRPCPanic(t, "SlaveWasPromoted", true /*verbose*/, err)
+func agentRPCTestSubordinateWasPromotedPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SubordinateWasPromoted(ctx, tablet)
+	expectHandleRPCPanic(t, "SubordinateWasPromoted", true /*verbose*/, err)
 }
 
-var testSetMasterCalled = false
-var testForceStartSlave = true
+var testSetMainCalled = false
+var testForceStartSubordinate = true
 
-func (fra *fakeRPCAgent) SetMaster(ctx context.Context, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSlave bool) error {
+func (fra *fakeRPCAgent) SetMain(ctx context.Context, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSubordinate bool) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	compare(fra.t, "SetMaster parent", parent, testMasterAlias)
-	compare(fra.t, "SetMaster timeCreatedNS", timeCreatedNS, testTimeCreatedNS)
-	compare(fra.t, "SetMaster forceStartSlave", forceStartSlave, testForceStartSlave)
-	testSetMasterCalled = true
+	compare(fra.t, "SetMain parent", parent, testMainAlias)
+	compare(fra.t, "SetMain timeCreatedNS", timeCreatedNS, testTimeCreatedNS)
+	compare(fra.t, "SetMain forceStartSubordinate", forceStartSubordinate, testForceStartSubordinate)
+	testSetMainCalled = true
 	return nil
 }
 
-func agentRPCTestSetMaster(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SetMaster(ctx, tablet, testMasterAlias, testTimeCreatedNS, testForceStartSlave)
-	compareError(t, "SetMaster", err, true, testSetMasterCalled)
+func agentRPCTestSetMain(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SetMain(ctx, tablet, testMainAlias, testTimeCreatedNS, testForceStartSubordinate)
+	compareError(t, "SetMain", err, true, testSetMainCalled)
 }
 
-func agentRPCTestSetMasterPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SetMaster(ctx, tablet, testMasterAlias, testTimeCreatedNS, testForceStartSlave)
-	expectHandleRPCPanic(t, "SetMaster", true /*verbose*/, err)
+func agentRPCTestSetMainPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SetMain(ctx, tablet, testMainAlias, testTimeCreatedNS, testForceStartSubordinate)
+	expectHandleRPCPanic(t, "SetMain", true /*verbose*/, err)
 }
 
-var testSlaveWasRestartedParent = &topodatapb.TabletAlias{
+var testSubordinateWasRestartedParent = &topodatapb.TabletAlias{
 	Cell: "prison",
 	Uid:  42,
 }
-var testSlaveWasRestartedCalled = false
+var testSubordinateWasRestartedCalled = false
 
-func (fra *fakeRPCAgent) SlaveWasRestarted(ctx context.Context, parent *topodatapb.TabletAlias) error {
+func (fra *fakeRPCAgent) SubordinateWasRestarted(ctx context.Context, parent *topodatapb.TabletAlias) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
-	compare(fra.t, "SlaveWasRestarted parent", parent, testSlaveWasRestartedParent)
-	testSlaveWasRestartedCalled = true
+	compare(fra.t, "SubordinateWasRestarted parent", parent, testSubordinateWasRestartedParent)
+	testSubordinateWasRestartedCalled = true
 	return nil
 }
 
-func agentRPCTestSlaveWasRestarted(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SlaveWasRestarted(ctx, tablet, testSlaveWasRestartedParent)
-	compareError(t, "SlaveWasRestarted", err, true, testSlaveWasRestartedCalled)
+func agentRPCTestSubordinateWasRestarted(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SubordinateWasRestarted(ctx, tablet, testSubordinateWasRestartedParent)
+	compareError(t, "SubordinateWasRestarted", err, true, testSubordinateWasRestartedCalled)
 }
 
-func agentRPCTestSlaveWasRestartedPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	err := client.SlaveWasRestarted(ctx, tablet, testSlaveWasRestartedParent)
-	expectHandleRPCPanic(t, "SlaveWasRestarted", true /*verbose*/, err)
+func agentRPCTestSubordinateWasRestartedPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	err := client.SubordinateWasRestarted(ctx, tablet, testSubordinateWasRestartedParent)
+	expectHandleRPCPanic(t, "SubordinateWasRestarted", true /*verbose*/, err)
 }
 
 func (fra *fakeRPCAgent) StopReplicationAndGetStatus(ctx context.Context) (*replicationdatapb.Status, error) {
@@ -1134,21 +1134,21 @@ func agentRPCTestStopReplicationAndGetStatusPanic(ctx context.Context, t *testin
 	expectHandleRPCPanic(t, "StopReplicationAndGetStatus", true /*verbose*/, err)
 }
 
-func (fra *fakeRPCAgent) PromoteSlave(ctx context.Context) (string, error) {
+func (fra *fakeRPCAgent) PromoteSubordinate(ctx context.Context) (string, error) {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	return testReplicationPosition, nil
 }
 
-func agentRPCTestPromoteSlave(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	rp, err := client.PromoteSlave(ctx, tablet)
-	compareError(t, "PromoteSlave", err, rp, testReplicationPosition)
+func agentRPCTestPromoteSubordinate(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	rp, err := client.PromoteSubordinate(ctx, tablet)
+	compareError(t, "PromoteSubordinate", err, rp, testReplicationPosition)
 }
 
-func agentRPCTestPromoteSlavePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	_, err := client.PromoteSlave(ctx, tablet)
-	expectHandleRPCPanic(t, "PromoteSlave", true /*verbose*/, err)
+func agentRPCTestPromoteSubordinatePanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
+	_, err := client.PromoteSubordinate(ctx, tablet)
+	expectHandleRPCPanic(t, "PromoteSubordinate", true /*verbose*/, err)
 }
 
 //
@@ -1156,23 +1156,23 @@ func agentRPCTestPromoteSlavePanic(ctx context.Context, t *testing.T, client tmc
 //
 
 var testBackupConcurrency = 24
-var testBackupAllowMaster = false
+var testBackupAllowMain = false
 var testBackupCalled = false
 var testRestoreFromBackupCalled = false
 
-func (fra *fakeRPCAgent) Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMaster bool) error {
+func (fra *fakeRPCAgent) Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMain bool) error {
 	if fra.panics {
 		panic(fmt.Errorf("test-triggered panic"))
 	}
 	compare(fra.t, "Backup args", concurrency, testBackupConcurrency)
-	compare(fra.t, "Backup args", allowMaster, testBackupAllowMaster)
+	compare(fra.t, "Backup args", allowMain, testBackupAllowMain)
 	logStuff(logger, 10)
 	testBackupCalled = true
 	return nil
 }
 
 func agentRPCTestBackup(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	stream, err := client.Backup(ctx, tablet, testBackupConcurrency, testBackupAllowMaster)
+	stream, err := client.Backup(ctx, tablet, testBackupConcurrency, testBackupAllowMain)
 	if err != nil {
 		t.Fatalf("Backup failed: %v", err)
 	}
@@ -1181,7 +1181,7 @@ func agentRPCTestBackup(ctx context.Context, t *testing.T, client tmclient.Table
 }
 
 func agentRPCTestBackupPanic(ctx context.Context, t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.Tablet) {
-	stream, err := client.Backup(ctx, tablet, testBackupConcurrency, testBackupAllowMaster)
+	stream, err := client.Backup(ctx, tablet, testBackupConcurrency, testBackupAllowMain)
 	if err != nil {
 		t.Fatalf("Backup failed: %v", err)
 	}
@@ -1266,14 +1266,14 @@ func Run(t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.T
 	agentRPCTestExecuteFetch(ctx, t, client, tablet)
 
 	// Replication related methods
-	agentRPCTestSlaveStatus(ctx, t, client, tablet)
-	agentRPCTestMasterPosition(ctx, t, client, tablet)
-	agentRPCTestStopSlave(ctx, t, client, tablet)
-	agentRPCTestStopSlaveMinimum(ctx, t, client, tablet)
-	agentRPCTestStartSlave(ctx, t, client, tablet)
-	agentRPCTestStartSlaveUntilAfter(ctx, t, client, tablet)
+	agentRPCTestSubordinateStatus(ctx, t, client, tablet)
+	agentRPCTestMainPosition(ctx, t, client, tablet)
+	agentRPCTestStopSubordinate(ctx, t, client, tablet)
+	agentRPCTestStopSubordinateMinimum(ctx, t, client, tablet)
+	agentRPCTestStartSubordinate(ctx, t, client, tablet)
+	agentRPCTestStartSubordinateUntilAfter(ctx, t, client, tablet)
 	agentRPCTestTabletExternallyReparented(ctx, t, client, tablet)
-	agentRPCTestGetSlaves(ctx, t, client, tablet)
+	agentRPCTestGetSubordinates(ctx, t, client, tablet)
 
 	// VReplication methods
 	agentRPCTestVReplicationExec(ctx, t, client, tablet)
@@ -1281,17 +1281,17 @@ func Run(t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.T
 
 	// Reparenting related functions
 	agentRPCTestResetReplication(ctx, t, client, tablet)
-	agentRPCTestInitMaster(ctx, t, client, tablet)
+	agentRPCTestInitMain(ctx, t, client, tablet)
 	agentRPCTestPopulateReparentJournal(ctx, t, client, tablet)
-	agentRPCTestInitSlave(ctx, t, client, tablet)
-	agentRPCTestDemoteMaster(ctx, t, client, tablet)
-	agentRPCTestUndoDemoteMaster(ctx, t, client, tablet)
-	agentRPCTestPromoteSlaveWhenCaughtUp(ctx, t, client, tablet)
-	agentRPCTestSlaveWasPromoted(ctx, t, client, tablet)
-	agentRPCTestSetMaster(ctx, t, client, tablet)
-	agentRPCTestSlaveWasRestarted(ctx, t, client, tablet)
+	agentRPCTestInitSubordinate(ctx, t, client, tablet)
+	agentRPCTestDemoteMain(ctx, t, client, tablet)
+	agentRPCTestUndoDemoteMain(ctx, t, client, tablet)
+	agentRPCTestPromoteSubordinateWhenCaughtUp(ctx, t, client, tablet)
+	agentRPCTestSubordinateWasPromoted(ctx, t, client, tablet)
+	agentRPCTestSetMain(ctx, t, client, tablet)
+	agentRPCTestSubordinateWasRestarted(ctx, t, client, tablet)
 	agentRPCTestStopReplicationAndGetStatus(ctx, t, client, tablet)
-	agentRPCTestPromoteSlave(ctx, t, client, tablet)
+	agentRPCTestPromoteSubordinate(ctx, t, client, tablet)
 
 	// Backup / restore related methods
 	agentRPCTestBackup(ctx, t, client, tablet)
@@ -1321,13 +1321,13 @@ func Run(t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.T
 	agentRPCTestExecuteFetchPanic(ctx, t, client, tablet)
 
 	// Replication related methods
-	agentRPCTestSlaveStatusPanic(ctx, t, client, tablet)
-	agentRPCTestMasterPositionPanic(ctx, t, client, tablet)
-	agentRPCTestStopSlavePanic(ctx, t, client, tablet)
-	agentRPCTestStopSlaveMinimumPanic(ctx, t, client, tablet)
-	agentRPCTestStartSlavePanic(ctx, t, client, tablet)
+	agentRPCTestSubordinateStatusPanic(ctx, t, client, tablet)
+	agentRPCTestMainPositionPanic(ctx, t, client, tablet)
+	agentRPCTestStopSubordinatePanic(ctx, t, client, tablet)
+	agentRPCTestStopSubordinateMinimumPanic(ctx, t, client, tablet)
+	agentRPCTestStartSubordinatePanic(ctx, t, client, tablet)
 	agentRPCTestTabletExternallyReparentedPanic(ctx, t, client, tablet)
-	agentRPCTestGetSlavesPanic(ctx, t, client, tablet)
+	agentRPCTestGetSubordinatesPanic(ctx, t, client, tablet)
 
 	// VReplication methods
 	agentRPCTestVReplicationExecPanic(ctx, t, client, tablet)
@@ -1335,17 +1335,17 @@ func Run(t *testing.T, client tmclient.TabletManagerClient, tablet *topodatapb.T
 
 	// Reparenting related functions
 	agentRPCTestResetReplicationPanic(ctx, t, client, tablet)
-	agentRPCTestInitMasterPanic(ctx, t, client, tablet)
+	agentRPCTestInitMainPanic(ctx, t, client, tablet)
 	agentRPCTestPopulateReparentJournalPanic(ctx, t, client, tablet)
-	agentRPCTestInitSlavePanic(ctx, t, client, tablet)
-	agentRPCTestDemoteMasterPanic(ctx, t, client, tablet)
-	agentRPCTestUndoDemoteMasterPanic(ctx, t, client, tablet)
-	agentRPCTestPromoteSlaveWhenCaughtUpPanic(ctx, t, client, tablet)
-	agentRPCTestSlaveWasPromotedPanic(ctx, t, client, tablet)
-	agentRPCTestSetMasterPanic(ctx, t, client, tablet)
-	agentRPCTestSlaveWasRestartedPanic(ctx, t, client, tablet)
+	agentRPCTestInitSubordinatePanic(ctx, t, client, tablet)
+	agentRPCTestDemoteMainPanic(ctx, t, client, tablet)
+	agentRPCTestUndoDemoteMainPanic(ctx, t, client, tablet)
+	agentRPCTestPromoteSubordinateWhenCaughtUpPanic(ctx, t, client, tablet)
+	agentRPCTestSubordinateWasPromotedPanic(ctx, t, client, tablet)
+	agentRPCTestSetMainPanic(ctx, t, client, tablet)
+	agentRPCTestSubordinateWasRestartedPanic(ctx, t, client, tablet)
 	agentRPCTestStopReplicationAndGetStatusPanic(ctx, t, client, tablet)
-	agentRPCTestPromoteSlavePanic(ctx, t, client, tablet)
+	agentRPCTestPromoteSubordinatePanic(ctx, t, client, tablet)
 
 	// Backup / restore related methods
 	agentRPCTestBackupPanic(ctx, t, client, tablet)

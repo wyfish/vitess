@@ -160,7 +160,7 @@ func TestAPI(t *testing.T) {
 		// Shards
 		{"GET", "shards/ks1/", "", `["-80","80-"]`},
 		{"GET", "shards/ks1/-80", "", `{
-				"master_alias": null,
+				"main_alias": null,
 				"key_range": {
 					"start": null,
 					"end":"gA=="
@@ -168,7 +168,7 @@ func TestAPI(t *testing.T) {
 				"served_types": [],
 				"source_shards": [],
 				"tablet_controls": [],
-				"is_master_serving": true
+				"is_main_serving": true
 			}`},
 		{"GET", "shards/ks1/-DEAD", "", "404 page not found"},
 		{"POST", "shards/ks1/-80?action=TestShardAction", "", `{
@@ -265,7 +265,7 @@ func TestAPI(t *testing.T) {
 		// Tablet Health
 		{"GET", "tablet_health/cell1/100", "", `{ "Key": "", "Tablet": { "alias": { "cell": "cell1", "uid": 100 },"port_map": { "vt": 100 }, "keyspace": "ks1", "shard": "-80", "type": 2},
 		  "Name": "", "Target": { "keyspace": "ks1", "shard": "-80", "tablet_type": 2 }, "Up": true, "Serving": true, "TabletExternallyReparentedTimestamp": 0,
-		  "Stats": { "seconds_behind_master": 100 }, "LastError": null }`},
+		  "Stats": { "seconds_behind_main": 100 }, "LastError": null }`},
 		{"GET", "tablet_health/cell1", "", "can't get tablet_health: invalid tablet_health path: \"cell1\"  expected path: /tablet_health/<cell>/<uid>"},
 		{"GET", "tablet_health/cell1/gh", "", "can't get tablet_health: incorrect uid"},
 

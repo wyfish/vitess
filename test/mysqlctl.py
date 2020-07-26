@@ -25,7 +25,7 @@ import utils
 # the "IF EXISTS" clause. Squelch these warnings.
 warnings.simplefilter('ignore')
 
-master_tablet = tablet.Tablet()
+main_tablet = tablet.Tablet()
 replica_tablet = tablet.Tablet()
 
 
@@ -35,17 +35,17 @@ def setUpModule():
     utils.Vtctld().start()
 
     setup_procs = [
-        master_tablet.init_mysql(),
+        main_tablet.init_mysql(),
         replica_tablet.init_mysql(),
         ]
     utils.wait_procs(setup_procs)
 
     utils.run_vtctl(['CreateKeyspace', 'test_keyspace'])
 
-    master_tablet.init_tablet('replica', 'test_keyspace', '0')
+    main_tablet.init_tablet('replica', 'test_keyspace', '0')
     replica_tablet.init_tablet('replica', 'test_keyspace', '0')
 
-    master_tablet.create_db('vt_test_keyspace')
+    main_tablet.create_db('vt_test_keyspace')
     replica_tablet.create_db('vt_test_keyspace')
   except:
     tearDownModule()
@@ -57,10 +57,10 @@ def tearDownModule():
   if utils.options.skip_teardown:
     return
 
-  tablet.kill_tablets([master_tablet, replica_tablet])
+  tablet.kill_tablets([main_tablet, replica_tablet])
 
   teardown_procs = [
-      master_tablet.teardown_mysql(),
+      main_tablet.teardown_mysql(),
       replica_tablet.teardown_mysql(),
       ]
   utils.wait_procs(teardown_procs, raise_on_error=False)
@@ -69,7 +69,7 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  master_tablet.remove_tree()
+  main_tablet.remove_tree()
   replica_tablet.remove_tree()
 
 
@@ -77,30 +77,30 @@ class TestMysqlctl(unittest.TestCase):
 
   def tearDown(self):
     tablet.Tablet.check_vttablet_count()
-    for t in [master_tablet, replica_tablet]:
+    for t in [main_tablet, replica_tablet]:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False)
+      t.set_semi_sync_enabled(main=False)
       t.clean_dbs()
 
   def test_mysqlctl_restart(self):
     utils.pause('mysqld initialized')
-    utils.wait_procs([master_tablet.shutdown_mysql()])
-    utils.wait_procs([master_tablet.start_mysql()])
+    utils.wait_procs([main_tablet.shutdown_mysql()])
+    utils.wait_procs([main_tablet.start_mysql()])
 
   def test_auto_detect(self):
     # start up tablets with an empty MYSQL_FLAVOR, which means auto-detect
-    master_tablet.start_vttablet(wait_for_state=None,
+    main_tablet.start_vttablet(wait_for_state=None,
                                  extra_env={'MYSQL_FLAVOR': ''})
     replica_tablet.start_vttablet(wait_for_state=None,
                                   extra_env={'MYSQL_FLAVOR': ''})
-    master_tablet.wait_for_vttablet_state('NOT_SERVING')
+    main_tablet.wait_for_vttablet_state('NOT_SERVING')
     replica_tablet.wait_for_vttablet_state('NOT_SERVING')
 
     # reparent tablets, which requires flavor detection
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     master_tablet.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     main_tablet.tablet_alias], auto_log=True)
 
-    master_tablet.kill_vttablet()
+    main_tablet.kill_vttablet()
     replica_tablet.kill_vttablet()
 
 

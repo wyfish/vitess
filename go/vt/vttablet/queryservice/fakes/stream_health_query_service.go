@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	// DefaultSecondsBehindMaster is the default MySQL replication lag which is
+	// DefaultSecondsBehindMain is the default MySQL replication lag which is
 	// reported in all faked stream health responses.
-	DefaultSecondsBehindMaster uint32 = 1
+	DefaultSecondsBehindMain uint32 = 1
 )
 
 // StreamHealthQueryService is a QueryService implementation which allows to
@@ -82,7 +82,7 @@ func (q *StreamHealthQueryService) AddDefaultHealthResponse() {
 		Target:  proto.Clone(&q.target).(*querypb.Target),
 		Serving: true,
 		RealtimeStats: &querypb.RealtimeStats{
-			SecondsBehindMaster: DefaultSecondsBehindMaster,
+			SecondsBehindMain: DefaultSecondsBehindMain,
 		},
 	}
 }
@@ -95,19 +95,19 @@ func (q *StreamHealthQueryService) AddHealthResponseWithQPS(qps float64) {
 		Serving: true,
 		RealtimeStats: &querypb.RealtimeStats{
 			Qps:                 qps,
-			SecondsBehindMaster: DefaultSecondsBehindMaster,
+			SecondsBehindMain: DefaultSecondsBehindMain,
 		},
 	}
 }
 
-// AddHealthResponseWithSecondsBehindMaster adds a faked health response to the
-// buffer channel. Only "seconds_behind_master" is different in this message.
-func (q *StreamHealthQueryService) AddHealthResponseWithSecondsBehindMaster(replicationLag uint32) {
+// AddHealthResponseWithSecondsBehindMain adds a faked health response to the
+// buffer channel. Only "seconds_behind_main" is different in this message.
+func (q *StreamHealthQueryService) AddHealthResponseWithSecondsBehindMain(replicationLag uint32) {
 	q.healthResponses <- &querypb.StreamHealthResponse{
 		Target:  proto.Clone(&q.target).(*querypb.Target),
 		Serving: true,
 		RealtimeStats: &querypb.RealtimeStats{
-			SecondsBehindMaster: replicationLag,
+			SecondsBehindMain: replicationLag,
 		},
 	}
 }
@@ -119,7 +119,7 @@ func (q *StreamHealthQueryService) AddHealthResponseWithNotServing() {
 		Target:  proto.Clone(&q.target).(*querypb.Target),
 		Serving: false,
 		RealtimeStats: &querypb.RealtimeStats{
-			SecondsBehindMaster: DefaultSecondsBehindMaster,
+			SecondsBehindMain: DefaultSecondsBehindMain,
 		},
 	}
 }

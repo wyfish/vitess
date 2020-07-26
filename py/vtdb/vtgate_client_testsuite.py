@@ -40,45 +40,45 @@ class TestPythonClientBase(object):
   KEYSPACE_ID_0X80 = struct.Struct('!Q').pack(0x80 << 56)
 
   def _open_v3_cursor(self):
-    return self.conn.cursor(keyspace=None, tablet_type='master')
+    return self.conn.cursor(keyspace=None, tablet_type='main')
 
   def _open_shards_cursor(self):
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace', shards=['-80'])
+        tablet_type='main', keyspace='keyspace', shards=['-80'])
 
   def _open_keyspace_ids_cursor(self):
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace',
+        tablet_type='main', keyspace='keyspace',
         keyspace_ids=[self.KEYSPACE_ID_0X80])
 
   def _open_keyranges_cursor(self):
     kr = keyrange.KeyRange(keyrange_constants.NON_PARTIAL_KEYRANGE)
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace', keyranges=[kr])
+        tablet_type='main', keyspace='keyspace', keyranges=[kr])
 
   def _open_batch_cursor(self):
-    return self.conn.cursor(tablet_type='master', keyspace=None)
+    return self.conn.cursor(tablet_type='main', keyspace=None)
 
   def _open_stream_v3_cursor(self):
     return self.conn.cursor(
-        tablet_type='master', keyspace=None,
+        tablet_type='main', keyspace=None,
         cursorclass=vtgate_cursor.StreamVTGateCursor)
 
   def _open_stream_shards_cursor(self):
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace', shards=['-80'],
+        tablet_type='main', keyspace='keyspace', shards=['-80'],
         cursorclass=vtgate_cursor.StreamVTGateCursor)
 
   def _open_stream_keyspace_ids_cursor(self):
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace',
+        tablet_type='main', keyspace='keyspace',
         keyspace_ids=[self.KEYSPACE_ID_0X80],
         cursorclass=vtgate_cursor.StreamVTGateCursor)
 
   def _open_stream_keyranges_cursor(self):
     kr = keyrange.KeyRange(keyrange_constants.NON_PARTIAL_KEYRANGE)
     return self.conn.cursor(
-        tablet_type='master', keyspace='keyspace', keyranges=[kr],
+        tablet_type='main', keyspace='keyspace', keyranges=[kr],
         cursorclass=vtgate_cursor.StreamVTGateCursor)
 
 
@@ -118,7 +118,7 @@ class TestErrors(TestPythonClientBase):
     cursor.close()
 
     # ExecuteEntityIds test
-    cursor = self.conn.cursor(tablet_type='master', keyspace='keyspace')
+    cursor = self.conn.cursor(tablet_type='main', keyspace='keyspace')
     with self.assertRaises(exception):
       cursor.execute(
           query, {},
@@ -271,7 +271,7 @@ class TestSuccess(TestPythonClientBase):
     self.assertEquals(big.name, 'big')
     self.assertEquals(big.sharding_col_name, 'sharding_column_name')
     self.assertEquals(big.sharding_col_type, keyrange_constants.KIT_UINT64)
-    self.assertEquals(big.served_from, {'master': 'other_keyspace'})
+    self.assertEquals(big.served_from, {'main': 'other_keyspace'})
     self.assertEquals(big.get_shards('replica'),
                       [{'Name': 'shard0',
                         'KeyRange': {
@@ -365,7 +365,7 @@ class TestCallerId(TestPythonClientBase):
           entity_column_name='user_id')
 
     check_good_and_bad_effective_caller_ids(
-        self.conn.cursor(tablet_type='master', keyspace='keyspace'),
+        self.conn.cursor(tablet_type='main', keyspace='keyspace'),
         cursor_execute_entity_ids_method)
 
     # test ExecuteBatchKeyspaceIds

@@ -486,7 +486,7 @@ def apply_vschema(vschema):
 
 
 def wait_for_tablet_type(tablet_alias, expected_type, timeout=10):
-  """Waits for a given tablet's SlaveType to become the expected value.
+  """Waits for a given tablet's SubordinateType to become the expected value.
 
   Args:
     tablet_alias: Alias of the tablet.
@@ -494,7 +494,7 @@ def wait_for_tablet_type(tablet_alias, expected_type, timeout=10):
     timeout: Timeout in seconds.
 
   Raises:
-    TestError: SlaveType did not become expected_type within timeout seconds.
+    TestError: SubordinateType did not become expected_type within timeout seconds.
   """
   type_as_int = topodata_pb2.TabletType.Value(expected_type.upper())
   while True:
@@ -503,7 +503,7 @@ def wait_for_tablet_type(tablet_alias, expected_type, timeout=10):
                     tablet_alias, expected_type)
       break
     timeout = wait_step(
-        "%s's SlaveType to be %s" % (tablet_alias, expected_type),
+        "%s's SubordinateType to be %s" % (tablet_alias, expected_type),
         timeout)
 
 
@@ -518,9 +518,9 @@ def wait_for_replication_pos(tablet_a, tablet_b, timeout=60.0):
   Raises:
     TestError: replication position did not catch up within timeout seconds.
   """
-  replication_pos_a = mysql_flavor().master_position(tablet_a)
+  replication_pos_a = mysql_flavor().main_position(tablet_a)
   while True:
-    replication_pos_b = mysql_flavor().master_position(tablet_b)
+    replication_pos_b = mysql_flavor().main_position(tablet_b)
     if mysql_flavor().position_at_least(replication_pos_b, replication_pos_a):
       break
     timeout = wait_step(
@@ -664,7 +664,7 @@ class VtGate(object):
 
     Example:
       with self.vtgate.create_connection() as conn:
-        c = conn.cursor(keyspace=KEYSPACE, shards=[SHARD], tablet_type='master',
+        c = conn.cursor(keyspace=KEYSPACE, shards=[SHARD], tablet_type='main',
                         writable=self.writable)
         c.execute('SELECT * FROM buffer WHERE id = :id', {'id': 1})
     """
@@ -688,7 +688,7 @@ class VtGate(object):
 
     Example:
       with utils.vtgate.write_transaction(keyspace=KEYSPACE, shards=[SHARD],
-                                          tablet_type='master') as tx:
+                                          tablet_type='main') as tx:
         tx.execute('INSERT INTO table1 (id, msg) VALUES (:id, :msg)',
                    {'id': 1, 'msg': 'msg1'})
     """
@@ -698,7 +698,7 @@ class VtGate(object):
       yield cursor
       cursor.commit()
 
-  def vtclient(self, sql, keyspace=None, tablet_type='master',
+  def vtclient(self, sql, keyspace=None, tablet_type='main',
                bindvars=None, streaming=False,
                verbose=False, raise_on_error=True, json_output=False):
     """Uses the vtclient binary to send a query to vtgate."""
@@ -725,7 +725,7 @@ class VtGate(object):
       return json.loads(out), err
     return out, err
 
-  def execute(self, sql, tablet_type='master', bindvars=None,
+  def execute(self, sql, tablet_type='main', bindvars=None,
               execute_options=None):
     """Uses 'vtctl VtGateExecute' to execute a command.
 
@@ -749,7 +749,7 @@ class VtGate(object):
     args.append(sql)
     return run_vtctl_json(args)
 
-  def execute_shards(self, sql, keyspace, shards, tablet_type='master',
+  def execute_shards(self, sql, keyspace, shards, tablet_type='main',
                      bindvars=None):
     """Uses 'vtctl VtGateExecuteShards' to execute a command."""
     _, addr = self.rpc_endpoint()

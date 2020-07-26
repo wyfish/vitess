@@ -74,10 +74,10 @@ type splitCloneTestCase struct {
 	sourceRdonlyQs []*testQueryService
 
 	// Destination tablets.
-	leftMasterFakeDb  *fakesqldb.DB
-	leftMasterQs      *testQueryService
-	rightMasterFakeDb *fakesqldb.DB
-	rightMasterQs     *testQueryService
+	leftMainFakeDb  *fakesqldb.DB
+	leftMainQs      *testQueryService
+	rightMainFakeDb *fakesqldb.DB
+	rightMainQs     *testQueryService
 
 	// leftReplica is used by the reparent test.
 	leftReplica       *testlib.FakeTablet
@@ -149,19 +149,19 @@ func (tc *splitCloneTestCase) setUpWithConcurrency(v3 bool, concurrency, writeQu
 
 	// Create the fake databases.
 	sourceRdonlyFakeDB := sourceRdonlyFakeDB(tc.t, "vt_ks", "table1", splitCloneTestMin, splitCloneTestMax)
-	tc.leftMasterFakeDb = fakesqldb.New(tc.t).SetName("leftMaster").OrderMatters()
+	tc.leftMainFakeDb = fakesqldb.New(tc.t).SetName("leftMain").OrderMatters()
 	tc.leftReplicaFakeDb = fakesqldb.New(tc.t).SetName("leftReplica").OrderMatters()
-	tc.rightMasterFakeDb = fakesqldb.New(tc.t).SetName("rightMaster").OrderMatters()
+	tc.rightMainFakeDb = fakesqldb.New(tc.t).SetName("rightMain").OrderMatters()
 
-	sourceMaster := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 0,
+	sourceMain := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 0,
 		topodatapb.TabletType_MASTER, nil, testlib.TabletKeyspaceShard(tc.t, "ks", "-80"))
 	sourceRdonly1 := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 1,
 		topodatapb.TabletType_RDONLY, sourceRdonlyFakeDB, testlib.TabletKeyspaceShard(tc.t, "ks", "-80"))
 	sourceRdonly2 := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 2,
 		topodatapb.TabletType_RDONLY, sourceRdonlyFakeDB, testlib.TabletKeyspaceShard(tc.t, "ks", "-80"))
 
-	leftMaster := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 10,
-		topodatapb.TabletType_MASTER, tc.leftMasterFakeDb, testlib.TabletKeyspaceShard(tc.t, "ks", "-40"))
+	leftMain := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 10,
+		topodatapb.TabletType_MASTER, tc.leftMainFakeDb, testlib.TabletKeyspaceShard(tc.t, "ks", "-40"))
 	// leftReplica is used by the reparent test.
 	leftReplica := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 11,
 		topodatapb.TabletType_REPLICA, tc.leftReplicaFakeDb, testlib.TabletKeyspaceShard(tc.t, "ks", "-40"))
@@ -171,15 +171,15 @@ func (tc *splitCloneTestCase) setUpWithConcurrency(v3 bool, concurrency, writeQu
 	leftRdonly2 := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 13,
 		topodatapb.TabletType_RDONLY, nil, testlib.TabletKeyspaceShard(tc.t, "ks", "-40"))
 
-	rightMaster := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 20,
-		topodatapb.TabletType_MASTER, tc.rightMasterFakeDb, testlib.TabletKeyspaceShard(tc.t, "ks", "40-80"))
+	rightMain := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 20,
+		topodatapb.TabletType_MASTER, tc.rightMainFakeDb, testlib.TabletKeyspaceShard(tc.t, "ks", "40-80"))
 	rightRdonly1 := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 22,
 		topodatapb.TabletType_RDONLY, nil, testlib.TabletKeyspaceShard(tc.t, "ks", "40-80"))
 	rightRdonly2 := testlib.NewFakeTablet(tc.t, tc.wi.wr, "cell1", 23,
 		topodatapb.TabletType_RDONLY, nil, testlib.TabletKeyspaceShard(tc.t, "ks", "40-80"))
 
-	tc.tablets = []*testlib.FakeTablet{sourceMaster, sourceRdonly1, sourceRdonly2,
-		leftMaster, tc.leftReplica, leftRdonly1, leftRdonly2, rightMaster, rightRdonly1, rightRdonly2}
+	tc.tablets = []*testlib.FakeTablet{sourceMain, sourceRdonly1, sourceRdonly2,
+		leftMain, tc.leftReplica, leftRdonly1, leftRdonly2, rightMain, rightRdonly1, rightRdonly2}
 
 	// add the topo and schema data we'll need
 	if err := tc.ts.CreateShard(ctx, "ks", "80-"); err != nil {
@@ -211,7 +211,7 @@ func (tc *splitCloneTestCase) setUpWithConcurrency(v3 bool, concurrency, writeQu
 				},
 			},
 		}
-		sourceRdonly.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+		sourceRdonly.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 			GTIDSet: mysql.MariadbGTIDSet{mysql.MariadbGTID{Domain: 12, Server: 34, Sequence: 5678}},
 		}
 		sourceRdonly.FakeMysqlDaemon.ExpectedExecuteSuperQueryList = []string{
@@ -247,22 +247,22 @@ func (tc *splitCloneTestCase) setUpWithConcurrency(v3 bool, concurrency, writeQu
 	insertsPerThread := math.Ceil(float64(rowsPerThread) / float64(writeQueryMaxRows))
 	insertsTotal := int(insertsPerThread) * concurrency
 	for i := 1; i <= insertsTotal; i++ {
-		tc.leftMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
+		tc.leftMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
 		// leftReplica is unused by default.
-		tc.rightMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
+		tc.rightMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
 	}
 
-	// Fake stream health responses because vtworker needs them to find the master.
-	shqs := fakes.NewStreamHealthQueryService(leftMaster.Target())
+	// Fake stream health responses because vtworker needs them to find the main.
+	shqs := fakes.NewStreamHealthQueryService(leftMain.Target())
 	shqs.AddDefaultHealthResponse()
-	tc.leftMasterQs = newTestQueryService(tc.t, leftMaster.Target(), shqs, 0, 2, topoproto.TabletAliasString(leftMaster.Tablet.Alias), false /* omitKeyspaceID */)
+	tc.leftMainQs = newTestQueryService(tc.t, leftMain.Target(), shqs, 0, 2, topoproto.TabletAliasString(leftMain.Tablet.Alias), false /* omitKeyspaceID */)
 	tc.leftReplicaQs = fakes.NewStreamHealthQueryService(leftReplica.Target())
-	shqs = fakes.NewStreamHealthQueryService(rightMaster.Target())
+	shqs = fakes.NewStreamHealthQueryService(rightMain.Target())
 	shqs.AddDefaultHealthResponse()
-	tc.rightMasterQs = newTestQueryService(tc.t, rightMaster.Target(), shqs, 1, 2, topoproto.TabletAliasString(rightMaster.Tablet.Alias), false /* omitKeyspaceID */)
-	grpcqueryservice.Register(leftMaster.RPCServer, tc.leftMasterQs)
+	tc.rightMainQs = newTestQueryService(tc.t, rightMain.Target(), shqs, 1, 2, topoproto.TabletAliasString(rightMain.Tablet.Alias), false /* omitKeyspaceID */)
+	grpcqueryservice.Register(leftMain.RPCServer, tc.leftMainQs)
 	grpcqueryservice.Register(leftReplica.RPCServer, tc.leftReplicaQs)
-	grpcqueryservice.Register(rightMaster.RPCServer, tc.rightMasterQs)
+	grpcqueryservice.Register(rightMain.RPCServer, tc.rightMainQs)
 
 	tc.defaultWorkerArgs = []string{
 		"SplitClone",
@@ -296,9 +296,9 @@ func (tc *splitCloneTestCase) tearDown() {
 		ft.RPCServer = nil
 		ft.FakeMysqlDaemon = nil
 	}
-	tc.leftMasterFakeDb.VerifyAllExecutedOrFail()
+	tc.leftMainFakeDb.VerifyAllExecutedOrFail()
 	tc.leftReplicaFakeDb.VerifyAllExecutedOrFail()
-	tc.rightMasterFakeDb.VerifyAllExecutedOrFail()
+	tc.rightMainFakeDb.VerifyAllExecutedOrFail()
 }
 
 // testQueryService is a local QueryService implementation to support the tests.
@@ -569,7 +569,7 @@ func TestSplitCloneV2_Offline_RestartStreamingQuery(t *testing.T) {
 	// to verify that the restart actually happened for that tablet.
 	// SplitClone will ignore the second tablet because we set its replication lag
 	// to 1h.
-	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMaster(3600)
+	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMain(3600)
 
 	// TODO(mberlin): Change this test to use a multi-column primary key because
 	// the restart generates a WHERE clause which includes all primary key
@@ -607,7 +607,7 @@ func TestSplitCloneV2_Offline_FailOverStreamingQuery_NotAllowed(t *testing.T) {
 	*executeFetchRetryTime = 1 * time.Millisecond
 
 	// Ensure that this test uses only the first tablet.
-	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMaster(3600)
+	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMain(3600)
 
 	// We fail when returning the last row to ensure that vtworker is forced to
 	// give up after the one allowed restart.
@@ -615,8 +615,8 @@ func TestSplitCloneV2_Offline_FailOverStreamingQuery_NotAllowed(t *testing.T) {
 
 	// vtworker fails due to the read error and may write less than all but the
 	// last errored error. We cannot reliably expect any number of written rows.
-	defer tc.leftMasterFakeDb.DeleteAllEntries()
-	defer tc.rightMasterFakeDb.DeleteAllEntries()
+	defer tc.leftMainFakeDb.DeleteAllEntries()
+	defer tc.rightMainFakeDb.DeleteAllEntries()
 
 	// Run the vtworker command.
 	args := []string{"SplitClone", "--min_healthy_rdonly_tablets", "1"}
@@ -644,19 +644,19 @@ func TestSplitCloneV2_Online_FailOverStreamingQuery(t *testing.T) {
 	defer tc.tearDown()
 
 	// In the online phase we won't enable filtered replication. Don't expect it.
-	tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(4)
-	tc.rightMasterFakeDb.DeleteAllEntriesAfterIndex(4)
+	tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(4)
+	tc.rightMainFakeDb.DeleteAllEntriesAfterIndex(4)
 
 	// Ensure that this test uses only the first tablet initially.
-	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMaster(3600)
+	tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMain(3600)
 
 	// Let the first tablet fail at the last row.
 	tc.sourceRdonlyQs[0].errorStreamAtRow(199, 12345667890 /* infinite */)
 	tc.sourceRdonlyQs[0].setErrorCallback(func() {
 		// Make the first tablet unhealthy and the second one healthy again.
 		// vtworker should failover from the first to the second tablet then.
-		tc.sourceRdonlyQs[0].AddHealthResponseWithSecondsBehindMaster(3600)
-		tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMaster(1)
+		tc.sourceRdonlyQs[0].AddHealthResponseWithSecondsBehindMain(3600)
+		tc.sourceRdonlyQs[1].AddHealthResponseWithSecondsBehindMain(1)
 	})
 
 	// Only wait 1 ns between retries, so that the test passes faster.
@@ -699,10 +699,10 @@ func TestSplitCloneV2_Online_TabletsUnavailableDuringRestart(t *testing.T) {
 	defer tc.tearDown()
 
 	// In the online phase we won't enable filtered replication. Don't expect it.
-	tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(4)
-	tc.rightMasterFakeDb.DeleteAllEntriesAfterIndex(4)
+	tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(4)
+	tc.rightMainFakeDb.DeleteAllEntriesAfterIndex(4)
 	// The last row will never make it. Don't expect it.
-	tc.rightMasterFakeDb.DeleteAllEntriesAfterIndex(3)
+	tc.rightMainFakeDb.DeleteAllEntriesAfterIndex(3)
 
 	// Ensure that this test uses only the first tablet initially.
 	tc.sourceRdonlyQs[1].AddHealthResponseWithNotServing()
@@ -747,8 +747,8 @@ func TestSplitCloneV2_Online(t *testing.T) {
 	defer tc.tearDown()
 
 	// In the online phase we won't enable filtered replication. Don't expect it.
-	tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(29)
-	tc.rightMasterFakeDb.DeleteAllEntriesAfterIndex(29)
+	tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(29)
+	tc.rightMainFakeDb.DeleteAllEntriesAfterIndex(29)
 
 	// Run the vtworker command.
 	args := make([]string, len(tc.defaultWorkerArgs))
@@ -773,11 +773,11 @@ func TestSplitCloneV2_Online_Offline(t *testing.T) {
 
 	// When the online clone inserted the last rows, modify the destination test
 	// query service such that it will return them as well.
-	tc.leftMasterFakeDb.GetEntry(29).AfterFunc = func() {
-		tc.leftMasterQs.addGeneratedRows(100, 200)
+	tc.leftMainFakeDb.GetEntry(29).AfterFunc = func() {
+		tc.leftMainQs.addGeneratedRows(100, 200)
 	}
-	tc.rightMasterFakeDb.GetEntry(29).AfterFunc = func() {
-		tc.rightMasterQs.addGeneratedRows(100, 200)
+	tc.rightMainFakeDb.GetEntry(29).AfterFunc = func() {
+		tc.rightMainQs.addGeneratedRows(100, 200)
 	}
 
 	// Run the vtworker command.
@@ -801,7 +801,7 @@ func TestSplitCloneV2_Online_Offline(t *testing.T) {
 func TestSplitCloneV2_Offline_Reconciliation(t *testing.T) {
 	tc := &splitCloneTestCase{t: t}
 	// We reduce the parallelism to 1 to test the order of expected
-	// insert/update/delete statements on the destination master.
+	// insert/update/delete statements on the destination main.
 	tc.setUpWithConcurrency(false /* v3 */, 1, 10, splitCloneTestRowsCount)
 	defer tc.tearDown()
 
@@ -822,28 +822,28 @@ func TestSplitCloneV2_Offline_Reconciliation(t *testing.T) {
 
 	// The destination has rows 100-190 with the source in common.
 	// Rows 191-200 are extraneous on the destination.
-	tc.leftMasterQs.addGeneratedRows(100, 200)
-	tc.rightMasterQs.addGeneratedRows(100, 200)
+	tc.leftMainQs.addGeneratedRows(100, 200)
+	tc.rightMainQs.addGeneratedRows(100, 200)
 	// But some data is outdated data and must be updated.
-	tc.leftMasterQs.modifyFirstRows(2)
-	tc.rightMasterQs.modifyFirstRows(2)
+	tc.leftMainQs.modifyFirstRows(2)
+	tc.rightMainQs.modifyFirstRows(2)
 
 	// The destination tablets should see inserts, updates and deletes.
 	// Clear the entries added by setUp() because the reconciliation will
 	// produce different statements in this test case.
-	tc.leftMasterFakeDb.DeleteAllEntries()
-	tc.rightMasterFakeDb.DeleteAllEntries()
+	tc.leftMainFakeDb.DeleteAllEntries()
+	tc.rightMainFakeDb.DeleteAllEntries()
 	// Update statements. (One query will update one row.)
-	tc.leftMasterFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 100',`keyspace_id`=2305843009213693952 WHERE `id`=100", nil)
-	tc.leftMasterFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 102',`keyspace_id`=2305843009213693952 WHERE `id`=102", nil)
-	tc.rightMasterFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 101',`keyspace_id`=6917529027641081856 WHERE `id`=101", nil)
-	tc.rightMasterFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 103',`keyspace_id`=6917529027641081856 WHERE `id`=103", nil)
+	tc.leftMainFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 100',`keyspace_id`=2305843009213693952 WHERE `id`=100", nil)
+	tc.leftMainFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 102',`keyspace_id`=2305843009213693952 WHERE `id`=102", nil)
+	tc.rightMainFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 101',`keyspace_id`=6917529027641081856 WHERE `id`=101", nil)
+	tc.rightMainFakeDb.AddExpectedQuery("UPDATE `vt_ks`.`table1` SET `msg`='Text for 103',`keyspace_id`=6917529027641081856 WHERE `id`=103", nil)
 	// Insert statements. (All are combined in one.)
-	tc.leftMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (96,'Text for 96',2305843009213693952),(98,'Text for 98',2305843009213693952)", nil)
-	tc.rightMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (97,'Text for 97',6917529027641081856),(99,'Text for 99',6917529027641081856)", nil)
+	tc.leftMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (96,'Text for 96',2305843009213693952),(98,'Text for 98',2305843009213693952)", nil)
+	tc.rightMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (97,'Text for 97',6917529027641081856),(99,'Text for 99',6917529027641081856)", nil)
 	// Delete statements. (All are combined in one.)
-	tc.leftMasterFakeDb.AddExpectedQuery("DELETE FROM `vt_ks`.`table1` WHERE (`id`=190) OR (`id`=192) OR (`id`=194) OR (`id`=196) OR (`id`=198)", nil)
-	tc.rightMasterFakeDb.AddExpectedQuery("DELETE FROM `vt_ks`.`table1` WHERE (`id`=191) OR (`id`=193) OR (`id`=195) OR (`id`=197) OR (`id`=199)", nil)
+	tc.leftMainFakeDb.AddExpectedQuery("DELETE FROM `vt_ks`.`table1` WHERE (`id`=190) OR (`id`=192) OR (`id`=194) OR (`id`=196) OR (`id`=198)", nil)
+	tc.rightMainFakeDb.AddExpectedQuery("DELETE FROM `vt_ks`.`table1` WHERE (`id`=191) OR (`id`=193) OR (`id`=195) OR (`id`=197) OR (`id`=199)", nil)
 
 	// Run the vtworker command.
 	if err := runCommand(t, tc.wi, tc.wi.wr, tc.defaultWorkerArgs); err != nil {
@@ -897,7 +897,7 @@ func TestSplitCloneV2_Throttled(t *testing.T) {
 }
 
 // TestSplitCloneV2_RetryDueToReadonly is identical to the regular test
-// TestSplitCloneV2 with the additional twist that the destination masters
+// TestSplitCloneV2 with the additional twist that the destination mains
 // fail the first write because they are read-only and succeed after that.
 func TestSplitCloneV2_RetryDueToReadonly(t *testing.T) {
 	tc := &splitCloneTestCase{t: t}
@@ -908,8 +908,8 @@ func TestSplitCloneV2_RetryDueToReadonly(t *testing.T) {
 	*executeFetchRetryTime = 1 * time.Millisecond
 
 	// Provoke a retry to test the error handling.
-	tc.leftMasterFakeDb.AddExpectedQueryAtIndex(0, "INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
-	tc.rightMasterFakeDb.AddExpectedQueryAtIndex(0, "INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
+	tc.leftMainFakeDb.AddExpectedQueryAtIndex(0, "INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
+	tc.rightMainFakeDb.AddExpectedQueryAtIndex(0, "INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
 
 	// Run the vtworker command.
 	if err := runCommand(t, tc.wi, tc.wi.wr, tc.defaultWorkerArgs); err != nil {
@@ -941,13 +941,13 @@ func TestSplitCloneV2_RetryDueToReparent(t *testing.T) {
 	// leftReplica will take over for the last, 30th, insert and the vreplication checkpoint.
 	tc.leftReplicaFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
 
-	// Do not let leftMaster succeed the 30th write.
-	tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(28)
-	tc.leftMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
-	tc.leftMasterFakeDb.EnableInfinite()
-	// When vtworker encounters the readonly error on leftMaster, do the reparent.
-	tc.leftMasterFakeDb.GetEntry(29).AfterFunc = func() {
-		// Reparent from leftMaster to leftReplica.
+	// Do not let leftMain succeed the 30th write.
+	tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(28)
+	tc.leftMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
+	tc.leftMainFakeDb.EnableInfinite()
+	// When vtworker encounters the readonly error on leftMain, do the reparent.
+	tc.leftMainFakeDb.GetEntry(29).AfterFunc = func() {
+		// Reparent from leftMain to leftReplica.
 		// NOTE: This step is actually not necessary due to our fakes which bypass
 		//       a lot of logic. Let's keep it for correctness though.
 		ti, err := tc.ts.GetTablet(context.Background(), tc.leftReplica.Tablet.Alias)
@@ -960,17 +960,17 @@ func TestSplitCloneV2_RetryDueToReparent(t *testing.T) {
 		}
 
 		// Update targets in fake query service and send out a new health response.
-		tc.leftMasterQs.UpdateType(topodatapb.TabletType_REPLICA)
-		tc.leftMasterQs.AddDefaultHealthResponse()
+		tc.leftMainQs.UpdateType(topodatapb.TabletType_REPLICA)
+		tc.leftMainQs.AddDefaultHealthResponse()
 		tc.leftReplicaQs.UpdateType(topodatapb.TabletType_MASTER)
 		tc.leftReplicaQs.AddDefaultHealthResponse()
 
 		// After this, vtworker will retry. The following situations can occur:
 		// 1. HealthCheck picked up leftReplica as new MASTER
 		//    => retry will succeed.
-		// 2. HealthCheck picked up no changes (leftMaster remains MASTER)
-		//    => retry will hit leftMaster which keeps responding with readonly err.
-		// 3. HealthCheck picked up leftMaster as REPLICA, but leftReplica is still
+		// 2. HealthCheck picked up no changes (leftMain remains MASTER)
+		//    => retry will hit leftMain which keeps responding with readonly err.
+		// 3. HealthCheck picked up leftMain as REPLICA, but leftReplica is still
 		//    a REPLICA.
 		//    => vtworker has no MASTER to go to and will keep retrying.
 	}
@@ -986,10 +986,10 @@ func TestSplitCloneV2_RetryDueToReparent(t *testing.T) {
 	}
 }
 
-// TestSplitCloneV2_NoMasterAvailable tests that vtworker correctly retries
+// TestSplitCloneV2_NoMainAvailable tests that vtworker correctly retries
 // even in a period where no MASTER tablet is available according to the
 // HealthCheck instance.
-func TestSplitCloneV2_NoMasterAvailable(t *testing.T) {
+func TestSplitCloneV2_NoMainAvailable(t *testing.T) {
 	tc := &splitCloneTestCase{t: t}
 	tc.setUp(false /* v3 */)
 	defer tc.tearDown()
@@ -1001,24 +1001,24 @@ func TestSplitCloneV2_NoMasterAvailable(t *testing.T) {
 	tc.leftReplicaFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", nil)
 
 	// During the 29th write, let the MASTER disappear.
-	tc.leftMasterFakeDb.GetEntry(28).AfterFunc = func() {
+	tc.leftMainFakeDb.GetEntry(28).AfterFunc = func() {
 		t.Logf("setting MASTER tablet to REPLICA")
-		tc.leftMasterQs.UpdateType(topodatapb.TabletType_REPLICA)
-		tc.leftMasterQs.AddDefaultHealthResponse()
+		tc.leftMainQs.UpdateType(topodatapb.TabletType_REPLICA)
+		tc.leftMainQs.AddDefaultHealthResponse()
 	}
 
 	// If the HealthCheck didn't pick up the change yet, the 30th write would
 	// succeed. To prevent this from happening, replace it with an error.
-	tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(28)
-	tc.leftMasterFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
-	tc.leftMasterFakeDb.EnableInfinite()
-	// vtworker may not retry on leftMaster again if HealthCheck picks up the
+	tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(28)
+	tc.leftMainFakeDb.AddExpectedQuery("INSERT INTO `vt_ks`.`table1` (`id`, `msg`, `keyspace_id`) VALUES (*", errReadOnly)
+	tc.leftMainFakeDb.EnableInfinite()
+	// vtworker may not retry on leftMain again if HealthCheck picks up the
 	// change very fast. In that case, the error was never encountered.
 	// Delete it or verifyAllExecutedOrFail() will fail because it was not
 	// processed.
-	defer tc.leftMasterFakeDb.DeleteAllEntriesAfterIndex(28)
+	defer tc.leftMainFakeDb.DeleteAllEntriesAfterIndex(28)
 
-	// Wait for a retry due to NoMasterAvailable to happen, expect the 30th write
+	// Wait for a retry due to NoMainAvailable to happen, expect the 30th write
 	// on leftReplica and change leftReplica from REPLICA to MASTER.
 	//
 	// Reset the stats now. It also happens when the worker starts but that's too
@@ -1029,7 +1029,7 @@ func TestSplitCloneV2_NoMasterAvailable(t *testing.T) {
 		defer cancel()
 
 		for {
-			retries := statsRetryCounters.Counts()[retryCategoryNoMasterAvailable]
+			retries := statsRetryCounters.Counts()[retryCategoryNoMainAvailable]
 			if retries >= 1 {
 				t.Logf("retried on no MASTER %v times", retries)
 				break
@@ -1037,7 +1037,7 @@ func TestSplitCloneV2_NoMasterAvailable(t *testing.T) {
 
 			select {
 			case <-ctx.Done():
-				panic(fmt.Errorf("timed out waiting for vtworker to retry due to NoMasterAvailable: %v", ctx.Err()))
+				panic(fmt.Errorf("timed out waiting for vtworker to retry due to NoMainAvailable: %v", ctx.Err()))
 			case <-time.After(10 * time.Millisecond):
 				// Poll constantly.
 			}

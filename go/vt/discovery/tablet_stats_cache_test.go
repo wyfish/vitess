@@ -71,7 +71,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 1, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 1, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(ts1)
 
@@ -92,7 +92,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 2, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 2, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(stillHealthyTs1)
 
@@ -113,7 +113,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 35, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 35, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(notHealthyTs1)
 
@@ -135,7 +135,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 10, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 10, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(ts2)
 
@@ -184,7 +184,7 @@ func TestTabletStatsCache(t *testing.T) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// second tablet turns into a master, we receive down + up
+	// second tablet turns into a main, we receive down + up
 	ts2.Serving = true
 	ts2.Up = false
 	tsc.StatsUpdate(ts2)
@@ -199,13 +199,13 @@ func TestTabletStatsCache(t *testing.T) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// check we have a master now
+	// check we have a main now
 	a = tsc.GetTabletStats("k", "s", topodatapb.TabletType_MASTER)
 	if len(a) != 1 || !ts2.DeepEqual(&a[0]) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// reparent: old replica goes into master
+	// reparent: old replica goes into main
 	ts1.Up = false
 	tsc.StatsUpdate(ts1)
 	ts1.Up = true
@@ -213,7 +213,7 @@ func TestTabletStatsCache(t *testing.T) {
 	ts1.TabletExternallyReparentedTimestamp = 20
 	tsc.StatsUpdate(ts1)
 
-	// check we lost all replicas, and master is new one
+	// check we lost all replicas, and main is new one
 	a = tsc.GetTabletStats("k", "s", topodatapb.TabletType_REPLICA)
 	if len(a) != 0 {
 		t.Errorf("unexpected result: %v", a)
@@ -223,14 +223,14 @@ func TestTabletStatsCache(t *testing.T) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// old master sending an old ping should be ignored
+	// old main sending an old ping should be ignored
 	tsc.StatsUpdate(ts2)
 	a = tsc.GetHealthyTabletStats("k", "s", topodatapb.TabletType_MASTER)
 	if len(a) != 1 || !ts1.DeepEqual(&a[0]) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// add a third tablet as slave in diff cell, same region
+	// add a third tablet as subordinate in diff cell, same region
 	tablet3 := topo.NewTablet(12, "cell1", "host3")
 	ts3 := &TabletStats{
 		Key:     "t3",
@@ -238,7 +238,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 10, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 10, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(ts3)
 	// check it's there
@@ -251,7 +251,7 @@ func TestTabletStatsCache(t *testing.T) {
 		t.Errorf("unexpected result: %v", a)
 	}
 
-	// add a 4th slave tablet in a diff cell, diff region
+	// add a 4th subordinate tablet in a diff cell, diff region
 	tablet4 := topo.NewTablet(13, "cell2", "host4")
 	ts4 := &TabletStats{
 		Key:     "t4",
@@ -259,7 +259,7 @@ func TestTabletStatsCache(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 10, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 10, CpuUsage: 0.2},
 	}
 	tsc.StatsUpdate(ts4)
 	// check it's *NOT* there

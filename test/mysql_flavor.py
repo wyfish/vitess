@@ -23,16 +23,16 @@ import subprocess
 class MysqlFlavor(object):
   """Base class with default SQL statements."""
 
-  def demote_master_commands(self):
-    """Returns commands to stop the current master."""
+  def demote_main_commands(self):
+    """Returns commands to stop the current main."""
     return [
         "SET GLOBAL read_only = ON",
         "FLUSH TABLES WITH READ LOCK",
         "UNLOCK TABLES",
     ]
 
-  def promote_slave_commands(self):
-    """Returns commands to convert a slave to a master."""
+  def promote_subordinate_commands(self):
+    """Returns commands to convert a subordinate to a main."""
     return [
         "STOP SLAVE",
         "RESET SLAVE ALL",
@@ -47,23 +47,23 @@ class MysqlFlavor(object):
         "RESET MASTER",
     ]
 
-  def change_master_commands(self, host, port, pos):
+  def change_main_commands(self, host, port, pos):
     raise NotImplementedError()
 
-  def set_semi_sync_enabled_commands(self, master=None, slave=None):
+  def set_semi_sync_enabled_commands(self, main=None, subordinate=None):
     """Returns commands to turn semi-sync on/off."""
     cmds = []
-    if master is not None:
-      cmds.append("SET GLOBAL rpl_semi_sync_master_enabled = %d" % master)
-    if slave is not None:
-      cmds.append("SET GLOBAL rpl_semi_sync_slave_enabled = %d" % slave)
+    if main is not None:
+      cmds.append("SET GLOBAL rpl_semi_sync_main_enabled = %d" % main)
+    if subordinate is not None:
+      cmds.append("SET GLOBAL rpl_semi_sync_subordinate_enabled = %d" % subordinate)
     return cmds
 
   def extra_my_cnf(self):
     """Returns the path to an extra my_cnf file, or None."""
     return None
 
-  def master_position(self, tablet):
+  def main_position(self, tablet):
     """Returns the position from SHOW MASTER STATUS as a string."""
     raise NotImplementedError()
 
@@ -122,13 +122,13 @@ class MariaDB(MysqlFlavor):
         "STOP SLAVE",
         "RESET SLAVE ALL",
         "RESET MASTER",
-        "SET GLOBAL gtid_slave_pos = ''",
+        "SET GLOBAL gtid_subordinate_pos = ''",
     ]
 
   def extra_my_cnf(self):
-    return environment.vttop + "/config/mycnf/master_mariadb.cnf"
+    return environment.vttop + "/config/mycnf/main_mariadb.cnf"
 
-  def master_position(self, tablet):
+  def main_position(self, tablet):
     gtid = tablet.mquery("", "SELECT @@GLOBAL.gtid_binlog_pos")[0][0]
     return "MariaDB/" + gtid
 
@@ -139,12 +139,12 @@ class MariaDB(MysqlFlavor):
     # positions are MariaDB/A-B-C and we only compare C
     return int(a.split("-")[2]) >= int(b.split("-")[2])
 
-  def change_master_commands(self, host, port, pos):
+  def change_main_commands(self, host, port, pos):
     gtid = pos.split("/")[1]
     return [
-        "SET GLOBAL gtid_slave_pos = '%s'" % gtid,
+        "SET GLOBAL gtid_subordinate_pos = '%s'" % gtid,
         "CHANGE MASTER TO MASTER_HOST='%s', MASTER_PORT=%d, "
-        "MASTER_USER='vt_repl', MASTER_USE_GTID = slave_pos" %
+        "MASTER_USER='vt_repl', MASTER_USE_GTID = subordinate_pos" %
         (host, port)]
 
 
@@ -152,12 +152,12 @@ class MariaDB103(MariaDB):
   """Overrides specific to MariaDB 10.3+."""
 
   def extra_my_cnf(self):
-    return environment.vttop + "/config/mycnf/master_mariadb103.cnf"
+    return environment.vttop + "/config/mycnf/main_mariadb103.cnf"
 
 class MySQL56(MysqlFlavor):
   """Overrides specific to MySQL 5.6/5.7"""
 
-  def master_position(self, tablet):
+  def main_position(self, tablet):
     gtid = tablet.mquery("", "SELECT @@GLOBAL.gtid_executed")[0][0]
     return "MySQL56/" + gtid
 
@@ -172,9 +172,9 @@ class MySQL56(MysqlFlavor):
     ]).strip() == "true"
 
   def extra_my_cnf(self):
-    return environment.vttop + "/config/mycnf/master_mysql56.cnf"
+    return environment.vttop + "/config/mycnf/main_mysql56.cnf"
 
-  def change_master_commands(self, host, port, pos):
+  def change_main_commands(self, host, port, pos):
     gtid = pos.split("/")[1]
     return [
         "RESET MASTER",
@@ -186,7 +186,7 @@ class MySQL56(MysqlFlavor):
 class MySQL80(MySQL56):
   """Overrides specific to MySQL 8.0."""
   def extra_my_cnf(self):
-    return environment.vttop + "/config/mycnf/master_mysql80.cnf"
+    return environment.vttop + "/config/mycnf/main_mysql80.cnf"
   def change_passwords(self, password_col):
     """set real passwords for all users"""
     return '''

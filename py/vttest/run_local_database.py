@@ -199,7 +199,7 @@ if __name__ == '__main__':
   parser.add_option('--num_shards', default='2',
                     help='Comma separated shard count (one per keyspace)')
   parser.add_option('--replica_count', type='int', default=2,
-                    help='Replica tablets per shard (includes master)')
+                    help='Replica tablets per shard (includes main)')
   parser.add_option('--rdonly_count', type='int', default=1,
                     help='Rdonly tablets per shard')
   parser.add_option('--charset', default='utf8', help='MySQL charset')

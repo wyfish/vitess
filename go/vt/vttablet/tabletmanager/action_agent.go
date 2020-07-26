@@ -74,9 +74,9 @@ import (
 )
 
 const (
-	// slaveStoppedFile is the file name for the file whose existence informs
+	// subordinateStoppedFile is the file name for the file whose existence informs
 	// vttablet to NOT try to repair replication.
-	slaveStoppedFile = "do_not_replicate"
+	subordinateStoppedFile = "do_not_replicate"
 )
 
 var (
@@ -206,9 +206,9 @@ type ActionAgent struct {
 	// healthcheck errors. It should only be accessed while holding actionMutex.
 	_ignoreHealthErrorExpr *regexp.Regexp
 
-	// _slaveStopped remembers if we've been told to stop replicating.
-	// If it's nil, we'll try to check for the slaveStoppedFile.
-	_slaveStopped *bool
+	// _subordinateStopped remembers if we've been told to stop replicating.
+	// If it's nil, we'll try to check for the subordinateStoppedFile.
+	_subordinateStopped *bool
 
 	// _lockTablesConnection is used to get and release the table read locks to pause replication
 	_lockTablesConnection *dbconnpool.DBConnection
@@ -488,13 +488,13 @@ func (agent *ActionAgent) EnableUpdateStream() bool {
 	return agent._enableUpdateStream
 }
 
-func (agent *ActionAgent) slaveStopped() bool {
+func (agent *ActionAgent) subordinateStopped() bool {
 	agent.mutex.Lock()
 	defer agent.mutex.Unlock()
 
 	// If we already know the value, don't bother checking the file.
-	if agent._slaveStopped != nil {
-		return *agent._slaveStopped
+	if agent._subordinateStopped != nil {
+		return *agent._subordinateStopped
 	}
 
 	// If there's no Cnf file, don't read state.
@@ -504,17 +504,17 @@ func (agent *ActionAgent) slaveStopped() bool {
 
 	// If the marker file exists, we're stopped.
 	// Treat any read error as if the file doesn't exist.
-	_, err := os.Stat(path.Join(agent.Cnf.TabletDir(), slaveStoppedFile))
-	slaveStopped := err == nil
-	agent._slaveStopped = &slaveStopped
-	return slaveStopped
+	_, err := os.Stat(path.Join(agent.Cnf.TabletDir(), subordinateStoppedFile))
+	subordinateStopped := err == nil
+	agent._subordinateStopped = &subordinateStopped
+	return subordinateStopped
 }
 
-func (agent *ActionAgent) setSlaveStopped(slaveStopped bool) {
+func (agent *ActionAgent) setSubordinateStopped(subordinateStopped bool) {
 	agent.mutex.Lock()
 	defer agent.mutex.Unlock()
 
-	agent._slaveStopped = &slaveStopped
+	agent._subordinateStopped = &subordinateStopped
 
 	// Make a best-effort attempt to persist the value across tablet restarts.
 	// We store a marker in the filesystem so it works regardless of whether
@@ -527,8 +527,8 @@ func (agent *ActionAgent) setSlaveStopped(slaveStopped bool) {
 	if tabletDir == "" {
 		return
 	}
-	markerFile := path.Join(tabletDir, slaveStoppedFile)
-	if slaveStopped {
+	markerFile := path.Join(tabletDir, subordinateStoppedFile)
+	if subordinateStopped {
 		file, err := os.Create(markerFile)
 		if err == nil {
 			file.Close()

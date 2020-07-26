@@ -79,7 +79,7 @@ func IsRunningQueryService(tt topodatapb.TabletType) bool {
 // non-serving state through its health check. then vtgate will ctahc
 // that non-serving state, and stop sending queries.
 //
-// Masters are not subject to lameduck, as we usually want to transition
+// Mains are not subject to lameduck, as we usually want to transition
 // them as fast as possible.
 //
 // Replica and rdonly will use lameduck when going from healthy to
@@ -105,11 +105,11 @@ func IsRunningUpdateStream(tt topodatapb.TabletType) bool {
 	return false
 }
 
-// IsSlaveType returns if this type should be connected to a master db
+// IsSubordinateType returns if this type should be connected to a main db
 // and actively replicating?
 // MASTER is not obviously (only support one level replication graph)
 // BACKUP, RESTORE, DRAINED may or may not be, but we don't know for sure
-func IsSlaveType(tt topodatapb.TabletType) bool {
+func IsSubordinateType(tt topodatapb.TabletType) bool {
 	switch tt {
 	case topodatapb.TabletType_MASTER, topodatapb.TabletType_BACKUP, topodatapb.TabletType_RESTORE, topodatapb.TabletType_DRAINED:
 		return false
@@ -202,9 +202,9 @@ func (ti *TabletInfo) IsInServingGraph() bool {
 	return IsInServingGraph(ti.Type)
 }
 
-// IsSlaveType returns if this tablet's type is a slave
-func (ti *TabletInfo) IsSlaveType() bool {
-	return IsSlaveType(ti.Type)
+// IsSubordinateType returns if this tablet's type is a subordinate
+func (ti *TabletInfo) IsSubordinateType() bool {
+	return IsSubordinateType(ti.Type)
 }
 
 // NewTabletInfo returns a TabletInfo basing on tablet with the

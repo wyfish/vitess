@@ -266,12 +266,12 @@ func TestInitTablet(t *testing.T) {
 		t.Fatalf("REPLICA tablet should not have an ExternallyReparentedTimestamp set: %v", got)
 	}
 
-	// 2. Update shard's master to our alias, then try to init again.
-	// (This simulates the case where the MasterAlias in the shard record says
-	// that we are the master but the tablet record says otherwise. In that case,
+	// 2. Update shard's main to our alias, then try to init again.
+	// (This simulates the case where the MainAlias in the shard record says
+	// that we are the main but the tablet record says otherwise. In that case,
 	// we assume we are not the MASTER.)
 	_, err = agent.TopoServer.UpdateShardFields(ctx, "test_keyspace", "-c0", func(si *topo.ShardInfo) error {
-		si.MasterAlias = tabletAlias
+		si.MainAlias = tabletAlias
 		return nil
 	})
 	if err != nil {
@@ -313,7 +313,7 @@ func TestInitTablet(t *testing.T) {
 		t.Fatalf("MASTER tablet should have an ExternallyReparentedTimestamp set")
 	}
 
-	// 4. Fix the tablet record to agree that we're master.
+	// 4. Fix the tablet record to agree that we're main.
 	// Shard and tablet record are in sync now and we assume that we are actually
 	// the MASTER.
 	ti.Type = topodatapb.TabletType_MASTER

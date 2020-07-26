@@ -1180,8 +1180,8 @@ var (
 		input:  "show keys from table",
 		output: "show keys",
 	}, {
-		input:  "show master status",
-		output: "show master",
+		input:  "show main status",
+		output: "show main",
 	}, {
 		input:  "show open tables",
 		output: "show open",
@@ -1213,11 +1213,11 @@ var (
 		input:  "show relaylog events",
 		output: "show relaylog",
 	}, {
-		input:  "show slave hosts",
-		output: "show slave",
+		input:  "show subordinate hosts",
+		output: "show subordinate",
 	}, {
-		input:  "show slave status",
-		output: "show slave",
+		input:  "show subordinate status",
+		output: "show subordinate",
 	}, {
 		input:  "show status",
 		output: "show status",
@@ -1308,8 +1308,8 @@ var (
 		input:  "use duplicate",
 		output: "use `duplicate`",
 	}, {
-		input:  "use `ks:-80@master`",
-		output: "use `ks:-80@master`",
+		input:  "use `ks:-80@main`",
+		output: "use `ks:-80@main`",
 	}, {
 		input:  "describe foobar",
 		output: "otherread",

@@ -306,7 +306,7 @@ var execMap = map[string]struct {
 		execQuery: &queryExecute{
 			SQL: "begin",
 			Session: &vtgatepb.Session{
-				TargetString: "@master",
+				TargetString: "@main",
 				Autocommit:   true,
 			},
 		},
@@ -320,7 +320,7 @@ var execMap = map[string]struct {
 		},
 		result: &sqltypes.Result{},
 		session: &vtgatepb.Session{
-			TargetString: "@master",
+			TargetString: "@main",
 			Autocommit:   true,
 		},
 	},
@@ -331,7 +331,7 @@ var execMap = map[string]struct {
 		},
 		result: &sqltypes.Result{},
 		session: &vtgatepb.Session{
-			TargetString: "@master",
+			TargetString: "@main",
 		},
 	},
 }

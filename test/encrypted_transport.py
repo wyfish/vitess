@@ -64,8 +64,8 @@ import utils
 import tablet
 
 # single shard / 2 tablets
-shard_0_master = tablet.Tablet()
-shard_0_slave = tablet.Tablet()
+shard_0_main = tablet.Tablet()
+shard_0_subordinate = tablet.Tablet()
 
 cert_dir = environment.tmproot + '/certs'
 table_acl_config = environment.tmproot + '/table_acl_config.json'
@@ -160,19 +160,19 @@ def setUpModule():
 
     # setup all processes
     setup_procs = [
-        shard_0_master.init_mysql(),
-        shard_0_slave.init_mysql(),
+        shard_0_main.init_mysql(),
+        shard_0_subordinate.init_mysql(),
         ]
     utils.wait_procs(setup_procs)
 
     utils.run_vtctl(['CreateKeyspace', 'test_keyspace'])
 
-    shard_0_master.init_tablet('replica', 'test_keyspace', '0')
-    shard_0_slave.init_tablet('replica', 'test_keyspace', '0')
+    shard_0_main.init_tablet('replica', 'test_keyspace', '0')
+    shard_0_subordinate.init_tablet('replica', 'test_keyspace', '0')
 
     # create databases so vttablet can start behaving normally
-    shard_0_master.create_db('vt_test_keyspace')
-    shard_0_slave.create_db('vt_test_keyspace')
+    shard_0_main.create_db('vt_test_keyspace')
+    shard_0_subordinate.create_db('vt_test_keyspace')
 
   except:
     tearDownModule()
@@ -184,12 +184,12 @@ def tearDownModule():
   if utils.options.skip_teardown:
     return
 
-  shard_0_master.kill_vttablet()
-  shard_0_slave.kill_vttablet()
+  shard_0_main.kill_vttablet()
+  shard_0_subordinate.kill_vttablet()
 
   teardown_procs = [
-      shard_0_master.teardown_mysql(),
-      shard_0_slave.teardown_mysql(),
+      shard_0_main.teardown_mysql(),
+      shard_0_subordinate.teardown_mysql(),
       ]
   utils.wait_procs(teardown_procs, raise_on_error=False)
 
@@ -197,8 +197,8 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  shard_0_master.remove_tree()
-  shard_0_slave.remove_tree()
+  shard_0_main.remove_tree()
+  shard_0_subordinate.remove_tree()
 
 
 create_vt_insert_test = '''create table vt_insert_test (
@@ -228,12 +228,12 @@ class TestSecure(unittest.TestCase):
 """)
 
     # start the tablets
-    shard_0_master.start_vttablet(
+    shard_0_main.start_vttablet(
         wait_for_state='NOT_SERVING',
         table_acl_config=table_acl_config,
         extra_args=server_extra_args('vttablet-server-instance',
                                      'vttablet-client'))
-    shard_0_slave.start_vttablet(
+    shard_0_subordinate.start_vttablet(
         wait_for_state='NOT_SERVING',
         table_acl_config=table_acl_config,
         extra_args=server_extra_args('vttablet-server-instance',
@@ -241,12 +241,12 @@ class TestSecure(unittest.TestCase):
 
     # setup replication
     utils.run_vtctl(tmclient_extra_args('vttablet-client-1') + [
-        'InitShardMaster', '-force', 'test_keyspace/0',
-        shard_0_master.tablet_alias], auto_log=True)
+        'InitShardMain', '-force', 'test_keyspace/0',
+        shard_0_main.tablet_alias], auto_log=True)
     utils.run_vtctl(tmclient_extra_args('vttablet-client-1') + [
         'ApplySchema', '-sql', create_vt_insert_test,
         'test_keyspace'])
-    for t in [shard_0_master, shard_0_slave]:
+    for t in [shard_0_main, shard_0_subordinate]:
       utils.run_vtctl(tmclient_extra_args('vttablet-client-1') + [
           'RunHealthCheck', t.tablet_alias])
 
@@ -260,7 +260,7 @@ class TestSecure(unittest.TestCase):
     conn = vtgate_client.connect(protocol, addr, 30.0,
                                  **python_client_kwargs('vtgate-client-1',
                                                         'vtgate-server'))
-    cursor = conn.cursor(tablet_type='master', keyspace='test_keyspace',
+    cursor = conn.cursor(tablet_type='main', keyspace='test_keyspace',
                          shards=['0'])
     cursor.execute('select * from vt_insert_test', {})
     conn.close()
@@ -270,7 +270,7 @@ class TestSecure(unittest.TestCase):
                                  **python_client_kwargs('vtgate-client-2',
                                                         'vtgate-server'))
     try:
-      cursor = conn.cursor(tablet_type='master', keyspace='test_keyspace',
+      cursor = conn.cursor(tablet_type='main', keyspace='test_keyspace',
                            shards=['0'])
       cursor.execute('select * from vt_insert_test', {})
       self.fail('Execute went through')
@@ -289,7 +289,7 @@ class TestSecure(unittest.TestCase):
 
     protocol, addr = utils.vtgate.rpc_endpoint(python=True)
     conn = vtgate_client.connect(protocol, addr, 30.0)
-    cursor = conn.cursor(tablet_type='master', keyspace='test_keyspace',
+    cursor = conn.cursor(tablet_type='main', keyspace='test_keyspace',
                          shards=['0'])
 
     # not passing any immediate caller id should fail as using

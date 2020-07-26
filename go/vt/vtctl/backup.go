@@ -39,7 +39,7 @@ func init() {
 	addCommand("Shards", command{
 		"BackupShard",
 		commandBackupShard,
-		"[-allow_master=false] <keyspace/shard>",
+		"[-allow_main=false] <keyspace/shard>",
 		"Chooses a tablet and creates a backup for a shard."})
 	addCommand("Shards", command{
 		"RemoveBackup",
@@ -50,7 +50,7 @@ func init() {
 	addCommand("Tablets", command{
 		"Backup",
 		commandBackup,
-		"[-concurrency=4] [-allow_master=false] <tablet alias>",
+		"[-concurrency=4] [-allow_main=false] <tablet alias>",
 		"Stops mysqld and uses the BackupStorage service to store a new backup. This function also remembers if the tablet was replicating so that it can restore the same state after the backup completes."})
 	addCommand("Tablets", command{
 		"RestoreFromBackup",
@@ -61,7 +61,7 @@ func init() {
 
 func commandBackup(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
 	concurrency := subFlags.Int("concurrency", 4, "Specifies the number of compression/checksum jobs to run simultaneously")
-	allowMaster := subFlags.Bool("allow_master", false, "Allows backups to be taken on master. Warning!! If you are using the builtin backup engine, this will shutdown your master mysql for as long as it takes to create a backup ")
+	allowMain := subFlags.Bool("allow_main", false, "Allows backups to be taken on main. Warning!! If you are using the builtin backup engine, this will shutdown your main mysql for as long as it takes to create a backup ")
 
 	if err := subFlags.Parse(args); err != nil {
 		return err
@@ -79,12 +79,12 @@ func commandBackup(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.Fl
 		return err
 	}
 
-	return execBackup(ctx, wr, tabletInfo.Tablet, *concurrency, *allowMaster)
+	return execBackup(ctx, wr, tabletInfo.Tablet, *concurrency, *allowMain)
 }
 
 func commandBackupShard(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
 	concurrency := subFlags.Int("concurrency", 4, "Specifies the number of compression/checksum jobs to run simultaneously")
-	allowMaster := subFlags.Bool("allow_master", false, "Whether to use master tablet for backup. Warning!! If you are using the builtin backup engine, this will shutdown your master mysql for as long as it takes to create a backup ")
+	allowMain := subFlags.Bool("allow_main", false, "Whether to use main tablet for backup. Warning!! If you are using the builtin backup engine, this will shutdown your main mysql for as long as it takes to create a backup ")
 
 	if err := subFlags.Parse(args); err != nil {
 		return err
@@ -116,26 +116,26 @@ func commandBackupShard(ctx context.Context, wr *wrangler.Wrangler, subFlags *fl
 		// choose the first tablet as the baseline
 		if tabletForBackup == nil {
 			tabletForBackup = tablets[i].Tablet
-			secondsBehind = stats[i].SecondsBehindMaster
+			secondsBehind = stats[i].SecondsBehindMain
 			continue
 		}
 
 		// choose a new tablet if it is more up to date
-		if stats[i].SecondsBehindMaster < secondsBehind {
+		if stats[i].SecondsBehindMain < secondsBehind {
 			tabletForBackup = tablets[i].Tablet
-			secondsBehind = stats[i].SecondsBehindMaster
+			secondsBehind = stats[i].SecondsBehindMain
 		}
 	}
 
-	// if no other tablet is available and allowMaster is set to true
-	if tabletForBackup == nil && *allowMaster {
-	ChooseMaster:
+	// if no other tablet is available and allowMain is set to true
+	if tabletForBackup == nil && *allowMain {
+	ChooseMain:
 		for i := range tablets {
 			switch tablets[i].Type {
 			case topodatapb.TabletType_MASTER:
 				tabletForBackup = tablets[i].Tablet
 				secondsBehind = 0
-				break ChooseMaster
+				break ChooseMain
 			default:
 				continue
 			}
@@ -146,12 +146,12 @@ func commandBackupShard(ctx context.Context, wr *wrangler.Wrangler, subFlags *fl
 		return errors.New("no tablet available for backup")
 	}
 
-	return execBackup(ctx, wr, tabletForBackup, *concurrency, *allowMaster)
+	return execBackup(ctx, wr, tabletForBackup, *concurrency, *allowMain)
 }
 
 // execBackup is shared by Backup and BackupShard
-func execBackup(ctx context.Context, wr *wrangler.Wrangler, tablet *topodatapb.Tablet, concurrency int, allowMaster bool) error {
-	stream, err := wr.TabletManagerClient().Backup(ctx, tablet, concurrency, allowMaster)
+func execBackup(ctx context.Context, wr *wrangler.Wrangler, tablet *topodatapb.Tablet, concurrency int, allowMain bool) error {
+	stream, err := wr.TabletManagerClient().Backup(ctx, tablet, concurrency, allowMain)
 	if err != nil {
 		return err
 	}

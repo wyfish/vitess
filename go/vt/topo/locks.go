@@ -130,7 +130,7 @@ var locksKey locksKeyType
 //     as well as the associated horizontal resharding operations.
 //   * vertical resharding: includes changing the keyspace 'ServedFrom'
 //     field, as well as the associated vertical resharding operations.
-//   * 'vtctl SetShardIsMasterServing' emergency operations
+//   * 'vtctl SetShardIsMainServing' emergency operations
 //   * 'vtctl SetShardTabletControl' emergency operations
 //   * 'vtctl SourceShardAdd' and 'vtctl SourceShardDelete' emergency operations
 // * keyspace-wide schema changes
@@ -270,11 +270,11 @@ func (l *Lock) unlockKeyspace(ctx context.Context, ts *Server, keyspace string, 
 // UpdateShardFields, which is not locking the shard object. The
 // current list of actions that lock a shard are:
 // * all Vitess-controlled re-parenting operations:
-//   * InitShardMaster
+//   * InitShardMain
 //   * PlannedReparentShard
 //   * EmergencyReparentShard
 // * operations that we don't want to conflict with re-parenting:
-//   * DeleteTablet when it's the shard's current master
+//   * DeleteTablet when it's the shard's current main
 //
 func (ts *Server) LockShard(ctx context.Context, keyspace, shard, action string) (context.Context, func(*error), error) {
 	i, ok := ctx.Value(locksKey).(*locksInfo)

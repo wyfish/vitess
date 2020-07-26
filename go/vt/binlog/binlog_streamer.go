@@ -128,7 +128,7 @@ type tableCacheEntry struct {
 	pkIndexes []int
 }
 
-// Streamer streams binlog events from MySQL by connecting as a slave.
+// Streamer streams binlog events from MySQL by connecting as a subordinate.
 // A Streamer should only be used once. To start another stream, call
 // NewStreamer() again.
 type Streamer struct {
@@ -144,7 +144,7 @@ type Streamer struct {
 	sendTransaction  sendTransactionFunc
 	usePreviousGTIDs bool
 
-	conn *SlaveConnection
+	conn *SubordinateConnection
 }
 
 // NewStreamer creates a binlog Streamer.
@@ -181,7 +181,7 @@ func (bls *Streamer) Stream(ctx context.Context) (err error) {
 		log.Infof("stream ended @ %v, err = %v", stopPos, err)
 	}()
 
-	if bls.conn, err = NewSlaveConnection(bls.cp); err != nil {
+	if bls.conn, err = NewSubordinateConnection(bls.cp); err != nil {
 		return err
 	}
 	defer bls.conn.Close()
@@ -320,7 +320,7 @@ func (bls *Streamer) parseEvents(ctx context.Context, events <-chan mysql.Binlog
 		// tells us the size of the event header.
 		if format.IsZero() {
 			// The only thing that should come before the FORMAT_DESCRIPTION_EVENT
-			// is a fake ROTATE_EVENT, which the master sends to tell us the name
+			// is a fake ROTATE_EVENT, which the main sends to tell us the name
 			// of the current log file.
 			if ev.IsRotate() {
 				continue

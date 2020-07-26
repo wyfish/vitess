@@ -121,7 +121,7 @@ class TestMysqlctl(unittest.TestCase):
     row_id = 123
     keyspace_id = get_keyspace_id(row_id)
     cursor = conn.cursor(
-        tablet_type='master', keyspace='test_keyspace',
+        tablet_type='main', keyspace='test_keyspace',
         keyspace_ids=[pack_kid(keyspace_id)],
         writable=True)
     cursor.begin()
@@ -202,7 +202,7 @@ class TestMysqlctl(unittest.TestCase):
     row_id = 0x8100000000000000
     keyspace_id = get_keyspace_id(row_id)
     cursor = conn.cursor(
-        tablet_type='master', keyspace='test_keyspace',
+        tablet_type='main', keyspace='test_keyspace',
         keyspace_ids=[pack_kid(keyspace_id)],
         writable=True)
     cursor.begin()
@@ -249,7 +249,7 @@ class TestMysqlctl(unittest.TestCase):
          '-stderrthreshold', '0',
          'ListAllTablets', 'test',
         ], trap_output=True)
-    num_master = 0
+    num_main = 0
     num_replica = 0
     num_rdonly = 0
     num_dash_80 = 0
@@ -258,8 +258,8 @@ class TestMysqlctl(unittest.TestCase):
       parts = line.split()
       self.assertEqual(parts[1], 'test_keyspace',
                        'invalid keyspace in line: %s' % line)
-      if parts[3] == 'master':
-        num_master += 1
+      if parts[3] == 'main':
+        num_main += 1
       elif parts[3] == 'replica':
         num_replica += 1
       elif parts[3] == 'rdonly':
@@ -272,7 +272,7 @@ class TestMysqlctl(unittest.TestCase):
         num_80_dash += 1
       else:
         self.fail('invalid shard name in line: %s' % line)
-    self.assertEqual(num_master, 2)
+    self.assertEqual(num_main, 2)
     self.assertEqual(num_replica, 2)
     self.assertEqual(num_rdonly, 2)
     self.assertEqual(num_dash_80, 3)

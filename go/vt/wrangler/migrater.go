@@ -75,7 +75,7 @@ type migrater struct {
 // miTarget contains the metadata for each migration target.
 type miTarget struct {
 	si       *topo.ShardInfo
-	master   *topo.TabletInfo
+	main   *topo.TabletInfo
 	sources  map[uint32]*binlogdatapb.BinlogSource
 	position string
 }
@@ -83,7 +83,7 @@ type miTarget struct {
 // miSource contains the metadata for each migration source.
 type miSource struct {
 	si        *topo.ShardInfo
-	master    *topo.TabletInfo
+	main    *topo.TabletInfo
 	position  string
 	journaled bool
 }
@@ -210,13 +210,13 @@ func (wr *Wrangler) buildMigrater(ctx context.Context, targetKeyspace, workflow 
 			if err != nil {
 				return nil, err
 			}
-			sourceMaster, err := mi.wr.ts.GetTablet(ctx, sourcesi.MasterAlias)
+			sourceMain, err := mi.wr.ts.GetTablet(ctx, sourcesi.MainAlias)
 			if err != nil {
 				return nil, err
 			}
 			mi.sources[bls.Shard] = &miSource{
 				si:     sourcesi,
-				master: sourceMaster,
+				main: sourceMain,
 			}
 
 			if mi.tables == nil {
@@ -267,11 +267,11 @@ func (wr *Wrangler) buildMigrationTargets(ctx context.Context, targetKeyspace, w
 		if err != nil {
 			return nil, err
 		}
-		targetMaster, err := wr.ts.GetTablet(ctx, targetsi.MasterAlias)
+		targetMain, err := wr.ts.GetTablet(ctx, targetsi.MainAlias)
 		if err != nil {
 			return nil, err
 		}
-		p3qr, err := wr.tmc.VReplicationExec(ctx, targetMaster.Tablet, fmt.Sprintf("select id, source from _vt.vreplication where workflow='%s' and db_name='%s'", workflow, targetMaster.DbName()))
+		p3qr, err := wr.tmc.VReplicationExec(ctx, targetMain.Tablet, fmt.Sprintf("select id, source from _vt.vreplication where workflow='%s' and db_name='%s'", workflow, targetMain.DbName()))
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +282,7 @@ func (wr *Wrangler) buildMigrationTargets(ctx context.Context, targetKeyspace, w
 
 		targets[targetShard] = &miTarget{
 			si:      targetsi,
-			master:  targetMaster,
+			main:  targetMain,
 			sources: make(map[uint32]*binlogdatapb.BinlogSource),
 		}
 		qr := sqltypes.Proto3ToResult(p3qr)
@@ -462,7 +462,7 @@ func (mi *migrater) checkJournals(ctx context.Context) (journalsExist bool, err 
 	var exist sync2.AtomicBool
 	err = mi.forAllSources(func(source *miSource) error {
 		statement := fmt.Sprintf("select 1 from _vt.resharding_journal where id=%v", mi.id)
-		p3qr, err := mi.wr.tmc.VReplicationExec(ctx, source.master.Tablet, statement)
+		p3qr, err := mi.wr.tmc.VReplicationExec(ctx, source.main.Tablet, statement)
 		if err != nil {
 			return err
 		}
@@ -487,7 +487,7 @@ func (mi *migrater) stopSourceWrites(ctx context.Context) error {
 	}
 	return mi.forAllSources(func(source *miSource) error {
 		var err error
-		source.position, err = mi.wr.tmc.MasterPosition(ctx, source.master.Tablet)
+		source.position, err = mi.wr.tmc.MainPosition(ctx, source.main.Tablet)
 		mi.wr.Logger().Infof("Position for source %v:%v: %v", mi.sourceKeyspace, source.si.ShardName(), source.position)
 		return err
 	})
@@ -500,7 +500,7 @@ func (mi *migrater) changeTableSourceWrites(ctx context.Context, access accessTy
 		}); err != nil {
 			return err
 		}
-		return mi.wr.tmc.RefreshState(ctx, source.master.Tablet)
+		return mi.wr.tmc.RefreshState(ctx, source.main.Tablet)
 	})
 }
 
@@ -512,10 +512,10 @@ func (mi *migrater) waitForCatchup(ctx context.Context, filteredReplicationWaitT
 	return mi.forAllUids(func(target *miTarget, uid uint32) error {
 		bls := target.sources[uid]
 		source := mi.sources[bls.Shard]
-		if err := mi.wr.tmc.VReplicationWaitForPos(ctx, target.master.Tablet, int(uid), source.position); err != nil {
+		if err := mi.wr.tmc.VReplicationWaitForPos(ctx, target.main.Tablet, int(uid), source.position); err != nil {
 			return err
 		}
-		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.master.Tablet, binlogplayer.StopVReplication(uid, "stopped for cutover")); err != nil {
+		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.main.Tablet, binlogplayer.StopVReplication(uid, "stopped for cutover")); err != nil {
 			return err
 		}
 
@@ -526,7 +526,7 @@ func (mi *migrater) waitForCatchup(ctx context.Context, filteredReplicationWaitT
 			return nil
 		}
 		var err error
-		target.position, err = mi.wr.tmc.MasterPosition(ctx, target.master.Tablet)
+		target.position, err = mi.wr.tmc.MainPosition(ctx, target.main.Tablet)
 		mi.wr.Logger().Infof("Position for uid %v: %v", uid, target.position)
 		return err
 	})
@@ -544,7 +544,7 @@ func (mi *migrater) cancelMigration(ctx context.Context) {
 	}
 
 	err = mi.forAllUids(func(target *miTarget, uid uint32) error {
-		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.master.Tablet, binlogplayer.StartVReplication(uid)); err != nil {
+		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.main.Tablet, binlogplayer.StartVReplication(uid)); err != nil {
 			return err
 		}
 		return nil
@@ -557,7 +557,7 @@ func (mi *migrater) cancelMigration(ctx context.Context) {
 func (mi *migrater) gatherPositions(ctx context.Context) error {
 	err := mi.forAllSources(func(source *miSource) error {
 		var err error
-		source.position, err = mi.wr.tmc.MasterPosition(ctx, source.master.Tablet)
+		source.position, err = mi.wr.tmc.MainPosition(ctx, source.main.Tablet)
 		mi.wr.Logger().Infof("Position for source %v:%v: %v", mi.sourceKeyspace, source.si.ShardName(), source.position)
 		return err
 	})
@@ -566,7 +566,7 @@ func (mi *migrater) gatherPositions(ctx context.Context) error {
 	}
 	return mi.forAllTargets(func(target *miTarget) error {
 		var err error
-		target.position, err = mi.wr.tmc.MasterPosition(ctx, target.master.Tablet)
+		target.position, err = mi.wr.tmc.MainPosition(ctx, target.main.Tablet)
 		mi.wr.Logger().Infof("Position for target %v:%v: %v", mi.targetKeyspace, target.si.ShardName(), target.position)
 		return err
 	})
@@ -612,8 +612,8 @@ func (mi *migrater) createJournals(ctx context.Context) error {
 		statement := fmt.Sprintf("insert into _vt.resharding_journal "+
 			"(id, db_name, val) "+
 			"values (%v, %v, %v)",
-			mi.id, encodeString(source.master.DbName()), encodeString(journal.String()))
-		if _, err := mi.wr.tmc.VReplicationExec(ctx, source.master.Tablet, statement); err != nil {
+			mi.id, encodeString(source.main.DbName()), encodeString(journal.String()))
+		if _, err := mi.wr.tmc.VReplicationExec(ctx, source.main.Tablet, statement); err != nil {
 			return err
 		}
 		return nil
@@ -663,7 +663,7 @@ func (mi *migrater) createReverseReplication(ctx context.Context) error {
 			})
 		}
 
-		_, err := mi.wr.VReplicationExec(ctx, source.master.Alias, binlogplayer.CreateVReplicationState("ReversedResharding", reverseBls, target.position, binlogplayer.BlpStopped, source.master.DbName()))
+		_, err := mi.wr.VReplicationExec(ctx, source.main.Alias, binlogplayer.CreateVReplicationState("ReversedResharding", reverseBls, target.position, binlogplayer.BlpStopped, source.main.DbName()))
 		return err
 	})
 }
@@ -682,7 +682,7 @@ func (mi *migrater) allowTableTargetWrites(ctx context.Context) error {
 		}); err != nil {
 			return err
 		}
-		return mi.wr.tmc.RefreshState(ctx, target.master.Tablet)
+		return mi.wr.tmc.RefreshState(ctx, target.main.Tablet)
 	})
 }
 
@@ -730,7 +730,7 @@ func (mi *migrater) changeTableRouting(ctx context.Context) error {
 func (mi *migrater) changeShardRouting(ctx context.Context) error {
 	err := mi.forAllSources(func(source *miSource) error {
 		_, err := mi.wr.ts.UpdateShardFields(ctx, mi.sourceKeyspace, source.si.ShardName(), func(si *topo.ShardInfo) error {
-			si.IsMasterServing = false
+			si.IsMainServing = false
 			return nil
 		})
 		return err
@@ -740,7 +740,7 @@ func (mi *migrater) changeShardRouting(ctx context.Context) error {
 	}
 	err = mi.forAllTargets(func(target *miTarget) error {
 		_, err := mi.wr.ts.UpdateShardFields(ctx, mi.targetKeyspace, target.si.ShardName(), func(si *topo.ShardInfo) error {
-			si.IsMasterServing = true
+			si.IsMainServing = true
 			return nil
 		})
 		return err
@@ -753,7 +753,7 @@ func (mi *migrater) changeShardRouting(ctx context.Context) error {
 
 func (mi *migrater) deleteTargetVReplication(ctx context.Context) {
 	_ = mi.forAllUids(func(target *miTarget, uid uint32) error {
-		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.master.Tablet, binlogplayer.DeleteVReplication(uid)); err != nil {
+		if _, err := mi.wr.tmc.VReplicationExec(ctx, target.main.Tablet, binlogplayer.DeleteVReplication(uid)); err != nil {
 			mi.wr.Logger().Errorf("Final cleanup: could not delete vreplication, please delete stopped streams manually: %v", err)
 		}
 		return nil
@@ -764,7 +764,7 @@ func (mi *migrater) changeShardsAccess(ctx context.Context, keyspace string, sha
 	if err := mi.wr.ts.UpdateDisableQueryService(ctx, mi.sourceKeyspace, shards, topodatapb.TabletType_MASTER, nil, access == disallowWrites /* disable */); err != nil {
 		return err
 	}
-	return mi.wr.refreshMasters(ctx, shards)
+	return mi.wr.refreshMains(ctx, shards)
 }
 
 func (mi *migrater) forAllSources(f func(*miSource) error) error {

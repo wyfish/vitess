@@ -177,7 +177,7 @@ func (te *TxEngine) Stop() error {
 		return te.transitionTo(NotServing)
 
 	case AcceptingReadOnly:
-		// We are not master, so it's safe to kill all read-only transactions
+		// We are not main, so it's safe to kill all read-only transactions
 		te.close(true)
 		te.state = NotServing
 		te.stateLock.Unlock()
@@ -516,7 +516,7 @@ outer:
 
 // rollbackTransactions rolls back all open transactions
 // including the prepared ones.
-// This is used for transitioning from a master to a non-master
+// This is used for transitioning from a main to a non-main
 // serving type.
 func (te *TxEngine) rollbackTransactions() {
 	ctx := tabletenv.LocalContext()

@@ -41,20 +41,20 @@ func TestPermissions(t *testing.T) {
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
 
-	master := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, nil)
+	main := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, nil)
 	replica := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, nil)
 
-	// mark the master inside the shard
-	_, err := ts.UpdateShardFields(ctx, master.Tablet.Keyspace, master.Tablet.Shard, func(si *topo.ShardInfo) error {
-		si.MasterAlias = master.Tablet.Alias
+	// mark the main inside the shard
+	_, err := ts.UpdateShardFields(ctx, main.Tablet.Keyspace, main.Tablet.Shard, func(si *topo.ShardInfo) error {
+		si.MainAlias = main.Tablet.Alias
 		return nil
 	})
 	if err != nil {
 		t.Fatalf("UpdateShardFields failed: %v", err)
 	}
 
-	// master will be asked for permissions
-	master.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
+	// main will be asked for permissions
+	main.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
 		"SELECT * FROM mysql.user ORDER BY host, user": {
 			Fields: []*querypb.Field{
 				{
@@ -146,7 +146,7 @@ func TestPermissions(t *testing.T) {
 					Type: sqltypes.Char,
 				},
 				{
-					Name: "Repl_slave_priv",
+					Name: "Repl_subordinate_priv",
 					Type: sqltypes.Char,
 				},
 				{
@@ -540,17 +540,17 @@ func TestPermissions(t *testing.T) {
 			},
 		},
 	}
-	master.StartActionLoop(t, wr)
-	defer master.StopActionLoop(t)
+	main.StartActionLoop(t, wr)
+	defer main.StopActionLoop(t)
 
 	// Make a two-level-deep copy, so we can make them diverge later.
-	user := *master.FakeMysqlDaemon.FetchSuperQueryMap["SELECT * FROM mysql.user ORDER BY host, user"]
+	user := *main.FakeMysqlDaemon.FetchSuperQueryMap["SELECT * FROM mysql.user ORDER BY host, user"]
 	user.Fields = append([]*querypb.Field{}, user.Fields...)
 
 	// replica will be asked for permissions
 	replica.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
 		"SELECT * FROM mysql.user ORDER BY host, user":   &user,
-		"SELECT * FROM mysql.db ORDER BY host, db, user": master.FakeMysqlDaemon.FetchSuperQueryMap["SELECT * FROM mysql.db ORDER BY host, db, user"],
+		"SELECT * FROM mysql.db ORDER BY host, db, user": main.FakeMysqlDaemon.FetchSuperQueryMap["SELECT * FROM mysql.db ORDER BY host, db, user"],
 	}
 	replica.StartActionLoop(t, wr)
 	defer replica.StopActionLoop(t)
@@ -562,7 +562,7 @@ func TestPermissions(t *testing.T) {
 	}
 
 	// run ValidatePermissionsKeyspace, this should work
-	if err := vp.Run([]string{"ValidatePermissionsKeyspace", master.Tablet.Keyspace}); err != nil {
+	if err := vp.Run([]string{"ValidatePermissionsKeyspace", main.Tablet.Keyspace}); err != nil {
 		t.Fatalf("ValidatePermissionsKeyspace failed: %v", err)
 	}
 
@@ -573,7 +573,7 @@ func TestPermissions(t *testing.T) {
 	}
 
 	// run ValidatePermissionsKeyspace again, this should now fail
-	if err := vp.Run([]string{"ValidatePermissionsKeyspace", master.Tablet.Keyspace}); err == nil || !strings.Contains(err.Error(), "has an extra user") {
+	if err := vp.Run([]string{"ValidatePermissionsKeyspace", main.Tablet.Keyspace}); err == nil || !strings.Contains(err.Error(), "has an extra user") {
 		t.Fatalf("ValidatePermissionsKeyspace has unexpected err: %v", err)
 	}
 

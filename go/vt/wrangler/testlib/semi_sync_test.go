@@ -28,13 +28,13 @@ func init() {
 	flag.Set("enable_semi_sync", "true")
 }
 
-func checkSemiSyncEnabled(t *testing.T, master, slave bool, tablets ...*FakeTablet) {
+func checkSemiSyncEnabled(t *testing.T, main, subordinate bool, tablets ...*FakeTablet) {
 	for _, tablet := range tablets {
-		if got, want := tablet.FakeMysqlDaemon.SemiSyncMasterEnabled, master; got != want {
-			t.Errorf("%v: SemiSyncMasterEnabled = %v, want %v", topoproto.TabletAliasString(tablet.Tablet.Alias), got, want)
+		if got, want := tablet.FakeMysqlDaemon.SemiSyncMainEnabled, main; got != want {
+			t.Errorf("%v: SemiSyncMainEnabled = %v, want %v", topoproto.TabletAliasString(tablet.Tablet.Alias), got, want)
 		}
-		if got, want := tablet.FakeMysqlDaemon.SemiSyncSlaveEnabled, slave; got != want {
-			t.Errorf("%v: SemiSyncSlaveEnabled = %v, want %v", topoproto.TabletAliasString(tablet.Tablet.Alias), got, want)
+		if got, want := tablet.FakeMysqlDaemon.SemiSyncSubordinateEnabled, subordinate; got != want {
+			t.Errorf("%v: SemiSyncSubordinateEnabled = %v, want %v", topoproto.TabletAliasString(tablet.Tablet.Alias), got, want)
 		}
 	}
 }

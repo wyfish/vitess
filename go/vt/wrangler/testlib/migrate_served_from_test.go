@@ -42,7 +42,7 @@ func TestMigrateServedFrom(t *testing.T) {
 	defer vp.Close()
 
 	// create the source keyspace tablets
-	sourceMaster := NewFakeTablet(t, wr, "cell1", 10, topodatapb.TabletType_MASTER, nil,
+	sourceMain := NewFakeTablet(t, wr, "cell1", 10, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "source", "0"))
 	sourceReplica := NewFakeTablet(t, wr, "cell1", 11, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "source", "0"))
@@ -51,7 +51,7 @@ func TestMigrateServedFrom(t *testing.T) {
 
 	// create the destination keyspace, served form source
 	// double check it has all entries in map
-	if err := vp.Run([]string{"CreateKeyspace", "-served_from", "master:source,replica:source,rdonly:source", "dest"}); err != nil {
+	if err := vp.Run([]string{"CreateKeyspace", "-served_from", "main:source,replica:source,rdonly:source", "dest"}); err != nil {
 		t.Fatalf("CreateKeyspace(dest) failed: %v", err)
 	}
 	ki, err := ts.GetKeyspace(ctx, "dest")
@@ -63,7 +63,7 @@ func TestMigrateServedFrom(t *testing.T) {
 	}
 
 	// create the destination keyspace tablets
-	destMaster := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
+	destMain := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "dest", "0"))
 	destReplica := NewFakeTablet(t, wr, "cell1", 21, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "dest", "0"))
@@ -78,9 +78,9 @@ func TestMigrateServedFrom(t *testing.T) {
 	sourceReplica.StartActionLoop(t, wr)
 	defer sourceReplica.StopActionLoop(t)
 
-	// sourceMaster will see the refresh, and has to respond to it
+	// sourceMain will see the refresh, and has to respond to it
 	// also will be asked about its replication position.
-	sourceMaster.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	sourceMain.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -89,8 +89,8 @@ func TestMigrateServedFrom(t *testing.T) {
 			},
 		},
 	}
-	sourceMaster.StartActionLoop(t, wr)
-	defer sourceMaster.StopActionLoop(t)
+	sourceMain.StartActionLoop(t, wr)
+	defer sourceMain.StopActionLoop(t)
 
 	// destRdonly will see the refresh
 	destRdonly.StartActionLoop(t, wr)
@@ -100,15 +100,15 @@ func TestMigrateServedFrom(t *testing.T) {
 	destReplica.StartActionLoop(t, wr)
 	defer destReplica.StopActionLoop(t)
 
-	destMaster.StartActionLoop(t, wr)
-	defer destMaster.StopActionLoop(t)
+	destMain.StartActionLoop(t, wr)
+	defer destMain.StopActionLoop(t)
 
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient := binlogplayer.NewMockDBClient(t)
 	dbClientFactory := func() binlogplayer.DBClient { return dbClient }
-	destMaster.Agent.VREngine = vreplication.NewEngine(ts, "", destMaster.FakeMysqlDaemon, dbClientFactory, dbClient.DBName())
+	destMain.Agent.VREngine = vreplication.NewEngine(ts, "", destMain.FakeMysqlDaemon, dbClientFactory, dbClient.DBName())
 	dbClient.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := destMaster.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := destMain.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	// select pos, state, message from _vt.vreplication
@@ -239,9 +239,9 @@ func TestMigrateServedFrom(t *testing.T) {
 		t.Fatalf("replica type doesn't have right blacklisted tables")
 	}
 
-	// migrate master over
-	if err := vp.Run([]string{"MigrateServedFrom", "dest/0", "master"}); err != nil {
-		t.Fatalf("MigrateServedFrom(master) failed: %v", err)
+	// migrate main over
+	if err := vp.Run([]string{"MigrateServedFrom", "dest/0", "main"}); err != nil {
+		t.Fatalf("MigrateServedFrom(main) failed: %v", err)
 	}
 
 	// make sure ServedFromMap is empty
@@ -272,6 +272,6 @@ func TestMigrateServedFrom(t *testing.T) {
 			BlacklistedTables: []string{"gone1", "gone2"},
 		},
 	}) {
-		t.Fatalf("master type doesn't have right blacklisted tables")
+		t.Fatalf("main type doesn't have right blacklisted tables")
 	}
 }

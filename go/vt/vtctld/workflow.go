@@ -37,7 +37,7 @@ import (
 
 var (
 	workflowManagerInit        = flag.Bool("workflow_manager_init", false, "Initialize the workflow manager in this vtctld instance.")
-	workflowManagerUseElection = flag.Bool("workflow_manager_use_election", false, "if specified, will use a topology server-based master election to ensure only one workflow manager is active at a time.")
+	workflowManagerUseElection = flag.Bool("workflow_manager_use_election", false, "if specified, will use a topology server-based main election to ensure only one workflow manager is active at a time.")
 	workflowManagerDisable     flagutil.StringListValue
 )
 
@@ -95,7 +95,7 @@ func runWorkflowManagerAlone() {
 }
 
 func runWorkflowManagerElection(ts *topo.Server) {
-	var mp topo.MasterParticipation
+	var mp topo.MainParticipation
 
 	// We use servenv.ListeningURL which is only populated during Run,
 	// so we have to start this with OnRun.
@@ -109,29 +109,29 @@ func runWorkflowManagerElection(ts *topo.Server) {
 			return
 		}
 
-		mp, err = conn.NewMasterParticipation("vtctld", servenv.ListeningURL.Host)
+		mp, err = conn.NewMainParticipation("vtctld", servenv.ListeningURL.Host)
 		if err != nil {
-			log.Errorf("Cannot start MasterParticipation, disabling workflow manager: %v", err)
+			log.Errorf("Cannot start MainParticipation, disabling workflow manager: %v", err)
 			return
 		}
 
 		// Set up a redirect host so when we are not the
-		// master, we can redirect traffic properly.
+		// main, we can redirect traffic properly.
 		vtctl.WorkflowManager.SetRedirectFunc(func() (string, error) {
 			ctx := context.Background()
-			return mp.GetCurrentMasterID(ctx)
+			return mp.GetCurrentMainID(ctx)
 		})
 
 		go func() {
 			for {
-				ctx, err := mp.WaitForMastership()
+				ctx, err := mp.WaitForMainship()
 				switch {
 				case err == nil:
 					vtctl.WorkflowManager.Run(ctx)
 				case topo.IsErrType(err, topo.Interrupted):
 					return
 				default:
-					log.Errorf("Got error while waiting for master, will retry in 5s: %v", err)
+					log.Errorf("Got error while waiting for main, will retry in 5s: %v", err)
 					time.Sleep(5 * time.Second)
 				}
 			}

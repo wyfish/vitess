@@ -181,7 +181,7 @@ func TestErrors(t *testing.T) {
 
 		{
 			SQL: "SELECT * FROM table_not_in_schema",
-			Err: "target: ks_unsharded.-.master, used tablet: explainCell-0 (ks_unsharded/-): table table_not_in_schema not found in schema",
+			Err: "target: ks_unsharded.-.main, used tablet: explainCell-0 (ks_unsharded/-): table table_not_in_schema not found in schema",
 		},
 	}
 

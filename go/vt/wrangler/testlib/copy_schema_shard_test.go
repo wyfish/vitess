@@ -56,22 +56,22 @@ func copySchema(t *testing.T, useShardAsSource bool) {
 		t.Fatalf("CreateKeyspace failed: %v", err)
 	}
 
-	sourceMasterDb := fakesqldb.New(t).SetName("sourceMasterDb")
-	defer sourceMasterDb.Close()
-	sourceMaster := NewFakeTablet(t, wr, "cell1", 0,
-		topodatapb.TabletType_MASTER, sourceMasterDb, TabletKeyspaceShard(t, "ks", "-80"))
+	sourceMainDb := fakesqldb.New(t).SetName("sourceMainDb")
+	defer sourceMainDb.Close()
+	sourceMain := NewFakeTablet(t, wr, "cell1", 0,
+		topodatapb.TabletType_MASTER, sourceMainDb, TabletKeyspaceShard(t, "ks", "-80"))
 
 	sourceRdonlyDb := fakesqldb.New(t).SetName("sourceRdonlyDb")
 	defer sourceRdonlyDb.Close()
 	sourceRdonly := NewFakeTablet(t, wr, "cell1", 1,
 		topodatapb.TabletType_RDONLY, sourceRdonlyDb, TabletKeyspaceShard(t, "ks", "-80"))
 
-	destinationMasterDb := fakesqldb.New(t).SetName("destinationMasterDb")
-	defer destinationMasterDb.Close()
-	destinationMaster := NewFakeTablet(t, wr, "cell1", 10,
-		topodatapb.TabletType_MASTER, destinationMasterDb, TabletKeyspaceShard(t, "ks", "-40"))
+	destinationMainDb := fakesqldb.New(t).SetName("destinationMainDb")
+	defer destinationMainDb.Close()
+	destinationMain := NewFakeTablet(t, wr, "cell1", 10,
+		topodatapb.TabletType_MASTER, destinationMainDb, TabletKeyspaceShard(t, "ks", "-40"))
 
-	for _, ft := range []*FakeTablet{sourceMaster, sourceRdonly, destinationMaster} {
+	for _, ft := range []*FakeTablet{sourceMain, sourceRdonly, destinationMain} {
 		ft.StartActionLoop(t, wr)
 		defer ft.StopActionLoop(t)
 	}
@@ -95,7 +95,7 @@ func copySchema(t *testing.T, useShardAsSource bool) {
 		DatabaseSchema:   "CREATE DATABASE `{{.DatabaseName}}` /*!40100 DEFAULT CHARACTER SET utf8 */",
 		TableDefinitions: []*tabletmanagerdatapb.TableDefinition{},
 	}
-	sourceMaster.FakeMysqlDaemon.Schema = schema
+	sourceMain.FakeMysqlDaemon.Schema = schema
 	sourceRdonly.FakeMysqlDaemon.Schema = schema
 
 	changeToDb := "USE vt_ks"
@@ -118,10 +118,10 @@ func copySchema(t *testing.T, useShardAsSource bool) {
 	selectShardMetadata := "SELECT db_name, name, value FROM _vt.shard_metadata"
 
 	// The source table is asked about its schema.
-	// It may be the master or the rdonly.
+	// It may be the main or the rdonly.
 	sourceDb := sourceRdonlyDb
 	if useShardAsSource {
-		sourceDb = sourceMasterDb
+		sourceDb = sourceMainDb
 	}
 	sourceDb.AddQuery(changeToDb, &sqltypes.Result{})
 	sourceDb.AddQuery(selectInformationSchema, &sqltypes.Result{
@@ -139,13 +139,13 @@ func copySchema(t *testing.T, useShardAsSource bool) {
 	sourceDb.AddQuery(selectShardMetadata, &sqltypes.Result{})
 
 	// The destination table is asked to create the new schema.
-	destinationMasterDb.AddQuery(changeToDb, &sqltypes.Result{})
-	destinationMasterDb.AddQuery(createDb, &sqltypes.Result{})
-	destinationMasterDb.AddQuery(createTable, &sqltypes.Result{})
-	destinationMasterDb.AddQuery(createTableView, &sqltypes.Result{})
+	destinationMainDb.AddQuery(changeToDb, &sqltypes.Result{})
+	destinationMainDb.AddQuery(createDb, &sqltypes.Result{})
+	destinationMainDb.AddQuery(createTable, &sqltypes.Result{})
+	destinationMainDb.AddQuery(createTableView, &sqltypes.Result{})
 
-	destinationMaster.FakeMysqlDaemon.SchemaFunc = func() (*tabletmanagerdatapb.SchemaDefinition, error) {
-		if destinationMasterDb.GetQueryCalledNum(createTableView) == 1 {
+	destinationMain.FakeMysqlDaemon.SchemaFunc = func() (*tabletmanagerdatapb.SchemaDefinition, error) {
+		if destinationMainDb.GetQueryCalledNum(createTableView) == 1 {
 			return schema, nil
 		}
 		return schemaEmptyDb, nil
@@ -170,14 +170,14 @@ func copySchema(t *testing.T, useShardAsSource bool) {
 		t.Errorf("CopySchemaShard did not select data from _vt.shard_metadata exactly once. Query count: %v", count)
 	}
 
-	// Check call count on destinationMasterDb
-	if count := destinationMasterDb.GetQueryCalledNum(createDb); count != 1 {
+	// Check call count on destinationMainDb
+	if count := destinationMainDb.GetQueryCalledNum(createDb); count != 1 {
 		t.Errorf("CopySchemaShard did not create the db exactly once. Query count: %v", count)
 	}
-	if count := destinationMasterDb.GetQueryCalledNum(createTable); count != 1 {
+	if count := destinationMainDb.GetQueryCalledNum(createTable); count != 1 {
 		t.Errorf("CopySchemaShard did not create the table exactly once. Query count: %v", count)
 	}
-	if count := destinationMasterDb.GetQueryCalledNum(createTableView); count != 1 {
+	if count := destinationMainDb.GetQueryCalledNum(createTableView); count != 1 {
 		t.Errorf("CopySchemaShard did not create the table view exactly once. Query count: %v", count)
 	}
 }

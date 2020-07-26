@@ -50,45 +50,45 @@ type replicationReporter struct {
 }
 
 // Report is part of the health.Reporter interface
-func (r *replicationReporter) Report(isSlaveType, shouldQueryServiceBeRunning bool) (time.Duration, error) {
-	if !isSlaveType {
+func (r *replicationReporter) Report(isSubordinateType, shouldQueryServiceBeRunning bool) (time.Duration, error) {
+	if !isSubordinateType {
 		return 0, nil
 	}
 
-	status, statusErr := r.agent.MysqlDaemon.SlaveStatus()
-	if statusErr == mysql.ErrNotSlave ||
-		(statusErr == nil && !status.SlaveSQLRunning && !status.SlaveIORunning) {
-		// MySQL is up, but slave is either not configured or not running.
+	status, statusErr := r.agent.MysqlDaemon.SubordinateStatus()
+	if statusErr == mysql.ErrNotSubordinate ||
+		(statusErr == nil && !status.SubordinateSQLRunning && !status.SubordinateIORunning) {
+		// MySQL is up, but subordinate is either not configured or not running.
 		// Both SQL and IO threads are stopped, so it's probably either
 		// stopped on purpose, or stopped because of a mysqld restart.
-		if !r.agent.slaveStopped() {
+		if !r.agent.subordinateStopped() {
 			// As far as we've been told, it isn't stopped on purpose,
 			// so let's try to start it.
 			if *mysqlctl.DisableActiveReparents {
-				log.Infof("Slave is stopped. Running with --disable_active_reparents so will not try to reconnect to master...")
+				log.Infof("Subordinate is stopped. Running with --disable_active_reparents so will not try to reconnect to main...")
 			} else {
-				log.Infof("Slave is stopped. Trying to reconnect to master...")
+				log.Infof("Subordinate is stopped. Trying to reconnect to main...")
 				ctx, cancel := context.WithTimeout(r.agent.batchCtx, 5*time.Second)
 				if err := repairReplication(ctx, r.agent); err != nil {
-					log.Infof("Failed to reconnect to master: %v", err)
+					log.Infof("Failed to reconnect to main: %v", err)
 				}
 				cancel()
 				// Check status again.
-				status, statusErr = r.agent.MysqlDaemon.SlaveStatus()
+				status, statusErr = r.agent.MysqlDaemon.SubordinateStatus()
 			}
 		}
 	}
 	if statusErr != nil {
-		// mysqld is not running or slave is not configured.
+		// mysqld is not running or subordinate is not configured.
 		// We can't report healthy.
 		return 0, statusErr
 	}
-	if !status.SlaveRunning() {
-		// mysqld is running, but slave is not replicating (most likely,
+	if !status.SubordinateRunning() {
+		// mysqld is running, but subordinate is not replicating (most likely,
 		// replication has been stopped). See if we can extrapolate.
 		if r.lastKnownTime.IsZero() {
 			// we can't.
-			return 0, health.ErrSlaveNotRunning
+			return 0, health.ErrSubordinateNotRunning
 		}
 
 		// we can extrapolate with the worst possible
@@ -99,7 +99,7 @@ func (r *replicationReporter) Report(isSlaveType, shouldQueryServiceBeRunning bo
 	}
 
 	// we got a real value, save it.
-	r.lastKnownValue = time.Duration(status.SecondsBehindMaster) * time.Second
+	r.lastKnownValue = time.Duration(status.SecondsBehindMain) * time.Second
 	r.lastKnownTime = r.now()
 	return r.lastKnownValue, nil
 }
@@ -109,8 +109,8 @@ func (r *replicationReporter) HTMLName() template.HTML {
 	return template.HTML("MySQLReplicationLag")
 }
 
-// repairReplication tries to connect this slave to whoever is
-// the current master of the shard, and start replicating.
+// repairReplication tries to connect this subordinate to whoever is
+// the current main of the shard, and start replicating.
 func repairReplication(ctx context.Context, agent *ActionAgent) error {
 	if *mysqlctl.DisableActiveReparents {
 		return fmt.Errorf("can't repair replication with --disable_active_reparents")
@@ -123,16 +123,16 @@ func repairReplication(ctx context.Context, agent *ActionAgent) error {
 	if err != nil {
 		return err
 	}
-	if !si.HasMaster() {
-		return fmt.Errorf("no master tablet for shard %v/%v", tablet.Keyspace, tablet.Shard)
+	if !si.HasMain() {
+		return fmt.Errorf("no main tablet for shard %v/%v", tablet.Keyspace, tablet.Shard)
 	}
 
-	if topoproto.TabletAliasEqual(si.MasterAlias, tablet.Alias) {
-		// The shard record says we are master, but we disagree; we wouldn't
-		// reach this point unless we were told to check replication as a slave
+	if topoproto.TabletAliasEqual(si.MainAlias, tablet.Alias) {
+		// The shard record says we are main, but we disagree; we wouldn't
+		// reach this point unless we were told to check replication as a subordinate
 		// type. Hopefully someone is working on fixing that, but in any case,
 		// we should not try to reparent to ourselves.
-		return fmt.Errorf("shard %v/%v record claims tablet %v is master, but its type is %v", tablet.Keyspace, tablet.Shard, topoproto.TabletAliasString(tablet.Alias), tablet.Type)
+		return fmt.Errorf("shard %v/%v record claims tablet %v is main, but its type is %v", tablet.Keyspace, tablet.Shard, topoproto.TabletAliasString(tablet.Alias), tablet.Type)
 	}
 
 	// If Orchestrator is configured and if Orchestrator is actively reparenting, we should not repairReplication
@@ -147,13 +147,13 @@ func repairReplication(ctx context.Context, agent *ActionAgent) error {
 
 		// Before repairing replication, tell Orchestrator to enter maintenance mode for this tablet and to
 		// lock any other actions on this tablet by Orchestrator.
-		if err := agent.orc.BeginMaintenance(agent.Tablet(), "vttablet has been told to StopSlave"); err != nil {
+		if err := agent.orc.BeginMaintenance(agent.Tablet(), "vttablet has been told to StopSubordinate"); err != nil {
 			log.Warningf("Orchestrator BeginMaintenance failed: %v", err)
 			return vterrors.Wrap(err, "orchestrator BeginMaintenance failed, skipping repairReplication")
 		}
 	}
 
-	return agent.setMasterRepairReplication(ctx, si.MasterAlias, 0, true)
+	return agent.setMainRepairReplication(ctx, si.MainAlias, 0, true)
 }
 
 func registerReplicationReporter(agent *ActionAgent) {

@@ -98,8 +98,8 @@ func TestUpdateServedFromMap(t *testing.T) {
 	if err := ki.UpdateServedFromMap(topodatapb.TabletType_RDONLY, []string{"second"}, "othersource", true, allCells); err == nil || (err.Error() != "inconsistent keyspace specified in migration: othersource != source for type MASTER" && err.Error() != "inconsistent keyspace specified in migration: othersource != source for type RDONLY") {
 		t.Fatalf("different keyspace should fail: %v", err)
 	}
-	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, nil, "source", true, allCells); err == nil || err.Error() != "cannot migrate master into ks until everything else is migrated" {
-		t.Fatalf("migrate the master early should have failed: %v", err)
+	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, nil, "source", true, allCells); err == nil || err.Error() != "cannot migrate main into ks until everything else is migrated" {
+		t.Fatalf("migrate the main early should have failed: %v", err)
 	}
 
 	// now remove all cells
@@ -116,17 +116,17 @@ func TestUpdateServedFromMap(t *testing.T) {
 		t.Fatalf("migrate rdonly again should have failed: %v", err)
 	}
 
-	// finally migrate the master
-	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, []string{"second"}, "source", true, allCells); err == nil || err.Error() != "cannot migrate only some cells for master removal in keyspace ks" {
-		t.Fatalf("migrate master with cells should have failed: %v", err)
+	// finally migrate the main
+	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, []string{"second"}, "source", true, allCells); err == nil || err.Error() != "cannot migrate only some cells for main removal in keyspace ks" {
+		t.Fatalf("migrate main with cells should have failed: %v", err)
 	}
 	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, nil, "source", true, allCells); err != nil || ki.ServedFroms != nil {
-		t.Fatalf("migrate the master failed: %v", ki)
+		t.Fatalf("migrate the main failed: %v", ki)
 	}
 
 	// error case again
 	if err := ki.UpdateServedFromMap(topodatapb.TabletType_MASTER, nil, "source", true, allCells); err == nil || err.Error() != "supplied type cannot be migrated" {
-		t.Fatalf("migrate the master again should have failed: %v", err)
+		t.Fatalf("migrate the main again should have failed: %v", err)
 	}
 }
 

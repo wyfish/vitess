@@ -94,11 +94,11 @@ func TestBackupRestore(t *testing.T) {
 		t.Fatalf("failed to write file db.opt: %v", err)
 	}
 
-	// create a master tablet, set its master position
-	master := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, db)
-	master.FakeMysqlDaemon.ReadOnly = false
-	master.FakeMysqlDaemon.Replicating = false
-	master.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	// create a main tablet, set its main position
+	main := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, db)
+	main.FakeMysqlDaemon.ReadOnly = false
+	main.FakeMysqlDaemon.Replicating = false
+	main.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -108,16 +108,16 @@ func TestBackupRestore(t *testing.T) {
 		},
 	}
 
-	// start master so that replica can fetch master position from it
-	master.StartActionLoop(t, wr)
-	defer master.StopActionLoop(t)
+	// start main so that replica can fetch main position from it
+	main.StartActionLoop(t, wr)
+	defer main.StopActionLoop(t)
 
 	// create a single tablet, set it up so we can do backups
-	// set its position same as that of master so that backup doesn't wait for catchup
+	// set its position same as that of main so that backup doesn't wait for catchup
 	sourceTablet := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, db)
 	sourceTablet.FakeMysqlDaemon.ReadOnly = true
 	sourceTablet.FakeMysqlDaemon.Replicating = true
-	sourceTablet.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	sourceTablet.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -159,7 +159,7 @@ func TestBackupRestore(t *testing.T) {
 	destTablet := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, db)
 	destTablet.FakeMysqlDaemon.ReadOnly = true
 	destTablet.FakeMysqlDaemon.Replicating = true
-	destTablet.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	destTablet.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -178,8 +178,8 @@ func TestBackupRestore(t *testing.T) {
 	destTablet.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
 		"SHOW DATABASES": {},
 	}
-	destTablet.FakeMysqlDaemon.SetSlavePositionPos = sourceTablet.FakeMysqlDaemon.CurrentMasterPosition
-	destTablet.FakeMysqlDaemon.SetMasterInput = topoproto.MysqlAddr(master.Tablet)
+	destTablet.FakeMysqlDaemon.SetSubordinatePositionPos = sourceTablet.FakeMysqlDaemon.CurrentMainPosition
+	destTablet.FakeMysqlDaemon.SetMainInput = topoproto.MysqlAddr(main.Tablet)
 
 	destTablet.StartActionLoop(t, wr)
 	defer destTablet.StopActionLoop(t)
@@ -211,7 +211,7 @@ func TestBackupRestore(t *testing.T) {
 
 }
 
-func TestRestoreUnreachableMaster(t *testing.T) {
+func TestRestoreUnreachableMain(t *testing.T) {
 	// Initialize our environment
 	ctx := context.Background()
 	db := fakesqldb.New(t)
@@ -266,11 +266,11 @@ func TestRestoreUnreachableMaster(t *testing.T) {
 		t.Fatalf("failed to write file db.opt: %v", err)
 	}
 
-	// create a master tablet, set its master position
-	master := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, db)
-	master.FakeMysqlDaemon.ReadOnly = false
-	master.FakeMysqlDaemon.Replicating = false
-	master.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	// create a main tablet, set its main position
+	main := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, db)
+	main.FakeMysqlDaemon.ReadOnly = false
+	main.FakeMysqlDaemon.Replicating = false
+	main.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -280,15 +280,15 @@ func TestRestoreUnreachableMaster(t *testing.T) {
 		},
 	}
 
-	// start master so that replica can fetch master position from it
-	master.StartActionLoop(t, wr)
+	// start main so that replica can fetch main position from it
+	main.StartActionLoop(t, wr)
 
 	// create a single tablet, set it up so we can do backups
-	// set its position same as that of master so that backup doesn't wait for catchup
+	// set its position same as that of main so that backup doesn't wait for catchup
 	sourceTablet := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, db)
 	sourceTablet.FakeMysqlDaemon.ReadOnly = true
 	sourceTablet.FakeMysqlDaemon.Replicating = true
-	sourceTablet.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	sourceTablet.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -319,7 +319,7 @@ func TestRestoreUnreachableMaster(t *testing.T) {
 	destTablet := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, db)
 	destTablet.FakeMysqlDaemon.ReadOnly = true
 	destTablet.FakeMysqlDaemon.Replicating = true
-	destTablet.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	destTablet.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   2,
@@ -338,8 +338,8 @@ func TestRestoreUnreachableMaster(t *testing.T) {
 	destTablet.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
 		"SHOW DATABASES": {},
 	}
-	destTablet.FakeMysqlDaemon.SetSlavePositionPos = sourceTablet.FakeMysqlDaemon.CurrentMasterPosition
-	destTablet.FakeMysqlDaemon.SetMasterInput = topoproto.MysqlAddr(master.Tablet)
+	destTablet.FakeMysqlDaemon.SetSubordinatePositionPos = sourceTablet.FakeMysqlDaemon.CurrentMainPosition
+	destTablet.FakeMysqlDaemon.SetMainInput = topoproto.MysqlAddr(main.Tablet)
 
 	destTablet.StartActionLoop(t, wr)
 	defer destTablet.StopActionLoop(t)
@@ -354,8 +354,8 @@ func TestRestoreUnreachableMaster(t *testing.T) {
 		RelayLogInfoPath:      path.Join(root, "relay-log.info"),
 	}
 
-	// stop master so that it is unreachable
-	master.StopActionLoop(t)
+	// stop main so that it is unreachable
+	main.StopActionLoop(t)
 
 	// Restore should still succeed
 	if err := destTablet.Agent.RestoreData(ctx, logutil.NewConsoleLogger(), 0 /* waitForBackupInterval */, false /* deleteBeforeRestore */); err != nil {

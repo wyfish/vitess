@@ -191,14 +191,14 @@ func (agent *ActionAgent) runHealthCheckLocked() {
 
 	// run the health check
 	record := &HealthRecord{}
-	isSlaveType := true
+	isSubordinateType := true
 	if tablet.Type == topodatapb.TabletType_MASTER {
-		isSlaveType = false
+		isSubordinateType = false
 	}
 
 	// Remember the health error as healthErr to be sure we don't
 	// accidentally overwrite it with some other err.
-	replicationDelay, healthErr := agent.HealthReporter.Report(isSlaveType, shouldBeServing)
+	replicationDelay, healthErr := agent.HealthReporter.Report(isSubordinateType, shouldBeServing)
 	if healthErr != nil && ignoreErrorExpr != nil &&
 		ignoreErrorExpr.MatchString(healthErr.Error()) {
 		// we need to ignore this health error
@@ -206,8 +206,8 @@ func (agent *ActionAgent) runHealthCheckLocked() {
 		record.IgnoreErrorExpr = ignoreErrorExpr.String()
 		healthErr = nil
 	}
-	if healthErr == health.ErrSlaveNotRunning {
-		// The slave is not running, so we just don't know the
+	if healthErr == health.ErrSubordinateNotRunning {
+		// The subordinate is not running, so we just don't know the
 		// delay.  Use a maximum delay, so we can let vtgate
 		// find the right replica, instead of erroring out.
 		// (this works as the check below is a strict > operator).
@@ -284,7 +284,7 @@ func (agent *ActionAgent) runHealthCheckLocked() {
 		agent.UpdateStream.Disable()
 	}
 
-	// All master tablets have to run the VReplication engine.
+	// All main tablets have to run the VReplication engine.
 	// There is no guarantee that VREngine was successfully started when tabletmanager
 	// came up. This is because the mysql could have been in read-only mode, etc.
 	// So, start the engine if it's not already running.
@@ -321,7 +321,7 @@ func (agent *ActionAgent) runHealthCheckLocked() {
 
 // terminateHealthChecks is called when we enter lame duck mode.
 // We will clean up our state, and set query service to lame duck mode.
-// We only do something if we are in a serving state, and not a master.
+// We only do something if we are in a serving state, and not a main.
 func (agent *ActionAgent) terminateHealthChecks() {
 	// No need to check for error, only a canceled batchCtx would fail this.
 	agent.lock(agent.batchCtx)
@@ -352,7 +352,7 @@ func (agent *ActionAgent) terminateHealthChecks() {
 	agent.lameduck("terminating healthchecks")
 
 	// Note we only do this now if we entered lameduck. In the
-	// master case for instance, we want to keep serving until
+	// main case for instance, we want to keep serving until
 	// vttablet dies entirely (where else is the client going to
 	// go?).  After servenv lameduck, the queryservice is stopped
 	// from a servenv.OnClose() hook anyway.

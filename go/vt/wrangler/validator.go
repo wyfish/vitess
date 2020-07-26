@@ -135,7 +135,7 @@ func (wr *Wrangler) validateShard(ctx context.Context, keyspace, shard string, p
 
 	tabletMap, _ := wr.ts.GetTabletMap(ctx, aliases)
 
-	var masterAlias *topodatapb.TabletAlias
+	var mainAlias *topodatapb.TabletAlias
 	for _, alias := range aliases {
 		tabletInfo, ok := tabletMap[topoproto.TabletAliasString(alias)]
 		if !ok {
@@ -143,18 +143,18 @@ func (wr *Wrangler) validateShard(ctx context.Context, keyspace, shard string, p
 			continue
 		}
 		if tabletInfo.Type == topodatapb.TabletType_MASTER {
-			if masterAlias != nil {
-				results <- fmt.Errorf("shard %v/%v already has master %v but found other master %v", keyspace, shard, topoproto.TabletAliasString(masterAlias), topoproto.TabletAliasString(alias))
+			if mainAlias != nil {
+				results <- fmt.Errorf("shard %v/%v already has main %v but found other main %v", keyspace, shard, topoproto.TabletAliasString(mainAlias), topoproto.TabletAliasString(alias))
 			} else {
-				masterAlias = alias
+				mainAlias = alias
 			}
 		}
 	}
 
-	if masterAlias == nil {
-		results <- fmt.Errorf("no master for shard %v/%v", keyspace, shard)
-	} else if !topoproto.TabletAliasEqual(shardInfo.MasterAlias, masterAlias) {
-		results <- fmt.Errorf("master mismatch for shard %v/%v: found %v, expected %v", keyspace, shard, topoproto.TabletAliasString(masterAlias), topoproto.TabletAliasString(shardInfo.MasterAlias))
+	if mainAlias == nil {
+		results <- fmt.Errorf("no main for shard %v/%v", keyspace, shard)
+	} else if !topoproto.TabletAliasEqual(shardInfo.MainAlias, mainAlias) {
+		results <- fmt.Errorf("main mismatch for shard %v/%v: found %v, expected %v", keyspace, shard, topoproto.TabletAliasString(mainAlias), topoproto.TabletAliasString(shardInfo.MainAlias))
 	}
 
 	for _, alias := range aliases {
@@ -179,37 +179,37 @@ func normalizeIP(ip string) string {
 	// Normalize loopback to avoid spurious validation errors.
 	if parsedIP := net.ParseIP(ip); parsedIP != nil && parsedIP.IsLoopback() {
 		// Note that this also maps IPv6 localhost to IPv4 localhost
-		// as GetSlaves() will return only IPv4 addresses.
+		// as GetSubordinates() will return only IPv4 addresses.
 		return "127.0.0.1"
 	}
 	return ip
 }
 
 func (wr *Wrangler) validateReplication(ctx context.Context, shardInfo *topo.ShardInfo, tabletMap map[string]*topo.TabletInfo, results chan<- error) {
-	if shardInfo.MasterAlias == nil {
-		results <- fmt.Errorf("no master in shard record %v/%v", shardInfo.Keyspace(), shardInfo.ShardName())
+	if shardInfo.MainAlias == nil {
+		results <- fmt.Errorf("no main in shard record %v/%v", shardInfo.Keyspace(), shardInfo.ShardName())
 		return
 	}
 
-	shardInfoMasterAliasStr := topoproto.TabletAliasString(shardInfo.MasterAlias)
-	masterTabletInfo, ok := tabletMap[shardInfoMasterAliasStr]
+	shardInfoMainAliasStr := topoproto.TabletAliasString(shardInfo.MainAlias)
+	mainTabletInfo, ok := tabletMap[shardInfoMainAliasStr]
 	if !ok {
-		results <- fmt.Errorf("master %v not in tablet map", shardInfoMasterAliasStr)
+		results <- fmt.Errorf("main %v not in tablet map", shardInfoMainAliasStr)
 		return
 	}
 
-	slaveList, err := wr.tmc.GetSlaves(ctx, masterTabletInfo.Tablet)
+	subordinateList, err := wr.tmc.GetSubordinates(ctx, mainTabletInfo.Tablet)
 	if err != nil {
-		results <- fmt.Errorf("GetSlaves(%v) failed: %v", masterTabletInfo, err)
+		results <- fmt.Errorf("GetSubordinates(%v) failed: %v", mainTabletInfo, err)
 		return
 	}
-	if len(slaveList) == 0 {
-		results <- fmt.Errorf("no slaves of tablet %v found", shardInfoMasterAliasStr)
+	if len(subordinateList) == 0 {
+		results <- fmt.Errorf("no subordinates of tablet %v found", shardInfoMainAliasStr)
 		return
 	}
 
 	tabletIPMap := make(map[string]*topodatapb.Tablet)
-	slaveIPMap := make(map[string]bool)
+	subordinateIPMap := make(map[string]bool)
 	for _, tablet := range tabletMap {
 		ip, err := topoproto.MySQLIP(tablet.Tablet)
 		if err != nil {
@@ -219,17 +219,17 @@ func (wr *Wrangler) validateReplication(ctx context.Context, shardInfo *topo.Sha
 		tabletIPMap[normalizeIP(ip)] = tablet.Tablet
 	}
 
-	// See if every slave is in the replication graph.
-	for _, slaveAddr := range slaveList {
-		if tabletIPMap[normalizeIP(slaveAddr)] == nil {
-			results <- fmt.Errorf("slave %v not in replication graph for shard %v/%v (mysql instance without vttablet?)", slaveAddr, shardInfo.Keyspace(), shardInfo.ShardName())
+	// See if every subordinate is in the replication graph.
+	for _, subordinateAddr := range subordinateList {
+		if tabletIPMap[normalizeIP(subordinateAddr)] == nil {
+			results <- fmt.Errorf("subordinate %v not in replication graph for shard %v/%v (mysql instance without vttablet?)", subordinateAddr, shardInfo.Keyspace(), shardInfo.ShardName())
 		}
-		slaveIPMap[normalizeIP(slaveAddr)] = true
+		subordinateIPMap[normalizeIP(subordinateAddr)] = true
 	}
 
-	// See if every entry in the replication graph is connected to the master.
+	// See if every entry in the replication graph is connected to the main.
 	for _, tablet := range tabletMap {
-		if !tablet.IsSlaveType() {
+		if !tablet.IsSubordinateType() {
 			continue
 		}
 
@@ -238,8 +238,8 @@ func (wr *Wrangler) validateReplication(ctx context.Context, shardInfo *topo.Sha
 			results <- fmt.Errorf("could not resolve IP for tablet %s: %v", topoproto.MysqlHostname(tablet.Tablet), err)
 			continue
 		}
-		if !slaveIPMap[normalizeIP(ip)] {
-			results <- fmt.Errorf("slave %v not replicating: %v slave list: %q", topoproto.TabletAliasString(tablet.Alias), ip, slaveList)
+		if !subordinateIPMap[normalizeIP(ip)] {
+			results <- fmt.Errorf("subordinate %v not replicating: %v subordinate list: %q", topoproto.TabletAliasString(tablet.Alias), ip, subordinateList)
 		}
 	}
 }

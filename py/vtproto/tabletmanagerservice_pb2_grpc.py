@@ -112,35 +112,35 @@ class TabletManagerStub(object):
         request_serializer=tabletmanagerdata__pb2.ExecuteFetchAsAppRequest.SerializeToString,
         response_deserializer=tabletmanagerdata__pb2.ExecuteFetchAsAppResponse.FromString,
         )
-    self.SlaveStatus = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/SlaveStatus',
-        request_serializer=tabletmanagerdata__pb2.SlaveStatusRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.SlaveStatusResponse.FromString,
+    self.SubordinateStatus = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/SubordinateStatus',
+        request_serializer=tabletmanagerdata__pb2.SubordinateStatusRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.SubordinateStatusResponse.FromString,
         )
-    self.MasterPosition = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/MasterPosition',
-        request_serializer=tabletmanagerdata__pb2.MasterPositionRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.MasterPositionResponse.FromString,
+    self.MainPosition = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/MainPosition',
+        request_serializer=tabletmanagerdata__pb2.MainPositionRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.MainPositionResponse.FromString,
         )
-    self.StopSlave = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/StopSlave',
-        request_serializer=tabletmanagerdata__pb2.StopSlaveRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.StopSlaveResponse.FromString,
+    self.StopSubordinate = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/StopSubordinate',
+        request_serializer=tabletmanagerdata__pb2.StopSubordinateRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.StopSubordinateResponse.FromString,
         )
-    self.StopSlaveMinimum = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/StopSlaveMinimum',
-        request_serializer=tabletmanagerdata__pb2.StopSlaveMinimumRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.StopSlaveMinimumResponse.FromString,
+    self.StopSubordinateMinimum = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/StopSubordinateMinimum',
+        request_serializer=tabletmanagerdata__pb2.StopSubordinateMinimumRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.StopSubordinateMinimumResponse.FromString,
         )
-    self.StartSlave = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/StartSlave',
-        request_serializer=tabletmanagerdata__pb2.StartSlaveRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.StartSlaveResponse.FromString,
+    self.StartSubordinate = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/StartSubordinate',
+        request_serializer=tabletmanagerdata__pb2.StartSubordinateRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.StartSubordinateResponse.FromString,
         )
-    self.StartSlaveUntilAfter = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/StartSlaveUntilAfter',
-        request_serializer=tabletmanagerdata__pb2.StartSlaveUntilAfterRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.StartSlaveUntilAfterResponse.FromString,
+    self.StartSubordinateUntilAfter = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/StartSubordinateUntilAfter',
+        request_serializer=tabletmanagerdata__pb2.StartSubordinateUntilAfterRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.StartSubordinateUntilAfterResponse.FromString,
         )
     self.TabletExternallyReparented = channel.unary_unary(
         '/tabletmanagerservice.TabletManager/TabletExternallyReparented',
@@ -152,10 +152,10 @@ class TabletManagerStub(object):
         request_serializer=tabletmanagerdata__pb2.TabletExternallyElectedRequest.SerializeToString,
         response_deserializer=tabletmanagerdata__pb2.TabletExternallyElectedResponse.FromString,
         )
-    self.GetSlaves = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/GetSlaves',
-        request_serializer=tabletmanagerdata__pb2.GetSlavesRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.GetSlavesResponse.FromString,
+    self.GetSubordinates = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/GetSubordinates',
+        request_serializer=tabletmanagerdata__pb2.GetSubordinatesRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.GetSubordinatesResponse.FromString,
         )
     self.VReplicationExec = channel.unary_unary(
         '/tabletmanagerservice.TabletManager/VReplicationExec',
@@ -172,60 +172,60 @@ class TabletManagerStub(object):
         request_serializer=tabletmanagerdata__pb2.ResetReplicationRequest.SerializeToString,
         response_deserializer=tabletmanagerdata__pb2.ResetReplicationResponse.FromString,
         )
-    self.InitMaster = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/InitMaster',
-        request_serializer=tabletmanagerdata__pb2.InitMasterRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.InitMasterResponse.FromString,
+    self.InitMain = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/InitMain',
+        request_serializer=tabletmanagerdata__pb2.InitMainRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.InitMainResponse.FromString,
         )
     self.PopulateReparentJournal = channel.unary_unary(
         '/tabletmanagerservice.TabletManager/PopulateReparentJournal',
         request_serializer=tabletmanagerdata__pb2.PopulateReparentJournalRequest.SerializeToString,
         response_deserializer=tabletmanagerdata__pb2.PopulateReparentJournalResponse.FromString,
         )
-    self.InitSlave = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/InitSlave',
-        request_serializer=tabletmanagerdata__pb2.InitSlaveRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.InitSlaveResponse.FromString,
+    self.InitSubordinate = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/InitSubordinate',
+        request_serializer=tabletmanagerdata__pb2.InitSubordinateRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.InitSubordinateResponse.FromString,
         )
-    self.DemoteMaster = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/DemoteMaster',
-        request_serializer=tabletmanagerdata__pb2.DemoteMasterRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.DemoteMasterResponse.FromString,
+    self.DemoteMain = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/DemoteMain',
+        request_serializer=tabletmanagerdata__pb2.DemoteMainRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.DemoteMainResponse.FromString,
         )
-    self.UndoDemoteMaster = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/UndoDemoteMaster',
-        request_serializer=tabletmanagerdata__pb2.UndoDemoteMasterRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.UndoDemoteMasterResponse.FromString,
+    self.UndoDemoteMain = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/UndoDemoteMain',
+        request_serializer=tabletmanagerdata__pb2.UndoDemoteMainRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.UndoDemoteMainResponse.FromString,
         )
-    self.PromoteSlaveWhenCaughtUp = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/PromoteSlaveWhenCaughtUp',
-        request_serializer=tabletmanagerdata__pb2.PromoteSlaveWhenCaughtUpRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.PromoteSlaveWhenCaughtUpResponse.FromString,
+    self.PromoteSubordinateWhenCaughtUp = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/PromoteSubordinateWhenCaughtUp',
+        request_serializer=tabletmanagerdata__pb2.PromoteSubordinateWhenCaughtUpRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.PromoteSubordinateWhenCaughtUpResponse.FromString,
         )
-    self.SlaveWasPromoted = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/SlaveWasPromoted',
-        request_serializer=tabletmanagerdata__pb2.SlaveWasPromotedRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.SlaveWasPromotedResponse.FromString,
+    self.SubordinateWasPromoted = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/SubordinateWasPromoted',
+        request_serializer=tabletmanagerdata__pb2.SubordinateWasPromotedRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.SubordinateWasPromotedResponse.FromString,
         )
-    self.SetMaster = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/SetMaster',
-        request_serializer=tabletmanagerdata__pb2.SetMasterRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.SetMasterResponse.FromString,
+    self.SetMain = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/SetMain',
+        request_serializer=tabletmanagerdata__pb2.SetMainRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.SetMainResponse.FromString,
         )
-    self.SlaveWasRestarted = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/SlaveWasRestarted',
-        request_serializer=tabletmanagerdata__pb2.SlaveWasRestartedRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.SlaveWasRestartedResponse.FromString,
+    self.SubordinateWasRestarted = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/SubordinateWasRestarted',
+        request_serializer=tabletmanagerdata__pb2.SubordinateWasRestartedRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.SubordinateWasRestartedResponse.FromString,
         )
     self.StopReplicationAndGetStatus = channel.unary_unary(
         '/tabletmanagerservice.TabletManager/StopReplicationAndGetStatus',
         request_serializer=tabletmanagerdata__pb2.StopReplicationAndGetStatusRequest.SerializeToString,
         response_deserializer=tabletmanagerdata__pb2.StopReplicationAndGetStatusResponse.FromString,
         )
-    self.PromoteSlave = channel.unary_unary(
-        '/tabletmanagerservice.TabletManager/PromoteSlave',
-        request_serializer=tabletmanagerdata__pb2.PromoteSlaveRequest.SerializeToString,
-        response_deserializer=tabletmanagerdata__pb2.PromoteSlaveResponse.FromString,
+    self.PromoteSubordinate = channel.unary_unary(
+        '/tabletmanagerservice.TabletManager/PromoteSubordinate',
+        request_serializer=tabletmanagerdata__pb2.PromoteSubordinateRequest.SerializeToString,
+        response_deserializer=tabletmanagerdata__pb2.PromoteSubordinateResponse.FromString,
         )
     self.Backup = channel.unary_stream(
         '/tabletmanagerservice.TabletManager/Backup',
@@ -382,48 +382,48 @@ class TabletManagerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def SlaveStatus(self, request, context):
+  def SubordinateStatus(self, request, context):
     """
     Replication related methods
 
 
-    SlaveStatus returns the current slave status.
+    SubordinateStatus returns the current subordinate status.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def MasterPosition(self, request, context):
-    """MasterPosition returns the current master position
+  def MainPosition(self, request, context):
+    """MainPosition returns the current main position
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def StopSlave(self, request, context):
-    """StopSlave makes mysql stop its replication
+  def StopSubordinate(self, request, context):
+    """StopSubordinate makes mysql stop its replication
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def StopSlaveMinimum(self, request, context):
-    """StopSlaveMinimum stops the mysql replication after it reaches
+  def StopSubordinateMinimum(self, request, context):
+    """StopSubordinateMinimum stops the mysql replication after it reaches
     the provided minimum point
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def StartSlave(self, request, context):
-    """StartSlave starts the mysql replication
+  def StartSubordinate(self, request, context):
+    """StartSubordinate starts the mysql replication
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def StartSlaveUntilAfter(self, request, context):
-    """StartSlave starts the mysql replication until and including
+  def StartSubordinateUntilAfter(self, request, context):
+    """StartSubordinate starts the mysql replication until and including
     the provided position
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -432,7 +432,7 @@ class TabletManagerServicer(object):
 
   def TabletExternallyReparented(self, request, context):
     """TabletExternallyReparented tells a tablet that its underlying MySQL is
-    currently the master. It is only used in environments (tabletmanagerdata.such as Vitess+MoB)
+    currently the main. It is only used in environments (tabletmanagerdata.such as Vitess+MoB)
     in which MySQL is reparented by some agent external to Vitess, and then
     that agent simply notifies Vitess.
 
@@ -466,8 +466,8 @@ class TabletManagerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def GetSlaves(self, request, context):
-    """GetSlaves asks for the list of mysql slaves
+  def GetSubordinates(self, request, context):
+    """GetSubordinates asks for the list of mysql subordinates
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -498,8 +498,8 @@ class TabletManagerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def InitMaster(self, request, context):
-    """InitMaster initializes the tablet as a master
+  def InitMain(self, request, context):
+    """InitMain initializes the tablet as a main
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -513,51 +513,51 @@ class TabletManagerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def InitSlave(self, request, context):
-    """InitSlave tells the tablet to reparent to the master unconditionally
+  def InitSubordinate(self, request, context):
+    """InitSubordinate tells the tablet to reparent to the main unconditionally
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def DemoteMaster(self, request, context):
-    """DemoteMaster tells the soon-to-be-former master it's gonna change
+  def DemoteMain(self, request, context):
+    """DemoteMain tells the soon-to-be-former main it's gonna change
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def UndoDemoteMaster(self, request, context):
-    """UndoDemoteMaster reverts all changes made by DemoteMaster
+  def UndoDemoteMain(self, request, context):
+    """UndoDemoteMain reverts all changes made by DemoteMain
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def PromoteSlaveWhenCaughtUp(self, request, context):
-    """PromoteSlaveWhenCaughtUp tells the remote tablet to catch up,
-    and then be the master
+  def PromoteSubordinateWhenCaughtUp(self, request, context):
+    """PromoteSubordinateWhenCaughtUp tells the remote tablet to catch up,
+    and then be the main
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def SlaveWasPromoted(self, request, context):
-    """SlaveWasPromoted tells the remote tablet it is now the master
+  def SubordinateWasPromoted(self, request, context):
+    """SubordinateWasPromoted tells the remote tablet it is now the main
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def SetMaster(self, request, context):
-    """SetMaster tells the slave to reparent
+  def SetMain(self, request, context):
+    """SetMain tells the subordinate to reparent
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def SlaveWasRestarted(self, request, context):
-    """SlaveWasRestarted tells the remote tablet its master has changed
+  def SubordinateWasRestarted(self, request, context):
+    """SubordinateWasRestarted tells the remote tablet its main has changed
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -571,8 +571,8 @@ class TabletManagerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def PromoteSlave(self, request, context):
-    """PromoteSlave makes the slave the new master
+  def PromoteSubordinate(self, request, context):
+    """PromoteSubordinate makes the subordinate the new main
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -693,35 +693,35 @@ def add_TabletManagerServicer_to_server(servicer, server):
           request_deserializer=tabletmanagerdata__pb2.ExecuteFetchAsAppRequest.FromString,
           response_serializer=tabletmanagerdata__pb2.ExecuteFetchAsAppResponse.SerializeToString,
       ),
-      'SlaveStatus': grpc.unary_unary_rpc_method_handler(
-          servicer.SlaveStatus,
-          request_deserializer=tabletmanagerdata__pb2.SlaveStatusRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.SlaveStatusResponse.SerializeToString,
+      'SubordinateStatus': grpc.unary_unary_rpc_method_handler(
+          servicer.SubordinateStatus,
+          request_deserializer=tabletmanagerdata__pb2.SubordinateStatusRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.SubordinateStatusResponse.SerializeToString,
       ),
-      'MasterPosition': grpc.unary_unary_rpc_method_handler(
-          servicer.MasterPosition,
-          request_deserializer=tabletmanagerdata__pb2.MasterPositionRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.MasterPositionResponse.SerializeToString,
+      'MainPosition': grpc.unary_unary_rpc_method_handler(
+          servicer.MainPosition,
+          request_deserializer=tabletmanagerdata__pb2.MainPositionRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.MainPositionResponse.SerializeToString,
       ),
-      'StopSlave': grpc.unary_unary_rpc_method_handler(
-          servicer.StopSlave,
-          request_deserializer=tabletmanagerdata__pb2.StopSlaveRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.StopSlaveResponse.SerializeToString,
+      'StopSubordinate': grpc.unary_unary_rpc_method_handler(
+          servicer.StopSubordinate,
+          request_deserializer=tabletmanagerdata__pb2.StopSubordinateRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.StopSubordinateResponse.SerializeToString,
       ),
-      'StopSlaveMinimum': grpc.unary_unary_rpc_method_handler(
-          servicer.StopSlaveMinimum,
-          request_deserializer=tabletmanagerdata__pb2.StopSlaveMinimumRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.StopSlaveMinimumResponse.SerializeToString,
+      'StopSubordinateMinimum': grpc.unary_unary_rpc_method_handler(
+          servicer.StopSubordinateMinimum,
+          request_deserializer=tabletmanagerdata__pb2.StopSubordinateMinimumRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.StopSubordinateMinimumResponse.SerializeToString,
       ),
-      'StartSlave': grpc.unary_unary_rpc_method_handler(
-          servicer.StartSlave,
-          request_deserializer=tabletmanagerdata__pb2.StartSlaveRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.StartSlaveResponse.SerializeToString,
+      'StartSubordinate': grpc.unary_unary_rpc_method_handler(
+          servicer.StartSubordinate,
+          request_deserializer=tabletmanagerdata__pb2.StartSubordinateRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.StartSubordinateResponse.SerializeToString,
       ),
-      'StartSlaveUntilAfter': grpc.unary_unary_rpc_method_handler(
-          servicer.StartSlaveUntilAfter,
-          request_deserializer=tabletmanagerdata__pb2.StartSlaveUntilAfterRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.StartSlaveUntilAfterResponse.SerializeToString,
+      'StartSubordinateUntilAfter': grpc.unary_unary_rpc_method_handler(
+          servicer.StartSubordinateUntilAfter,
+          request_deserializer=tabletmanagerdata__pb2.StartSubordinateUntilAfterRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.StartSubordinateUntilAfterResponse.SerializeToString,
       ),
       'TabletExternallyReparented': grpc.unary_unary_rpc_method_handler(
           servicer.TabletExternallyReparented,
@@ -733,10 +733,10 @@ def add_TabletManagerServicer_to_server(servicer, server):
           request_deserializer=tabletmanagerdata__pb2.TabletExternallyElectedRequest.FromString,
           response_serializer=tabletmanagerdata__pb2.TabletExternallyElectedResponse.SerializeToString,
       ),
-      'GetSlaves': grpc.unary_unary_rpc_method_handler(
-          servicer.GetSlaves,
-          request_deserializer=tabletmanagerdata__pb2.GetSlavesRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.GetSlavesResponse.SerializeToString,
+      'GetSubordinates': grpc.unary_unary_rpc_method_handler(
+          servicer.GetSubordinates,
+          request_deserializer=tabletmanagerdata__pb2.GetSubordinatesRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.GetSubordinatesResponse.SerializeToString,
       ),
       'VReplicationExec': grpc.unary_unary_rpc_method_handler(
           servicer.VReplicationExec,
@@ -753,60 +753,60 @@ def add_TabletManagerServicer_to_server(servicer, server):
           request_deserializer=tabletmanagerdata__pb2.ResetReplicationRequest.FromString,
           response_serializer=tabletmanagerdata__pb2.ResetReplicationResponse.SerializeToString,
       ),
-      'InitMaster': grpc.unary_unary_rpc_method_handler(
-          servicer.InitMaster,
-          request_deserializer=tabletmanagerdata__pb2.InitMasterRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.InitMasterResponse.SerializeToString,
+      'InitMain': grpc.unary_unary_rpc_method_handler(
+          servicer.InitMain,
+          request_deserializer=tabletmanagerdata__pb2.InitMainRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.InitMainResponse.SerializeToString,
       ),
       'PopulateReparentJournal': grpc.unary_unary_rpc_method_handler(
           servicer.PopulateReparentJournal,
           request_deserializer=tabletmanagerdata__pb2.PopulateReparentJournalRequest.FromString,
           response_serializer=tabletmanagerdata__pb2.PopulateReparentJournalResponse.SerializeToString,
       ),
-      'InitSlave': grpc.unary_unary_rpc_method_handler(
-          servicer.InitSlave,
-          request_deserializer=tabletmanagerdata__pb2.InitSlaveRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.InitSlaveResponse.SerializeToString,
+      'InitSubordinate': grpc.unary_unary_rpc_method_handler(
+          servicer.InitSubordinate,
+          request_deserializer=tabletmanagerdata__pb2.InitSubordinateRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.InitSubordinateResponse.SerializeToString,
       ),
-      'DemoteMaster': grpc.unary_unary_rpc_method_handler(
-          servicer.DemoteMaster,
-          request_deserializer=tabletmanagerdata__pb2.DemoteMasterRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.DemoteMasterResponse.SerializeToString,
+      'DemoteMain': grpc.unary_unary_rpc_method_handler(
+          servicer.DemoteMain,
+          request_deserializer=tabletmanagerdata__pb2.DemoteMainRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.DemoteMainResponse.SerializeToString,
       ),
-      'UndoDemoteMaster': grpc.unary_unary_rpc_method_handler(
-          servicer.UndoDemoteMaster,
-          request_deserializer=tabletmanagerdata__pb2.UndoDemoteMasterRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.UndoDemoteMasterResponse.SerializeToString,
+      'UndoDemoteMain': grpc.unary_unary_rpc_method_handler(
+          servicer.UndoDemoteMain,
+          request_deserializer=tabletmanagerdata__pb2.UndoDemoteMainRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.UndoDemoteMainResponse.SerializeToString,
       ),
-      'PromoteSlaveWhenCaughtUp': grpc.unary_unary_rpc_method_handler(
-          servicer.PromoteSlaveWhenCaughtUp,
-          request_deserializer=tabletmanagerdata__pb2.PromoteSlaveWhenCaughtUpRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.PromoteSlaveWhenCaughtUpResponse.SerializeToString,
+      'PromoteSubordinateWhenCaughtUp': grpc.unary_unary_rpc_method_handler(
+          servicer.PromoteSubordinateWhenCaughtUp,
+          request_deserializer=tabletmanagerdata__pb2.PromoteSubordinateWhenCaughtUpRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.PromoteSubordinateWhenCaughtUpResponse.SerializeToString,
       ),
-      'SlaveWasPromoted': grpc.unary_unary_rpc_method_handler(
-          servicer.SlaveWasPromoted,
-          request_deserializer=tabletmanagerdata__pb2.SlaveWasPromotedRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.SlaveWasPromotedResponse.SerializeToString,
+      'SubordinateWasPromoted': grpc.unary_unary_rpc_method_handler(
+          servicer.SubordinateWasPromoted,
+          request_deserializer=tabletmanagerdata__pb2.SubordinateWasPromotedRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.SubordinateWasPromotedResponse.SerializeToString,
       ),
-      'SetMaster': grpc.unary_unary_rpc_method_handler(
-          servicer.SetMaster,
-          request_deserializer=tabletmanagerdata__pb2.SetMasterRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.SetMasterResponse.SerializeToString,
+      'SetMain': grpc.unary_unary_rpc_method_handler(
+          servicer.SetMain,
+          request_deserializer=tabletmanagerdata__pb2.SetMainRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.SetMainResponse.SerializeToString,
       ),
-      'SlaveWasRestarted': grpc.unary_unary_rpc_method_handler(
-          servicer.SlaveWasRestarted,
-          request_deserializer=tabletmanagerdata__pb2.SlaveWasRestartedRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.SlaveWasRestartedResponse.SerializeToString,
+      'SubordinateWasRestarted': grpc.unary_unary_rpc_method_handler(
+          servicer.SubordinateWasRestarted,
+          request_deserializer=tabletmanagerdata__pb2.SubordinateWasRestartedRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.SubordinateWasRestartedResponse.SerializeToString,
       ),
       'StopReplicationAndGetStatus': grpc.unary_unary_rpc_method_handler(
           servicer.StopReplicationAndGetStatus,
           request_deserializer=tabletmanagerdata__pb2.StopReplicationAndGetStatusRequest.FromString,
           response_serializer=tabletmanagerdata__pb2.StopReplicationAndGetStatusResponse.SerializeToString,
       ),
-      'PromoteSlave': grpc.unary_unary_rpc_method_handler(
-          servicer.PromoteSlave,
-          request_deserializer=tabletmanagerdata__pb2.PromoteSlaveRequest.FromString,
-          response_serializer=tabletmanagerdata__pb2.PromoteSlaveResponse.SerializeToString,
+      'PromoteSubordinate': grpc.unary_unary_rpc_method_handler(
+          servicer.PromoteSubordinate,
+          request_deserializer=tabletmanagerdata__pb2.PromoteSubordinateRequest.FromString,
+          response_serializer=tabletmanagerdata__pb2.PromoteSubordinateResponse.SerializeToString,
       ),
       'Backup': grpc.unary_stream_rpc_method_handler(
           servicer.Backup,

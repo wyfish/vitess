@@ -47,10 +47,10 @@ class FixServedTypesTest(unittest.TestCase):
     expected_result = [
         ['SetShardServedTypes', '--remove', 'foo/-80', 'replica'],
         ['SetShardServedTypes', '--remove', 'foo/-80', 'rdonly'],
-        ['SetShardServedTypes', '--remove', 'foo/-80', 'master'],
+        ['SetShardServedTypes', '--remove', 'foo/-80', 'main'],
         ['SetShardServedTypes', 'foo/0', 'replica'],
         ['SetShardServedTypes', 'foo/0', 'rdonly'],
-        ['SetShardServedTypes', 'foo/0', 'master']]
+        ['SetShardServedTypes', 'foo/0', 'main']]
     self.assertEquals(
         fix_served_types.get_vtctl_commands('foo', shards), expected_result)
 
@@ -61,13 +61,13 @@ class FixServedTypesTest(unittest.TestCase):
     expected_result = [
         ['SetShardServedTypes', '--remove', 'foo/-80', 'replica'],
         ['SetShardServedTypes', '--remove', 'foo/-80', 'rdonly'],
-        ['SetShardServedTypes', '--remove', 'foo/-80', 'master'],
+        ['SetShardServedTypes', '--remove', 'foo/-80', 'main'],
         ['SetShardServedTypes', '--remove', 'foo/80-', 'replica'],
         ['SetShardServedTypes', '--remove', 'foo/80-', 'rdonly'],
-        ['SetShardServedTypes', '--remove', 'foo/80-', 'master'],
+        ['SetShardServedTypes', '--remove', 'foo/80-', 'main'],
         ['SetShardServedTypes', 'foo/0', 'replica'],
         ['SetShardServedTypes', 'foo/0', 'rdonly'],
-        ['SetShardServedTypes', 'foo/0', 'master']]
+        ['SetShardServedTypes', 'foo/0', 'main']]
     self.assertEquals(
         fix_served_types.get_vtctl_commands('foo', shards), expected_result)
 
@@ -78,7 +78,7 @@ class FixServedTypesTest(unittest.TestCase):
     expected_result = [
         ['SetShardServedTypes', 'foo/0', 'replica'],
         ['SetShardServedTypes', 'foo/0', 'rdonly'],
-        ['SetShardServedTypes', 'foo/0', 'master']]
+        ['SetShardServedTypes', 'foo/0', 'main']]
     self.assertEquals(
         fix_served_types.get_vtctl_commands('foo', shards), expected_result)
 
@@ -89,10 +89,10 @@ class FixServedTypesTest(unittest.TestCase):
     expected_result = [
         ['SetShardServedTypes', '--remove', 'foo/80-', 'replica'],
         ['SetShardServedTypes', '--remove', 'foo/80-', 'rdonly'],
-        ['SetShardServedTypes', '--remove', 'foo/80-', 'master'],
+        ['SetShardServedTypes', '--remove', 'foo/80-', 'main'],
         ['SetShardServedTypes', 'foo/0', 'replica'],
         ['SetShardServedTypes', 'foo/0', 'rdonly'],
-        ['SetShardServedTypes', 'foo/0', 'master']]
+        ['SetShardServedTypes', 'foo/0', 'main']]
     self.assertEquals(
         fix_served_types.get_vtctl_commands('foo', shards), expected_result)
 
@@ -107,7 +107,7 @@ class FixServedTypesTest(unittest.TestCase):
         ['SetShardServedTypes', '--remove', 'foo/80-', 'rdonly'],
         ['SetShardServedTypes', 'foo/0', 'replica'],
         ['SetShardServedTypes', 'foo/0', 'rdonly'],
-        ['SetShardServedTypes', 'foo/0', 'master']]
+        ['SetShardServedTypes', 'foo/0', 'main']]
     self.assertEquals(
         fix_served_types.get_vtctl_commands('foo', shards), expected_result)
 

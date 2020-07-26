@@ -23,8 +23,8 @@ import utils
 import tablet
 
 # single shard / 2 tablets
-shard_0_master = tablet.Tablet()
-shard_0_slave = tablet.Tablet()
+shard_0_main = tablet.Tablet()
+shard_0_subordinate = tablet.Tablet()
 
 cert_dir = environment.tmproot + '/certs'
 
@@ -60,19 +60,19 @@ def setUpModule():
     fd.close()
 
     setup_procs = [
-        shard_0_master.init_mysql(extra_my_cnf=extra_my_cnf),
-        shard_0_slave.init_mysql(extra_my_cnf=extra_my_cnf),
+        shard_0_main.init_mysql(extra_my_cnf=extra_my_cnf),
+        shard_0_subordinate.init_mysql(extra_my_cnf=extra_my_cnf),
         ]
     utils.wait_procs(setup_procs)
 
     utils.run_vtctl(['CreateKeyspace', 'test_keyspace'])
 
-    shard_0_master.init_tablet('replica', 'test_keyspace', '0')
-    shard_0_slave.init_tablet('replica', 'test_keyspace', '0')
+    shard_0_main.init_tablet('replica', 'test_keyspace', '0')
+    shard_0_subordinate.init_tablet('replica', 'test_keyspace', '0')
 
     # create databases so vttablet can start behaving normally
-    shard_0_master.create_db('vt_test_keyspace')
-    shard_0_slave.create_db('vt_test_keyspace')
+    shard_0_main.create_db('vt_test_keyspace')
+    shard_0_subordinate.create_db('vt_test_keyspace')
   except:
     tearDownModule()
     raise
@@ -83,12 +83,12 @@ def tearDownModule():
   if utils.options.skip_teardown:
     return
 
-  shard_0_master.kill_vttablet()
-  shard_0_slave.kill_vttablet()
+  shard_0_main.kill_vttablet()
+  shard_0_subordinate.kill_vttablet()
 
   teardown_procs = [
-      shard_0_master.teardown_mysql(),
-      shard_0_slave.teardown_mysql(),
+      shard_0_main.teardown_mysql(),
+      shard_0_subordinate.teardown_mysql(),
       ]
   utils.wait_procs(teardown_procs, raise_on_error=False)
 
@@ -96,8 +96,8 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  shard_0_master.remove_tree()
-  shard_0_slave.remove_tree()
+  shard_0_main.remove_tree()
+  shard_0_subordinate.remove_tree()
 
 
 class TestSecure(unittest.TestCase):
@@ -106,8 +106,8 @@ class TestSecure(unittest.TestCase):
 
   def test_secure(self):
     # start the tablets
-    shard_0_master.start_vttablet(wait_for_state='NOT_SERVING')
-    shard_0_slave.start_vttablet(wait_for_state='NOT_SERVING',
+    shard_0_main.start_vttablet(wait_for_state='NOT_SERVING')
+    shard_0_subordinate.start_vttablet(wait_for_state='NOT_SERVING',
                                  repl_extra_flags={
                                      'flags': '2048',
                                      'ssl-ca': cert_dir + '/ca-cert.pem',
@@ -116,8 +116,8 @@ class TestSecure(unittest.TestCase):
                                  })
 
     # Reparent using SSL (this will also check replication works)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     shard_0_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     shard_0_main.tablet_alias], auto_log=True)
 
 if __name__ == '__main__':
   utils.main()

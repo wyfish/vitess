@@ -39,19 +39,19 @@ func TestDeleteShardCleanup(t *testing.T) {
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
 
-	// Create a master, a couple good slaves
-	master := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, nil)
-	slave := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, nil)
-	remoteSlave := NewFakeTablet(t, wr, "cell2", 2, topodatapb.TabletType_REPLICA, nil)
+	// Create a main, a couple good subordinates
+	main := NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_MASTER, nil)
+	subordinate := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, nil)
+	remoteSubordinate := NewFakeTablet(t, wr, "cell2", 2, topodatapb.TabletType_REPLICA, nil)
 
 	// Build keyspace graph
-	err := topotools.RebuildKeyspace(context.Background(), logutil.NewConsoleLogger(), ts, master.Tablet.Keyspace, []string{"cell1", "cell2"})
+	err := topotools.RebuildKeyspace(context.Background(), logutil.NewConsoleLogger(), ts, main.Tablet.Keyspace, []string{"cell1", "cell2"})
 	if err != nil {
 		t.Fatalf("RebuildKeyspaceLocked failed: %v", err)
 	}
 
 	// Delete the ShardReplication record in cell2
-	if err := ts.DeleteShardReplication(ctx, "cell2", remoteSlave.Tablet.Keyspace, remoteSlave.Tablet.Shard); err != nil {
+	if err := ts.DeleteShardReplication(ctx, "cell2", remoteSubordinate.Tablet.Keyspace, remoteSubordinate.Tablet.Shard); err != nil {
 		t.Fatalf("DeleteShardReplication failed: %v", err)
 	}
 
@@ -59,7 +59,7 @@ func TestDeleteShardCleanup(t *testing.T) {
 	// recursive flag, should fail on serving check first.
 	if err := vp.Run([]string{
 		"DeleteShard",
-		master.Tablet.Keyspace + "/" + master.Tablet.Shard,
+		main.Tablet.Keyspace + "/" + main.Tablet.Shard,
 	}); err == nil || !strings.Contains(err.Error(), "is still serving, cannot delete it") {
 		t.Fatalf("DeleteShard() returned wrong error: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestDeleteShardCleanup(t *testing.T) {
 	if err := vp.Run([]string{
 		"DeleteShard",
 		"-even_if_serving",
-		master.Tablet.Keyspace + "/" + master.Tablet.Shard,
+		main.Tablet.Keyspace + "/" + main.Tablet.Shard,
 	}); err == nil || !strings.Contains(err.Error(), "use -recursive or remove them manually") {
 		t.Fatalf("DeleteShard(evenIfServing=true) returned wrong error: %v", err)
 	}
@@ -80,20 +80,20 @@ func TestDeleteShardCleanup(t *testing.T) {
 		"DeleteShard",
 		"-recursive",
 		"-even_if_serving",
-		master.Tablet.Keyspace + "/" + master.Tablet.Shard,
+		main.Tablet.Keyspace + "/" + main.Tablet.Shard,
 	}); err != nil {
 		t.Fatalf("DeleteShard(recursive=true, evenIfServing=true) should have worked but returned: %v", err)
 	}
 
 	// Make sure all tablets are gone.
-	for _, ft := range []*FakeTablet{master, slave, remoteSlave} {
+	for _, ft := range []*FakeTablet{main, subordinate, remoteSubordinate} {
 		if _, err := ts.GetTablet(ctx, ft.Tablet.Alias); !topo.IsErrType(err, topo.NoNode) {
 			t.Errorf("tablet %v is still in topo: %v", ft.Tablet.Alias, err)
 		}
 	}
 
 	// Make sure the shard is gone.
-	if _, err := ts.GetShard(ctx, master.Tablet.Keyspace, master.Tablet.Shard); !topo.IsErrType(err, topo.NoNode) {
-		t.Errorf("shard %v/%v is still in topo: %v", master.Tablet.Keyspace, master.Tablet.Shard, err)
+	if _, err := ts.GetShard(ctx, main.Tablet.Keyspace, main.Tablet.Shard); !topo.IsErrType(err, topo.NoNode) {
+		t.Errorf("shard %v/%v is still in topo: %v", main.Tablet.Keyspace, main.Tablet.Shard, err)
 	}
 }

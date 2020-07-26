@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package binlogplayer contains the code that plays a vreplication
-// stream on a client database. It usually runs inside the destination master
+// stream on a client database. It usually runs inside the destination main
 // vttablet process.
 package binlogplayer
 
@@ -77,7 +77,7 @@ type Stats struct {
 	lastPositionMutex sync.Mutex
 	lastPosition      mysql.Position
 
-	SecondsBehindMaster sync2.AtomicInt64
+	SecondsBehindMain sync2.AtomicInt64
 	History             *history.History
 }
 
@@ -113,7 +113,7 @@ func NewStats() *Stats {
 	bps.Timings = stats.NewTimings("", "", "")
 	bps.Rates = stats.NewRates("", bps.Timings, 15, 60e9)
 	bps.History = history.New(3)
-	bps.SecondsBehindMaster.Set(math.MaxInt64)
+	bps.SecondsBehindMain.Set(math.MaxInt64)
 	return bps
 }
 
@@ -432,10 +432,10 @@ func (blp *BinlogPlayer) exec(sql string) (*sqltypes.Result, error) {
 // It also tries to get the timestamp for the transaction. Two cases:
 // - we have statements, and they start with a SET TIMESTAMP that we
 //   can parse: then we update transaction_timestamp in vreplication
-//   with it, and set SecondsBehindMaster to now() - transaction_timestamp
+//   with it, and set SecondsBehindMain to now() - transaction_timestamp
 // - otherwise (the statements are probably filtered out), we leave
 //   transaction_timestamp alone (keeping the old value), and we don't
-//   change SecondsBehindMaster
+//   change SecondsBehindMain
 func (blp *BinlogPlayer) writeRecoveryPosition(tx *binlogdatapb.BinlogTransaction) error {
 	position, err := mysql.DecodePosition(tx.EventToken.Position)
 	if err != nil {
@@ -457,7 +457,7 @@ func (blp *BinlogPlayer) writeRecoveryPosition(tx *binlogdatapb.BinlogTransactio
 	blp.position = position
 	blp.blplStats.SetLastPosition(blp.position)
 	if tx.EventToken.Timestamp != 0 {
-		blp.blplStats.SecondsBehindMaster.Set(now - tx.EventToken.Timestamp)
+		blp.blplStats.SecondsBehindMain.Set(now - tx.EventToken.Timestamp)
 	}
 	return nil
 }
@@ -474,7 +474,7 @@ func (blp *BinlogPlayer) writeRecoveryPosition(tx *binlogdatapb.BinlogTransactio
 // cell: optional column that overrides the current cell to replicate from.
 // tablet_types: optional column that overrides the tablet types to look to replicate from.
 // time_update: last time an event was applied.
-// transaction_timestamp: timestamp of the transaction (from the master).
+// transaction_timestamp: timestamp of the transaction (from the main).
 // state: Running, Error or Stopped.
 // message: Reason for current state.
 func CreateVReplicationTable() []string {

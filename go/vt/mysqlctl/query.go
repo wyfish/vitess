@@ -70,9 +70,9 @@ func (mysqld *Mysqld) ExecuteSuperQueryList(ctx context.Context, queryList []str
 
 func (mysqld *Mysqld) executeSuperQueryListConn(ctx context.Context, conn *dbconnpool.PooledDBConnection, queryList []string) error {
 	for _, query := range queryList {
-		log.Infof("exec %v", redactMasterPassword(query))
+		log.Infof("exec %v", redactMainPassword(query))
 		if _, err := mysqld.executeFetchContext(ctx, conn, query, 10000, false); err != nil {
-			return fmt.Errorf("ExecuteFetch(%v) failed: %v", redactMasterPassword(query), redactMasterPassword(err.Error()))
+			return fmt.Errorf("ExecuteFetch(%v) failed: %v", redactMainPassword(query), redactMainPassword(err.Error()))
 		}
 	}
 	return nil
@@ -200,18 +200,18 @@ func (mysqld *Mysqld) fetchVariables(ctx context.Context, pattern string) (map[s
 }
 
 const (
-	masterPasswordStart = "  MASTER_PASSWORD = '"
-	masterPasswordEnd   = "',\n"
+	mainPasswordStart = "  MASTER_PASSWORD = '"
+	mainPasswordEnd   = "',\n"
 )
 
-func redactMasterPassword(input string) string {
-	i := strings.Index(input, masterPasswordStart)
+func redactMainPassword(input string) string {
+	i := strings.Index(input, mainPasswordStart)
 	if i == -1 {
 		return input
 	}
-	j := strings.Index(input[i+len(masterPasswordStart):], masterPasswordEnd)
+	j := strings.Index(input[i+len(mainPasswordStart):], mainPasswordEnd)
 	if j == -1 {
 		return input
 	}
-	return input[:i+len(masterPasswordStart)] + strings.Repeat("*", j) + input[i+len(masterPasswordStart)+j:]
+	return input[:i+len(mainPasswordStart)] + strings.Repeat("*", j) + input[i+len(mainPasswordStart)+j:]
 }

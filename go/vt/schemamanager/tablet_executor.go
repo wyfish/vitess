@@ -37,16 +37,16 @@ type TabletExecutor struct {
 	isClosed             bool
 	allowBigSchemaChange bool
 	keyspace             string
-	waitSlaveTimeout     time.Duration
+	waitSubordinateTimeout     time.Duration
 }
 
 // NewTabletExecutor creates a new TabletExecutor instance
-func NewTabletExecutor(wr *wrangler.Wrangler, waitSlaveTimeout time.Duration) *TabletExecutor {
+func NewTabletExecutor(wr *wrangler.Wrangler, waitSubordinateTimeout time.Duration) *TabletExecutor {
 	return &TabletExecutor{
 		wr:                   wr,
 		isClosed:             true,
 		allowBigSchemaChange: false,
-		waitSlaveTimeout:     waitSlaveTimeout,
+		waitSubordinateTimeout:     waitSubordinateTimeout,
 	}
 }
 
@@ -62,7 +62,7 @@ func (exec *TabletExecutor) DisallowBigSchemaChange() {
 	exec.allowBigSchemaChange = false
 }
 
-// Open opens a connection to the master for every shard.
+// Open opens a connection to the main for every shard.
 func (exec *TabletExecutor) Open(ctx context.Context, keyspace string) error {
 	if !exec.isClosed {
 		return nil
@@ -78,18 +78,18 @@ func (exec *TabletExecutor) Open(ctx context.Context, keyspace string) error {
 		if err != nil {
 			return fmt.Errorf("unable to get shard info, keyspace: %s, shard: %s, error: %v", keyspace, shardName, err)
 		}
-		if !shardInfo.HasMaster() {
-			return fmt.Errorf("shard: %s does not have a master", shardName)
+		if !shardInfo.HasMain() {
+			return fmt.Errorf("shard: %s does not have a main", shardName)
 		}
-		tabletInfo, err := exec.wr.TopoServer().GetTablet(ctx, shardInfo.MasterAlias)
+		tabletInfo, err := exec.wr.TopoServer().GetTablet(ctx, shardInfo.MainAlias)
 		if err != nil {
-			return fmt.Errorf("unable to get master tablet info, keyspace: %s, shard: %s, error: %v", keyspace, shardName, err)
+			return fmt.Errorf("unable to get main tablet info, keyspace: %s, shard: %s, error: %v", keyspace, shardName, err)
 		}
 		exec.tablets[i] = tabletInfo.Tablet
 	}
 
 	if len(exec.tablets) == 0 {
-		return fmt.Errorf("keyspace: %s does not contain any master tablets", keyspace)
+		return fmt.Errorf("keyspace: %s does not contain any main tablets", keyspace)
 	}
 	exec.isClosed = false
 	return nil
@@ -140,10 +140,10 @@ func (exec *TabletExecutor) parseDDLs(sqls []string) ([]*sqlparser.DDL, error) {
 func (exec *TabletExecutor) detectBigSchemaChanges(ctx context.Context, parsedDDLs []*sqlparser.DDL) (bool, error) {
 	// exec.tablets is guaranteed to have at least one element;
 	// Otherwise, Open should fail and executor should fail.
-	masterTabletInfo := exec.tablets[0]
+	mainTabletInfo := exec.tablets[0]
 	// get database schema, excluding views.
 	dbSchema, err := exec.wr.TabletManagerClient().GetSchema(
-		ctx, masterTabletInfo, []string{}, []string{}, false)
+		ctx, mainTabletInfo, []string{}, []string{}, false)
 	if err != nil {
 		return false, fmt.Errorf("unable to get database schema, error: %v", err)
 	}
@@ -222,10 +222,10 @@ func (exec *TabletExecutor) Execute(ctx context.Context, sqls []string) *Execute
 
 func (exec *TabletExecutor) executeOnAllTablets(ctx context.Context, execResult *ExecuteResult, sql string) {
 	var wg sync.WaitGroup
-	numOfMasterTablets := len(exec.tablets)
-	wg.Add(numOfMasterTablets)
-	errChan := make(chan ShardWithError, numOfMasterTablets)
-	successChan := make(chan ShardResult, numOfMasterTablets)
+	numOfMainTablets := len(exec.tablets)
+	wg.Add(numOfMainTablets)
+	errChan := make(chan ShardWithError, numOfMainTablets)
+	successChan := make(chan ShardResult, numOfMainTablets)
 	for _, tablet := range exec.tablets {
 		go func(tablet *topodatapb.Tablet) {
 			defer wg.Done()
@@ -248,17 +248,17 @@ func (exec *TabletExecutor) executeOnAllTablets(ctx context.Context, execResult 
 		return
 	}
 
-	// If all shards succeeded, wait (up to waitSlaveTimeout) for slaves to
+	// If all shards succeeded, wait (up to waitSubordinateTimeout) for subordinates to
 	// execute the schema change via replication. This is best-effort, meaning
 	// we still return overall success if the timeout expires.
 	concurrency := sync2.NewSemaphore(10, 0)
-	reloadCtx, cancel := context.WithTimeout(ctx, exec.waitSlaveTimeout)
+	reloadCtx, cancel := context.WithTimeout(ctx, exec.waitSubordinateTimeout)
 	defer cancel()
 	for _, result := range execResult.SuccessShards {
 		wg.Add(1)
 		go func(result ShardResult) {
 			defer wg.Done()
-			exec.wr.ReloadSchemaShard(reloadCtx, exec.keyspace, result.Shard, result.Position, concurrency, false /* includeMaster */)
+			exec.wr.ReloadSchemaShard(reloadCtx, exec.keyspace, result.Shard, result.Position, concurrency, false /* includeMain */)
 		}(result)
 	}
 	wg.Wait()
@@ -276,12 +276,12 @@ func (exec *TabletExecutor) executeOneTablet(
 		return
 	}
 	// Get a replication position that's guaranteed to be after the schema change
-	// was applied on the master.
-	pos, err := exec.wr.TabletManagerClient().MasterPosition(ctx, tablet)
+	// was applied on the main.
+	pos, err := exec.wr.TabletManagerClient().MainPosition(ctx, tablet)
 	if err != nil {
 		errChan <- ShardWithError{
 			Shard: tablet.Shard,
-			Err:   fmt.Sprintf("couldn't get replication position after applying schema change on master: %v", err),
+			Err:   fmt.Sprintf("couldn't get replication position after applying schema change on main: %v", err),
 		}
 		return
 	}

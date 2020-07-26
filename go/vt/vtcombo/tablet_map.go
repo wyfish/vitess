@@ -72,7 +72,7 @@ type tablet struct {
 var tabletMap map[uint32]*tablet
 
 // CreateTablet creates an individual tablet, with its agent, and adds
-// it to the map. If it's a master tablet, it also issues a TER.
+// it to the map. If it's a main tablet, it also issues a TER.
 func CreateTablet(ctx context.Context, ts *topo.Server, cell string, uid uint32, keyspace, shard, dbname string, tabletType topodatapb.TabletType, mysqld mysqlctl.MysqlDaemon, dbcfgs *dbconfigs.DBConfigs) error {
 	alias := &topodatapb.TabletAlias{
 		Cell: cell,
@@ -89,7 +89,7 @@ func CreateTablet(ctx context.Context, ts *topo.Server, cell string, uid uint32,
 	agent := tabletmanager.NewComboActionAgent(ctx, ts, alias, int32(8000+uid), int32(9000+uid), controller, dbcfgs, mysqld, keyspace, shard, dbname, strings.ToLower(initTabletType.String()))
 	if tabletType == topodatapb.TabletType_MASTER {
 		if err := agent.TabletExternallyReparented(ctx, ""); err != nil {
-			return fmt.Errorf("TabletExternallyReparented failed on master %v: %v", topoproto.TabletAliasString(alias), err)
+			return fmt.Errorf("TabletExternallyReparented failed on main %v: %v", topoproto.TabletAliasString(alias), err)
 		}
 	}
 	tabletMap[uid] = &tablet{
@@ -183,7 +183,7 @@ func InitTabletMap(ts *topo.Server, tpb *vttestpb.VTTestTopology, mysqld mysqlct
 
 					replicas := int(kpb.ReplicaCount)
 					if replicas == 0 {
-						// 2 replicas in order to ensure the master cell has a master and a replica
+						// 2 replicas in order to ensure the main cell has a main and a replica
 						replicas = 2
 					}
 					rdonlys := int(kpb.RdonlyCount)
@@ -194,7 +194,7 @@ func InitTabletMap(ts *topo.Server, tpb *vttestpb.VTTestTopology, mysqld mysqlct
 					if cell == tpb.Cells[0] {
 						replicas--
 
-						// create the master
+						// create the main
 						if err := CreateTablet(ctx, ts, cell, uid, keyspace, shard, dbname, topodatapb.TabletType_MASTER, mysqld, copydbcfgs); err != nil {
 							return err
 						}
@@ -202,7 +202,7 @@ func InitTabletMap(ts *topo.Server, tpb *vttestpb.VTTestTopology, mysqld mysqlct
 					}
 
 					for i := 0; i < replicas; i++ {
-						// create a replica slave
+						// create a replica subordinate
 						if err := CreateTablet(ctx, ts, cell, uid, keyspace, shard, dbname, topodatapb.TabletType_REPLICA, mysqld, copydbcfgs); err != nil {
 							return err
 						}
@@ -210,7 +210,7 @@ func InitTabletMap(ts *topo.Server, tpb *vttestpb.VTTestTopology, mysqld mysqlct
 					}
 
 					for i := 0; i < rdonlys; i++ {
-						// create a rdonly slave
+						// create a rdonly subordinate
 						if err := CreateTablet(ctx, ts, cell, uid, keyspace, shard, dbname, topodatapb.TabletType_RDONLY, mysqld, copydbcfgs); err != nil {
 							return err
 						}
@@ -622,27 +622,27 @@ func (itmc *internalTabletManagerClient) ExecuteFetchAsApp(ctx context.Context, 
 	return nil, fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) SlaveStatus(ctx context.Context, tablet *topodatapb.Tablet) (*replicationdatapb.Status, error) {
+func (itmc *internalTabletManagerClient) SubordinateStatus(ctx context.Context, tablet *topodatapb.Tablet) (*replicationdatapb.Status, error) {
 	return nil, fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) MasterPosition(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
+func (itmc *internalTabletManagerClient) MainPosition(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) StopSlave(ctx context.Context, tablet *topodatapb.Tablet) error {
+func (itmc *internalTabletManagerClient) StopSubordinate(ctx context.Context, tablet *topodatapb.Tablet) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) StopSlaveMinimum(ctx context.Context, tablet *topodatapb.Tablet, stopPos string, waitTime time.Duration) (string, error) {
+func (itmc *internalTabletManagerClient) StopSubordinateMinimum(ctx context.Context, tablet *topodatapb.Tablet, stopPos string, waitTime time.Duration) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) StartSlave(ctx context.Context, tablet *topodatapb.Tablet) error {
+func (itmc *internalTabletManagerClient) StartSubordinate(ctx context.Context, tablet *topodatapb.Tablet) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) StartSlaveUntilAfter(ctx context.Context, tablet *topodatapb.Tablet, position string, duration time.Duration) error {
+func (itmc *internalTabletManagerClient) StartSubordinateUntilAfter(ctx context.Context, tablet *topodatapb.Tablet, position string, duration time.Duration) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
@@ -650,7 +650,7 @@ func (itmc *internalTabletManagerClient) TabletExternallyReparented(ctx context.
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) GetSlaves(ctx context.Context, tablet *topodatapb.Tablet) ([]string, error) {
+func (itmc *internalTabletManagerClient) GetSubordinates(ctx context.Context, tablet *topodatapb.Tablet) ([]string, error) {
 	return nil, fmt.Errorf("not implemented in vtcombo")
 }
 
@@ -666,39 +666,39 @@ func (itmc *internalTabletManagerClient) ResetReplication(ctx context.Context, t
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) InitMaster(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
+func (itmc *internalTabletManagerClient) InitMain(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) PopulateReparentJournal(ctx context.Context, tablet *topodatapb.Tablet, timeCreatedNS int64, actionName string, masterAlias *topodatapb.TabletAlias, pos string) error {
+func (itmc *internalTabletManagerClient) PopulateReparentJournal(ctx context.Context, tablet *topodatapb.Tablet, timeCreatedNS int64, actionName string, mainAlias *topodatapb.TabletAlias, pos string) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) InitSlave(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error {
+func (itmc *internalTabletManagerClient) InitSubordinate(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) DemoteMaster(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
+func (itmc *internalTabletManagerClient) DemoteMain(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) UndoDemoteMaster(ctx context.Context, tablet *topodatapb.Tablet) error {
+func (itmc *internalTabletManagerClient) UndoDemoteMain(ctx context.Context, tablet *topodatapb.Tablet) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) PromoteSlaveWhenCaughtUp(ctx context.Context, tablet *topodatapb.Tablet, pos string) (string, error) {
+func (itmc *internalTabletManagerClient) PromoteSubordinateWhenCaughtUp(ctx context.Context, tablet *topodatapb.Tablet, pos string) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) SlaveWasPromoted(ctx context.Context, tablet *topodatapb.Tablet) error {
+func (itmc *internalTabletManagerClient) SubordinateWasPromoted(ctx context.Context, tablet *topodatapb.Tablet) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) SetMaster(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSlave bool) error {
+func (itmc *internalTabletManagerClient) SetMain(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSubordinate bool) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) SlaveWasRestarted(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias) error {
+func (itmc *internalTabletManagerClient) SubordinateWasRestarted(ctx context.Context, tablet *topodatapb.Tablet, parent *topodatapb.TabletAlias) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
 
@@ -706,11 +706,11 @@ func (itmc *internalTabletManagerClient) StopReplicationAndGetStatus(ctx context
 	return nil, fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) PromoteSlave(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
+func (itmc *internalTabletManagerClient) PromoteSubordinate(ctx context.Context, tablet *topodatapb.Tablet) (string, error) {
 	return "", fmt.Errorf("not implemented in vtcombo")
 }
 
-func (itmc *internalTabletManagerClient) Backup(ctx context.Context, tablet *topodatapb.Tablet, concurrency int, allowMaster bool) (logutil.EventStream, error) {
+func (itmc *internalTabletManagerClient) Backup(ctx context.Context, tablet *topodatapb.Tablet, concurrency int, allowMain bool) (logutil.EventStream, error) {
 	return nil, fmt.Errorf("not implemented in vtcombo")
 }
 

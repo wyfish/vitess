@@ -376,13 +376,13 @@ func (scw *LegacySplitCloneWorker) findTargets(ctx context.Context) error {
 		scw.sourceTablets[i] = ti.Tablet
 
 		shortCtx, cancel = context.WithTimeout(ctx, *remoteActionsTimeout)
-		err = scw.wr.TabletManagerClient().StopSlave(shortCtx, scw.sourceTablets[i])
+		err = scw.wr.TabletManagerClient().StopSubordinate(shortCtx, scw.sourceTablets[i])
 		cancel()
 		if err != nil {
 			return fmt.Errorf("cannot stop replication on tablet %v", topoproto.TabletAliasString(alias))
 		}
 
-		wrangler.RecordStartSlaveAction(scw.cleaner, scw.sourceTablets[i])
+		wrangler.RecordStartSubordinateAction(scw.cleaner, scw.sourceTablets[i])
 	}
 
 	// Initialize healthcheck and add destination shards to it.
@@ -395,7 +395,7 @@ func (scw *LegacySplitCloneWorker) findTargets(ctx context.Context) error {
 		scw.destinationShardWatchers = append(scw.destinationShardWatchers, watcher)
 	}
 
-	// Make sure we find a master for each destination shard and log it.
+	// Make sure we find a main for each destination shard and log it.
 	scw.wr.Logger().Infof("Finding a MASTER tablet for each destination shard...")
 	for _, si := range scw.destinationShards {
 		waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
@@ -403,25 +403,25 @@ func (scw *LegacySplitCloneWorker) findTargets(ctx context.Context) error {
 		if err := scw.tsc.WaitForTablets(waitCtx, scw.cell, si.Keyspace(), si.ShardName(), topodatapb.TabletType_MASTER); err != nil {
 			return vterrors.Wrapf(err, "cannot find MASTER tablet for destination shard for %v/%v", si.Keyspace(), si.ShardName())
 		}
-		masters := scw.tsc.GetHealthyTabletStats(si.Keyspace(), si.ShardName(), topodatapb.TabletType_MASTER)
-		if len(masters) == 0 {
+		mains := scw.tsc.GetHealthyTabletStats(si.Keyspace(), si.ShardName(), topodatapb.TabletType_MASTER)
+		if len(mains) == 0 {
 			return fmt.Errorf("cannot find MASTER tablet for destination shard for %v/%v in HealthCheck: empty TabletStats list", si.Keyspace(), si.ShardName())
 		}
-		master := masters[0]
+		main := mains[0]
 
 		// Get the MySQL database name of the tablet.
 		shortCtx, cancel := context.WithTimeout(ctx, *remoteActionsTimeout)
-		ti, err := scw.wr.TopoServer().GetTablet(shortCtx, master.Tablet.Alias)
+		ti, err := scw.wr.TopoServer().GetTablet(shortCtx, main.Tablet.Alias)
 		cancel()
 		if err != nil {
-			return vterrors.Wrapf(err, "cannot get the TabletInfo for destination master (%v) to find out its db name", topoproto.TabletAliasString(master.Tablet.Alias))
+			return vterrors.Wrapf(err, "cannot get the TabletInfo for destination main (%v) to find out its db name", topoproto.TabletAliasString(main.Tablet.Alias))
 		}
 		keyspaceAndShard := topoproto.KeyspaceShardString(si.Keyspace(), si.ShardName())
 		scw.destinationDbNames[keyspaceAndShard] = ti.DbName()
 
-		scw.wr.Logger().Infof("Using tablet %v as destination master for %v/%v", topoproto.TabletAliasString(master.Tablet.Alias), si.Keyspace(), si.ShardName())
+		scw.wr.Logger().Infof("Using tablet %v as destination main for %v/%v", topoproto.TabletAliasString(main.Tablet.Alias), si.Keyspace(), si.ShardName())
 	}
-	scw.wr.Logger().Infof("NOTE: The used master of a destination shard might change over the course of the copy e.g. due to a reparent. The HealthCheck module will track and log master changes and any error message will always refer the actually used master address.")
+	scw.wr.Logger().Infof("NOTE: The used main of a destination shard might change over the course of the copy e.g. due to a reparent. The HealthCheck module will track and log main changes and any error message will always refer the actually used main address.")
 
 	// Set up the throttler for each destination shard.
 	for _, si := range scw.destinationShards {
@@ -438,7 +438,7 @@ func (scw *LegacySplitCloneWorker) findTargets(ctx context.Context) error {
 }
 
 // copy phase:
-//	- copy the data from source tablets to destination masters (with replication on)
+//	- copy the data from source tablets to destination mains (with replication on)
 // Assumes that the schema has already been created on each destination tablet
 // (probably from vtctl's CopySchemaShard)
 func (scw *LegacySplitCloneWorker) copy(ctx context.Context) error {
@@ -606,7 +606,7 @@ func (scw *LegacySplitCloneWorker) copy(ctx context.Context) error {
 	// get the current position from the sources
 	for shardIndex := range scw.sourceShards {
 		shortCtx, cancel := context.WithTimeout(ctx, *remoteActionsTimeout)
-		status, err := scw.wr.TabletManagerClient().SlaveStatus(shortCtx, scw.sourceTablets[shardIndex])
+		status, err := scw.wr.TabletManagerClient().SubordinateStatus(shortCtx, scw.sourceTablets[shardIndex])
 		cancel()
 		if err != nil {
 			return err

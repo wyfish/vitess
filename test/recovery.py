@@ -34,12 +34,12 @@ xtrabackup_args = []
 stream_mode = 'xbstream'
 
 # tablets
-tablet_master = tablet.Tablet()
+tablet_main = tablet.Tablet()
 tablet_replica1 = tablet.Tablet()
 tablet_replica2 = tablet.Tablet()
 tablet_replica3 = tablet.Tablet()
 
-all_tablets = [tablet_master, tablet_replica1, tablet_replica2, tablet_replica3]
+all_tablets = [tablet_main, tablet_replica1, tablet_replica2, tablet_replica3]
 
 def setUpModule():
   global xtrabackup_args
@@ -82,14 +82,14 @@ class TestRecovery(unittest.TestCase):
     xtra_args = ['-enable_replication_reporter']
     if use_xtrabackup:
       xtra_args.extend(xtrabackup_args)
-    tablet_master.init_tablet('replica', 'test_keyspace', '0', start=True,
+    tablet_main.init_tablet('replica', 'test_keyspace', '0', start=True,
                               supports_backups=True,
                               extra_args=xtra_args)
     tablet_replica1.init_tablet('replica', 'test_keyspace', '0', start=True,
                                 supports_backups=True,
                                 extra_args=xtra_args)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     tablet_master.tablet_alias])
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     tablet_main.tablet_alias])
 
   def tearDown(self):
     for t in all_tablets:
@@ -99,7 +99,7 @@ class TestRecovery(unittest.TestCase):
     environment.topo_server().wipe()
     for t in all_tablets:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False, slave=False)
+      t.set_semi_sync_enabled(main=False, subordinate=False)
       t.clean_dbs()
 
     for backup in self._list_backups():
@@ -194,11 +194,11 @@ class TestRecovery(unittest.TestCase):
     """Test recovery from backup flow.
 
     test_recovery will:
-    - create a shard with master and replica1 only
-    - run InitShardMaster
+    - create a shard with main and replica1 only
+    - run InitShardMain
     - insert some data
     - take a backup
-    - insert more data on the master
+    - insert more data on the main
     - create a recovery keyspace
     - bring up tablet_replica2 in the new keyspace
     - check that new tablet does not have data created after backup
@@ -206,15 +206,15 @@ class TestRecovery(unittest.TestCase):
 
     """
 
-    # insert data on master, wait for replica to get it
+    # insert data on main, wait for replica to get it
     utils.run_vtctl(['ApplySchema',
                      '-sql', self._create_vt_insert_test,
                      'test_keyspace'],
                     auto_log=True)
-    self._insert_data(tablet_master, 1)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
 
-    master_pos = mysql_flavor().master_position(tablet_master)
+    main_pos = mysql_flavor().main_position(tablet_main)
     # backup the replica
     utils.run_vtctl(['Backup', tablet_replica1.tablet_alias], auto_log=True)
 
@@ -227,8 +227,8 @@ class TestRecovery(unittest.TestCase):
     strs = backups[0].split('.')
     expectedTime = datetime.strptime(strs[0] + '.' + strs[1], '%Y-%m-%d.%H%M%S')
 
-    # insert more data on the master
-    self._insert_data(tablet_master, 2)
+    # insert more data on the main
+    self._insert_data(tablet_main, 2)
 
     utils.run_vtctl(['ApplyVSchema',
                      '-vschema', self._vschema_json,
@@ -263,18 +263,18 @@ class TestRecovery(unittest.TestCase):
     self.assertEqual(metadata['Alias'], 'test_nj-0000062346')
     self.assertEqual(metadata['ClusterAlias'], 'recovery_keyspace.0')
     self.assertEqual(metadata['DataCenter'], 'test_nj')
-    self.assertEqual(metadata['RestorePosition'], master_pos)
+    self.assertEqual(metadata['RestorePosition'], main_pos)
     logging.debug('RestoredBackupTime: %s', str(metadata['RestoredBackupTime']))
     gotTime = datetime.strptime(metadata['RestoredBackupTime'], '%Y-%m-%dT%H:%M:%SZ')
     self.assertEqual(gotTime, expectedTime)
 
-    # update original 1st row in master
-    tablet_master.mquery(
+    # update original 1st row in main
+    tablet_main.mquery(
         'vt_test_keyspace',
         "update vt_insert_test set msg='new msg' where id=1", write=True)
 
-    # verify that master has new value
-    result = tablet_master.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
+    # verify that main has new value
+    result = tablet_main.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
     self.assertEqual(result[0][0], 'new msg')
 
     # verify that restored replica has old value
@@ -284,9 +284,9 @@ class TestRecovery(unittest.TestCase):
     # start vtgate
     vtgate = utils.VtGate()
     vtgate.start(tablets=[
-      tablet_master, tablet_replica1, tablet_replica2
+      tablet_main, tablet_replica1, tablet_replica2
       ], tablet_types_to_wait='REPLICA')
-    utils.vtgate.wait_for_endpoints('test_keyspace.0.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.0.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.0.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_keyspace.0.replica', 1)
     
@@ -358,11 +358,11 @@ class TestRecovery(unittest.TestCase):
     """Test recovery from backup flow.
 
     test_multi_recovery will:
-    - create a shard with master and replica1 only
-    - run InitShardMaster
+    - create a shard with main and replica1 only
+    - run InitShardMain
     - insert some data
     - take a backup
-    - insert more data on the master
+    - insert more data on the main
     - take another backup
     - create a recovery keyspace after first backup
     - bring up tablet_replica2 in the new keyspace
@@ -374,12 +374,12 @@ class TestRecovery(unittest.TestCase):
 
     """
 
-    # insert data on master, wait for replica to get it
+    # insert data on main, wait for replica to get it
     utils.run_vtctl(['ApplySchema',
                      '-sql', self._create_vt_insert_test,
                      'test_keyspace'],
                     auto_log=True)
-    self._insert_data(tablet_master, 1)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
 
     # backup the replica
@@ -391,8 +391,8 @@ class TestRecovery(unittest.TestCase):
     self.assertEqual(len(backups), 1)
     self.assertTrue(backups[0].endswith(tablet_replica1.tablet_alias))
 
-    # insert more data on the master
-    self._insert_data(tablet_master, 2)
+    # insert more data on the main
+    self._insert_data(tablet_main, 2)
     # wait for it to replicate
     self._check_data(tablet_replica1, 2, 'replica1 tablet getting data')
 
@@ -416,13 +416,13 @@ class TestRecovery(unittest.TestCase):
     # check the new replica does not have the data
     self._check_data(tablet_replica2, 1, 'replica2 tablet should not have new data')
 
-    # update original 1st row in master
-    tablet_master.mquery(
+    # update original 1st row in main
+    tablet_main.mquery(
         'vt_test_keyspace',
         "update vt_insert_test set msg='new msg 1' where id=1", write=True)
 
-    # verify that master has new value
-    result = tablet_master.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
+    # verify that main has new value
+    result = tablet_main.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
     self.assertEqual(result[0][0], 'new msg 1')
 
     # verify that restored replica has old value
@@ -432,8 +432,8 @@ class TestRecovery(unittest.TestCase):
     # take another backup on the replica
     utils.run_vtctl(['Backup', tablet_replica1.tablet_alias], auto_log=True)
 
-    # insert more data on the master
-    self._insert_data(tablet_master, 3)
+    # insert more data on the main
+    self._insert_data(tablet_main, 3)
     # wait for it to replicate
     self._check_data(tablet_replica1, 3, 'replica1 tablet getting data')
 
@@ -447,13 +447,13 @@ class TestRecovery(unittest.TestCase):
     # check the new replica does not have the latest data
     self._check_data(tablet_replica3, 2, 'replica3 tablet should not have new data')
 
-    # update original 1st row in master again
-    tablet_master.mquery(
+    # update original 1st row in main again
+    tablet_main.mquery(
         'vt_test_keyspace',
         "update vt_insert_test set msg='new msg 2' where id=1", write=True)
 
-    # verify that master has new value
-    result = tablet_master.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
+    # verify that main has new value
+    result = tablet_main.mquery('vt_test_keyspace', 'select msg from vt_insert_test where id=1')
     self.assertEqual(result[0][0], 'new msg 2')
 
     # verify that restored replica has correct value
@@ -463,7 +463,7 @@ class TestRecovery(unittest.TestCase):
     # start vtgate
     vtgate = utils.VtGate()
     vtgate.start(tablets=all_tablets, tablet_types_to_wait='REPLICA')
-    utils.vtgate.wait_for_endpoints('test_keyspace.0.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.0.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.0.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_ks1.0.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_ks2.0.replica', 1)

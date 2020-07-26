@@ -226,8 +226,8 @@ func testResolverGeneric(t *testing.T, name string, action func(res *Resolver) (
 		sbc1.MustFailCodes[vtrpcpb.Code_INTERNAL] = 1
 		_, err := action(res)
 		want := []string{
-			fmt.Sprintf("target: %s.-20.master, used tablet: aa-0 (-20): INVALID_ARGUMENT error", name),
-			fmt.Sprintf("target: %s.20-40.master, used tablet: aa-0 (20-40): INTERNAL error", name),
+			fmt.Sprintf("target: %s.-20.main, used tablet: aa-0 (-20): INVALID_ARGUMENT error", name),
+			fmt.Sprintf("target: %s.20-40.main, used tablet: aa-0 (20-40): INTERNAL error", name),
 		}
 		if err == nil {
 			t.Errorf("want\n%v\ngot\n%v", want, err)
@@ -262,8 +262,8 @@ func testResolverGeneric(t *testing.T, name string, action func(res *Resolver) (
 		sbc1.MustFailCodes[vtrpcpb.Code_FAILED_PRECONDITION] = 1
 		_, err := action(res)
 		want := []string{
-			fmt.Sprintf("target: %s.-20.master, used tablet: aa-0 (-20): FAILED_PRECONDITION error", name),
-			fmt.Sprintf("target: %s.20-40.master, used tablet: aa-0 (20-40): FAILED_PRECONDITION error", name),
+			fmt.Sprintf("target: %s.-20.main, used tablet: aa-0 (-20): FAILED_PRECONDITION error", name),
+			fmt.Sprintf("target: %s.20-40.main, used tablet: aa-0 (20-40): FAILED_PRECONDITION error", name),
 		}
 		if err == nil {
 			t.Errorf("want\n%v\ngot\n%v", want, err)
@@ -421,7 +421,7 @@ func testResolverStreamGeneric(t *testing.T, name string, action func(res *Resol
 		hc.AddTestTablet("aa", "20-40", 1, name, "20-40", topodatapb.TabletType_MASTER, true, 1, nil)
 		sbc0.MustFailCodes[vtrpcpb.Code_INTERNAL] = 1
 		_, err := action(res)
-		want := fmt.Sprintf("target: %s.-20.master, used tablet: aa-0 (-20): INTERNAL error", name)
+		want := fmt.Sprintf("target: %s.-20.main, used tablet: aa-0 (-20): INTERNAL error", name)
 		if err == nil || err.Error() != want {
 			t.Errorf("want\n%s\ngot\n%v", want, err)
 		}
@@ -935,7 +935,7 @@ func TestResolverExecBatchReresolve(t *testing.T) {
 	}
 
 	_, err := res.ExecuteBatch(context.Background(), topodatapb.TabletType_MASTER, false, nil, nil, buildBatchRequest)
-	want := "target: TestResolverExecBatchReresolve.0.master, used tablet: aa-0 (0): FAILED_PRECONDITION error"
+	want := "target: TestResolverExecBatchReresolve.0.main, used tablet: aa-0 (0): FAILED_PRECONDITION error"
 	if err == nil || err.Error() != want {
 		t.Errorf("want %s, got %v", want, err)
 	}
@@ -972,7 +972,7 @@ func TestResolverExecBatchAsTransaction(t *testing.T) {
 	}
 
 	_, err := res.ExecuteBatch(context.Background(), topodatapb.TabletType_MASTER, true, nil, nil, buildBatchRequest)
-	want := "target: TestResolverExecBatchAsTransaction.0.master, used tablet: aa-0 (0): INTERNAL error"
+	want := "target: TestResolverExecBatchAsTransaction.0.main, used tablet: aa-0 (0): INTERNAL error"
 	if err == nil || err.Error() != want {
 		t.Errorf("want %v, got %v", want, err)
 	}

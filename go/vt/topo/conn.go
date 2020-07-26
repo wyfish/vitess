@@ -155,21 +155,21 @@ type Conn interface {
 	Watch(ctx context.Context, filePath string) (current *WatchData, changes <-chan *WatchData, cancel CancelFunc)
 
 	//
-	// Master election methods. This is meant to have a small
-	// number of processes elect a master within a group. The
+	// Main election methods. This is meant to have a small
+	// number of processes elect a main within a group. The
 	// backend storage for this can either be the global topo
 	// server, or a resilient quorum of individual cells, to
 	// reduce the load / dependency on the global topo server.
 	//
 
-	// NewMasterParticipation creates a MasterParticipation
-	// object, used to become the Master in an election for the
+	// NewMainParticipation creates a MainParticipation
+	// object, used to become the Main in an election for the
 	// provided group name.  Id is the name of the local process,
 	// passing in the hostname:port of the current process as id
 	// is the common usage. Id must be unique for each process
 	// calling this, for a given name. Calling this function does
 	// not make the current process a candidate for the election.
-	NewMasterParticipation(name, id string) (MasterParticipation, error)
+	NewMainParticipation(name, id string) (MainParticipation, error)
 
 	// Close closes the connection to the server.
 	Close()
@@ -198,7 +198,7 @@ type DirEntry struct {
 
 	// Ephemeral is set if the directory / file only contains
 	// data that was not set by the file API, like lock files
-	// or master-election related files.
+	// or main-election related files.
 	// Only filled in if full is true.
 	Ephemeral bool
 }
@@ -270,21 +270,21 @@ type WatchData struct {
 	Err error
 }
 
-// MasterParticipation is the object returned by NewMasterParticipation.
+// MainParticipation is the object returned by NewMainParticipation.
 // Sample usage:
 //
-// mp := server.NewMasterParticipation("vtctld", "hostname:8080")
+// mp := server.NewMainParticipation("vtctld", "hostname:8080")
 // job := NewJob()
 // go func() {
 //   for {
-//     ctx, err := mp.WaitForMastership()
+//     ctx, err := mp.WaitForMainship()
 //     switch err {
 //     case nil:
 //       job.RunUntilContextDone(ctx)
 //     case topo.ErrInterrupted:
 //       return
 //     default:
-//       log.Errorf("Got error while waiting for master, will retry in 5s: %v", err)
+//       log.Errorf("Got error while waiting for main, will retry in 5s: %v", err)
 //       time.Sleep(5 * time.Second)
 //     }
 //   }
@@ -294,34 +294,34 @@ type WatchData struct {
 //   if job.Running() {
 //     job.WriteStatus(w, r)
 //   } else {
-//     http.Redirect(w, r, mp.GetCurrentMasterID(context.Background()), http.StatusFound)
+//     http.Redirect(w, r, mp.GetCurrentMainID(context.Background()), http.StatusFound)
 //   }
 // })
 //
 // servenv.OnTermSync(func() {
 //   mp.Stop()
 // })
-type MasterParticipation interface {
-	// WaitForMastership makes the current process a candidate
-	// for election, and waits until this process is the master.
-	// After we become the master, we may lose mastership. In that case,
+type MainParticipation interface {
+	// WaitForMainship makes the current process a candidate
+	// for election, and waits until this process is the main.
+	// After we become the main, we may lose mainship. In that case,
 	// the returned context will be canceled. If Stop was called,
-	// WaitForMastership will return nil, ErrInterrupted.
-	WaitForMastership() (context.Context, error)
+	// WaitForMainship will return nil, ErrInterrupted.
+	WaitForMainship() (context.Context, error)
 
 	// Stop is called when we don't want to participate in the
-	// master election any more. Typically, that is when the
+	// main election any more. Typically, that is when the
 	// hosting process is terminating.  We will relinquish
-	// mastership at that point, if we had it. Stop should
+	// mainship at that point, if we had it. Stop should
 	// not return until everything has been done.
-	// The MasterParticipation object should be discarded
-	// after Stop has been called. Any call to WaitForMastership
+	// The MainParticipation object should be discarded
+	// after Stop has been called. Any call to WaitForMainship
 	// after Stop() will return nil, ErrInterrupted.
-	// If WaitForMastership() was running, it will return
+	// If WaitForMainship() was running, it will return
 	// nil, ErrInterrupted as soon as possible.
 	Stop()
 
-	// GetCurrentMasterID returns the current master id.
+	// GetCurrentMainID returns the current main id.
 	// This may not work after Stop has been called.
-	GetCurrentMasterID(ctx context.Context) (string, error)
+	GetCurrentMainID(ctx context.Context) (string, error)
 }

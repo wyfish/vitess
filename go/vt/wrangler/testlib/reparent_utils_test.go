@@ -41,19 +41,19 @@ func TestShardReplicationStatuses(t *testing.T) {
 	if _, err := ts.GetOrCreateShard(ctx, "test_keyspace", "0"); err != nil {
 		t.Fatalf("GetOrCreateShard failed: %v", err)
 	}
-	master := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_MASTER, nil)
-	slave := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, nil)
+	main := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_MASTER, nil)
+	subordinate := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, nil)
 
-	// mark the master inside the shard
+	// mark the main inside the shard
 	if _, err := ts.UpdateShardFields(ctx, "test_keyspace", "0", func(si *topo.ShardInfo) error {
-		si.MasterAlias = master.Tablet.Alias
+		si.MainAlias = main.Tablet.Alias
 		return nil
 	}); err != nil {
 		t.Fatalf("UpdateShardFields failed: %v", err)
 	}
 
-	// master action loop (to initialize host and port)
-	master.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	// main action loop (to initialize host and port)
+	main.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -62,11 +62,11 @@ func TestShardReplicationStatuses(t *testing.T) {
 			},
 		},
 	}
-	master.StartActionLoop(t, wr)
-	defer master.StopActionLoop(t)
+	main.StartActionLoop(t, wr)
+	defer main.StopActionLoop(t)
 
-	// slave loop
-	slave.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	// subordinate loop
+	subordinate.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -75,10 +75,10 @@ func TestShardReplicationStatuses(t *testing.T) {
 			},
 		},
 	}
-	slave.FakeMysqlDaemon.CurrentMasterHost = topoproto.MysqlHostname(master.Tablet)
-	slave.FakeMysqlDaemon.CurrentMasterPort = int(topoproto.MysqlPort(master.Tablet))
-	slave.StartActionLoop(t, wr)
-	defer slave.StopActionLoop(t)
+	subordinate.FakeMysqlDaemon.CurrentMainHost = topoproto.MysqlHostname(main.Tablet)
+	subordinate.FakeMysqlDaemon.CurrentMainPort = int(topoproto.MysqlPort(main.Tablet))
+	subordinate.StartActionLoop(t, wr)
+	defer subordinate.StopActionLoop(t)
 
 	// run ShardReplicationStatuses
 	ti, rs, err := wr.ShardReplicationStatuses(ctx, "test_keyspace", "0")
@@ -86,18 +86,18 @@ func TestShardReplicationStatuses(t *testing.T) {
 		t.Fatalf("ShardReplicationStatuses failed: %v", err)
 	}
 
-	// check result (make master first in the array)
+	// check result (make main first in the array)
 	if len(ti) != 2 || len(rs) != 2 {
 		t.Fatalf("ShardReplicationStatuses returned wrong results: %v %v", ti, rs)
 	}
-	if topoproto.TabletAliasEqual(ti[0].Alias, slave.Tablet.Alias) {
+	if topoproto.TabletAliasEqual(ti[0].Alias, subordinate.Tablet.Alias) {
 		ti[0], ti[1] = ti[1], ti[0]
 		rs[0], rs[1] = rs[1], rs[0]
 	}
-	if !topoproto.TabletAliasEqual(ti[0].Alias, master.Tablet.Alias) ||
-		!topoproto.TabletAliasEqual(ti[1].Alias, slave.Tablet.Alias) ||
-		rs[0].MasterHost != "" ||
-		rs[1].MasterHost != master.Tablet.Hostname {
+	if !topoproto.TabletAliasEqual(ti[0].Alias, main.Tablet.Alias) ||
+		!topoproto.TabletAliasEqual(ti[1].Alias, subordinate.Tablet.Alias) ||
+		rs[0].MainHost != "" ||
+		rs[1].MainHost != main.Tablet.Hostname {
 		t.Fatalf("ShardReplicationStatuses returend wrong results: %v %v", ti, rs)
 	}
 }
@@ -111,37 +111,37 @@ func TestReparentTablet(t *testing.T) {
 	if _, err := ts.GetOrCreateShard(ctx, "test_keyspace", "0"); err != nil {
 		t.Fatalf("CreateShard failed: %v", err)
 	}
-	master := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_MASTER, nil)
-	slave := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, nil)
+	main := NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_MASTER, nil)
+	subordinate := NewFakeTablet(t, wr, "cell1", 2, topodatapb.TabletType_REPLICA, nil)
 
-	// mark the master inside the shard
+	// mark the main inside the shard
 	if _, err := ts.UpdateShardFields(ctx, "test_keyspace", "0", func(si *topo.ShardInfo) error {
-		si.MasterAlias = master.Tablet.Alias
+		si.MainAlias = main.Tablet.Alias
 		return nil
 	}); err != nil {
 		t.Fatalf("UpdateShardFields failed: %v", err)
 	}
 
-	// master action loop (to initialize host and port)
-	master.StartActionLoop(t, wr)
-	defer master.StopActionLoop(t)
+	// main action loop (to initialize host and port)
+	main.StartActionLoop(t, wr)
+	defer main.StopActionLoop(t)
 
-	// slave loop
-	slave.FakeMysqlDaemon.SetMasterInput = topoproto.MysqlAddr(master.Tablet)
-	slave.FakeMysqlDaemon.ExpectedExecuteSuperQueryList = []string{
+	// subordinate loop
+	subordinate.FakeMysqlDaemon.SetMainInput = topoproto.MysqlAddr(main.Tablet)
+	subordinate.FakeMysqlDaemon.ExpectedExecuteSuperQueryList = []string{
 		"FAKE SET MASTER",
 	}
-	slave.StartActionLoop(t, wr)
-	defer slave.StopActionLoop(t)
+	subordinate.StartActionLoop(t, wr)
+	defer subordinate.StopActionLoop(t)
 
 	// run ReparentTablet
-	if err := wr.ReparentTablet(ctx, slave.Tablet.Alias); err != nil {
+	if err := wr.ReparentTablet(ctx, subordinate.Tablet.Alias); err != nil {
 		t.Fatalf("ReparentTablet failed: %v", err)
 	}
 
 	// check what was run
-	if err := slave.FakeMysqlDaemon.CheckSuperQueryList(); err != nil {
-		t.Fatalf("slave.FakeMysqlDaemon.CheckSuperQueryList failed: %v", err)
+	if err := subordinate.FakeMysqlDaemon.CheckSuperQueryList(); err != nil {
+		t.Fatalf("subordinate.FakeMysqlDaemon.CheckSuperQueryList failed: %v", err)
 	}
-	checkSemiSyncEnabled(t, false, true, slave)
+	checkSemiSyncEnabled(t, false, true, subordinate)
 }

@@ -66,7 +66,7 @@ func TestVerticalSplitClone(t *testing.T) {
 
 	sourceRdonlyFakeDB := sourceRdonlyFakeDB(t, "vt_source_ks", "moving1", verticalSplitCloneTestMin, verticalSplitCloneTestMax)
 
-	sourceMaster := testlib.NewFakeTablet(t, wi.wr, "cell1", 0,
+	sourceMain := testlib.NewFakeTablet(t, wi.wr, "cell1", 0,
 		topodatapb.TabletType_MASTER, nil, testlib.TabletKeyspaceShard(t, "source_ks", "0"))
 	sourceRdonly := testlib.NewFakeTablet(t, wi.wr, "cell1", 1,
 		topodatapb.TabletType_RDONLY, sourceRdonlyFakeDB, testlib.TabletKeyspaceShard(t, "source_ks", "0"))
@@ -96,11 +96,11 @@ func TestVerticalSplitClone(t *testing.T) {
 	// at once. So we'll process 4 + 4 + 2 rows to get to 10.
 	// That means 3 insert statements on the target. So 3 * 10
 	// = 30 insert statements on the destination.
-	destMasterFakeDb := createVerticalSplitCloneDestinationFakeDb(t, "destMaster", 30)
-	defer destMasterFakeDb.VerifyAllExecutedOrFail()
+	destMainFakeDb := createVerticalSplitCloneDestinationFakeDb(t, "destMain", 30)
+	defer destMainFakeDb.VerifyAllExecutedOrFail()
 
-	destMaster := testlib.NewFakeTablet(t, wi.wr, "cell1", 10,
-		topodatapb.TabletType_MASTER, destMasterFakeDb, testlib.TabletKeyspaceShard(t, "destination_ks", "0"))
+	destMain := testlib.NewFakeTablet(t, wi.wr, "cell1", 10,
+		topodatapb.TabletType_MASTER, destMainFakeDb, testlib.TabletKeyspaceShard(t, "destination_ks", "0"))
 	destRdonly := testlib.NewFakeTablet(t, wi.wr, "cell1", 11,
 		topodatapb.TabletType_RDONLY, nil, testlib.TabletKeyspaceShard(t, "destination_ks", "0"))
 
@@ -131,7 +131,7 @@ func TestVerticalSplitClone(t *testing.T) {
 			},
 		},
 	}
-	sourceRdonly.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	sourceRdonly.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{mysql.MariadbGTID{Domain: 12, Server: 34, Sequence: 5678}},
 	}
 	sourceRdonly.FakeMysqlDaemon.ExpectedExecuteSuperQueryList = []string{
@@ -144,24 +144,24 @@ func TestVerticalSplitClone(t *testing.T) {
 	sourceRdonlyQs.addGeneratedRows(verticalSplitCloneTestMin, verticalSplitCloneTestMax)
 	grpcqueryservice.Register(sourceRdonly.RPCServer, sourceRdonlyQs)
 
-	// Set up destination master which will be used as input for the diff during the clone.
-	destMasterShqs := fakes.NewStreamHealthQueryService(destMaster.Target())
-	destMasterShqs.AddDefaultHealthResponse()
-	destMasterQs := newTestQueryService(t, destMaster.Target(), destMasterShqs, 0, 1, topoproto.TabletAliasString(destMaster.Tablet.Alias), true /* omitKeyspaceID */)
+	// Set up destination main which will be used as input for the diff during the clone.
+	destMainShqs := fakes.NewStreamHealthQueryService(destMain.Target())
+	destMainShqs.AddDefaultHealthResponse()
+	destMainQs := newTestQueryService(t, destMain.Target(), destMainShqs, 0, 1, topoproto.TabletAliasString(destMain.Tablet.Alias), true /* omitKeyspaceID */)
 	// This tablet is empty and does not return any rows.
-	grpcqueryservice.Register(destMaster.RPCServer, destMasterQs)
+	grpcqueryservice.Register(destMain.RPCServer, destMainQs)
 
 	// Only wait 1 ms between retries, so that the test passes faster
 	*executeFetchRetryTime = (1 * time.Millisecond)
 
 	// When the online clone inserted the last rows, modify the destination test
 	// query service such that it will return them as well.
-	destMasterFakeDb.GetEntry(29).AfterFunc = func() {
-		destMasterQs.addGeneratedRows(verticalSplitCloneTestMin, verticalSplitCloneTestMax)
+	destMainFakeDb.GetEntry(29).AfterFunc = func() {
+		destMainQs.addGeneratedRows(verticalSplitCloneTestMin, verticalSplitCloneTestMax)
 	}
 
 	// Start action loop after having registered all RPC services.
-	for _, ft := range []*testlib.FakeTablet{sourceMaster, sourceRdonly, destMaster, destRdonly} {
+	for _, ft := range []*testlib.FakeTablet{sourceMain, sourceRdonly, destMain, destRdonly} {
 		ft.StartActionLoop(t, wi.wr)
 		defer ft.StopActionLoop(t)
 	}

@@ -33,7 +33,7 @@ from mysql_flavor import mysql_flavor
 use_mysqlctld = False
 use_xtrabackup = False
 stream_mode = 'tar'
-tablet_master = None
+tablet_main = None
 tablet_replica1 = None
 tablet_replica2 = None
 backup_tablet = None
@@ -53,9 +53,9 @@ def setUpModule():
                    '--password=VtDbaPass']
 
   global new_init_db, db_credentials_file
-  global tablet_master, tablet_replica1, tablet_replica2, backup_tablet
+  global tablet_main, tablet_replica1, tablet_replica2, backup_tablet
 
-  tablet_master = tablet.Tablet(use_mysqlctld=use_mysqlctld,
+  tablet_main = tablet.Tablet(use_mysqlctld=use_mysqlctld,
                                 vt_dba_passwd='VtDbaPass')
   tablet_replica1 = tablet.Tablet(use_mysqlctld=use_mysqlctld,
                                   vt_dba_passwd='VtDbaPass')
@@ -78,19 +78,19 @@ def setUpModule():
       fd.write(json.dumps(credentials))
 
     # Determine which column is used for user passwords in this MySQL version.
-    proc = tablet_master.init_mysql()
+    proc = tablet_main.init_mysql()
     if use_mysqlctld:
-      tablet_master.wait_for_mysqlctl_socket()
+      tablet_main.wait_for_mysqlctl_socket()
     else:
       utils.wait_procs([proc])
     try:
-      tablet_master.mquery('mysql', 'select password from mysql.user limit 0',
+      tablet_main.mquery('mysql', 'select password from mysql.user limit 0',
                            user='root')
       password_col = 'password'
     except MySQLdb.DatabaseError:
       password_col = 'authentication_string'
-    utils.wait_procs([tablet_master.teardown_mysql()])
-    tablet_master.remove_tree(ignore_options=True)
+    utils.wait_procs([tablet_main.teardown_mysql()])
+    tablet_main.remove_tree(ignore_options=True)
 
     # Create a new init_db.sql file that sets up passwords for all users.
     # Then we use a db-credentials-file with the passwords.
@@ -104,7 +104,7 @@ def setUpModule():
     logging.debug("initializing mysql %s",str(datetime.datetime.now()))
     # start mysql instance external to the test
     setup_procs = [
-        tablet_master.init_mysql(init_db=new_init_db,
+        tablet_main.init_mysql(init_db=new_init_db,
                                  extra_args=['-db-credentials-file',
                                              db_credentials_file]),
         tablet_replica1.init_mysql(init_db=new_init_db,
@@ -115,7 +115,7 @@ def setUpModule():
                                                db_credentials_file])
     ]
     if use_mysqlctld:
-      tablet_master.wait_for_mysqlctl_socket()
+      tablet_main.wait_for_mysqlctl_socket()
       tablet_replica1.wait_for_mysqlctl_socket()
       tablet_replica2.wait_for_mysqlctl_socket()
     else:
@@ -132,7 +132,7 @@ def tearDownModule():
     return
 
   teardown_procs = [
-      tablet_master.teardown_mysql(extra_args=['-db-credentials-file',
+      tablet_main.teardown_mysql(extra_args=['-db-credentials-file',
                                                db_credentials_file]),
       tablet_replica1.teardown_mysql(extra_args=['-db-credentials-file',
                                                  db_credentials_file]),
@@ -145,7 +145,7 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  tablet_master.remove_tree()
+  tablet_main.remove_tree()
   tablet_replica1.remove_tree()
   tablet_replica2.remove_tree()
   backup_tablet.remove_tree()
@@ -153,19 +153,19 @@ def tearDownModule():
 class TestBackup(unittest.TestCase):
 
   def setUp(self):
-    for t in tablet_master, tablet_replica1:
+    for t in tablet_main, tablet_replica1:
       t.create_db('vt_test_keyspace')
 
 
   def tearDown(self):
-    for t in tablet_master, tablet_replica1, tablet_replica2:
+    for t in tablet_main, tablet_replica1, tablet_replica2:
       t.kill_vttablet()
 
     tablet.Tablet.check_vttablet_count()
     environment.topo_server().wipe()
-    for t in [tablet_master, tablet_replica1, tablet_replica2]:
+    for t in [tablet_main, tablet_replica1, tablet_replica2]:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False, slave=False)
+      t.set_semi_sync_enabled(main=False, subordinate=False)
       t.clean_dbs()
 
     for backup in self._list_backups():
@@ -175,15 +175,15 @@ class TestBackup(unittest.TestCase):
     xtra_args = ['-db-credentials-file', db_credentials_file]
     if use_xtrabackup:
       xtra_args.extend(xtrabackup_args)
-    tablet_master.init_tablet('replica', 'test_keyspace', '0', start=start,
+    tablet_main.init_tablet('replica', 'test_keyspace', '0', start=start,
                               supports_backups=True,
                               extra_args=xtra_args)
     tablet_replica1.init_tablet('replica', 'test_keyspace', '0', start=start,
                                 supports_backups=True,
                                 extra_args=xtra_args)
     if init:
-      utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                       tablet_master.tablet_alias])
+      utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                       tablet_main.tablet_alias])
 
   _create_vt_insert_test = '''create table vt_insert_test (
   id bigint auto_increment,
@@ -290,8 +290,8 @@ class TestBackup(unittest.TestCase):
     self._init_tablets(init=False,start=False)
 
     # Restore the Tablets
-    self._restore(tablet_master, tablet_type='replica',wait_for_state="NOT_SERVING")
-    utils.run_vtctl(['TabletExternallyReparented',tablet_master.tablet_alias])
+    self._restore(tablet_main, tablet_type='replica',wait_for_state="NOT_SERVING")
+    utils.run_vtctl(['TabletExternallyReparented',tablet_main.tablet_alias])
     self._restore(tablet_replica1, tablet_type='replica')
 
     # Run the entire backup test
@@ -302,7 +302,7 @@ class TestBackup(unittest.TestCase):
     test_initial_backup will:
     - Create a shard using vtbackup and --initial-backup
     - Create the rest of the cluster restoring from backup
-    - Externally Reparenting to a master tablet
+    - Externally Reparenting to a main tablet
     - Insert Some data
     - Verify that the cluster is working
     - Take a Second Backup
@@ -322,11 +322,11 @@ class TestBackup(unittest.TestCase):
     """Test backup flow.
 
     test_backup will:
-    - create a shard with master and replica1 only
-    - run InitShardMaster
+    - create a shard with main and replica1 only
+    - run InitShardMain
     - insert some data
     - take a backup
-    - insert more data on the master
+    - insert more data on the main
     - bring up tablet_replica2 after the fact, let it restore the backup
     - check all data is right (before+after backup data)
     - list the backup, remove it
@@ -334,14 +334,14 @@ class TestBackup(unittest.TestCase):
     Args:
       tablet_type: 'replica' or 'rdonly'.
     """
-    # insert data on master, wait for slave to get it
+    # insert data on main, wait for subordinate to get it
     backups_count = len(self._list_backups())
 
-    tablet_master.mquery('vt_test_keyspace', self._create_vt_insert_test)
-    self._insert_data(tablet_master, 1)
+    tablet_main.mquery('vt_test_keyspace', self._create_vt_insert_test)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
 
-    # backup the slave
+    # backup the subordinate
     alias = tablet_replica1.tablet_alias
     logging.debug("taking backup %s",str(datetime.datetime.now()))
     if not backup_only:
@@ -357,16 +357,16 @@ class TestBackup(unittest.TestCase):
     logging.debug('list of backups: %s', backups)
     self.assertEqual(len(backups), backups_count+1)
 
-    # insert more data on the master
-    self._insert_data(tablet_master, 2)
+    # insert more data on the main
+    self._insert_data(tablet_main, 2)
 
-    # now bring up the other slave, letting it restore from backup.
+    # now bring up the other subordinate, letting it restore from backup.
     self._restore(tablet_replica2, tablet_type=tablet_type)
 
-    # check the new slave has the data
+    # check the new subordinate has the data
     self._check_data(tablet_replica2, 2, 'replica2 tablet getting data')
 
-    # check that the restored slave has the right local_metadata
+    # check that the restored subordinate has the right local_metadata
     result = tablet_replica2.mquery('_vt', 'select * from local_metadata')
     metadata = {}
     for row in result:

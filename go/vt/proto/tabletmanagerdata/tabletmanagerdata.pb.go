@@ -1215,7 +1215,7 @@ var xxx_messageInfo_IgnoreHealthErrorResponse proto.InternalMessageInfo
 
 type ReloadSchemaRequest struct {
 	// wait_position allows scheduling a schema reload to occur after a
-	// given DDL has replicated to this slave, by specifying a replication
+	// given DDL has replicated to this subordinate, by specifying a replication
 	// position to wait for. Leave empty to trigger the reload immediately.
 	WaitPosition         string   `protobuf:"bytes,1,opt,name=wait_position,json=waitPosition,proto3" json:"wait_position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1906,209 +1906,209 @@ func (m *ExecuteFetchAsAppResponse) GetResult() *query.QueryResult {
 	return nil
 }
 
-type SlaveStatusRequest struct {
+type SubordinateStatusRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SlaveStatusRequest) Reset()         { *m = SlaveStatusRequest{} }
-func (m *SlaveStatusRequest) String() string { return proto.CompactTextString(m) }
-func (*SlaveStatusRequest) ProtoMessage()    {}
-func (*SlaveStatusRequest) Descriptor() ([]byte, []int) {
+func (m *SubordinateStatusRequest) Reset()         { *m = SubordinateStatusRequest{} }
+func (m *SubordinateStatusRequest) String() string { return proto.CompactTextString(m) }
+func (*SubordinateStatusRequest) ProtoMessage()    {}
+func (*SubordinateStatusRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{44}
 }
 
-func (m *SlaveStatusRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveStatusRequest.Unmarshal(m, b)
+func (m *SubordinateStatusRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateStatusRequest.Unmarshal(m, b)
 }
-func (m *SlaveStatusRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveStatusRequest.Marshal(b, m, deterministic)
+func (m *SubordinateStatusRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateStatusRequest.Marshal(b, m, deterministic)
 }
-func (m *SlaveStatusRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveStatusRequest.Merge(m, src)
+func (m *SubordinateStatusRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateStatusRequest.Merge(m, src)
 }
-func (m *SlaveStatusRequest) XXX_Size() int {
-	return xxx_messageInfo_SlaveStatusRequest.Size(m)
+func (m *SubordinateStatusRequest) XXX_Size() int {
+	return xxx_messageInfo_SubordinateStatusRequest.Size(m)
 }
-func (m *SlaveStatusRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveStatusRequest.DiscardUnknown(m)
+func (m *SubordinateStatusRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateStatusRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveStatusRequest proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateStatusRequest proto.InternalMessageInfo
 
-type SlaveStatusResponse struct {
+type SubordinateStatusResponse struct {
 	Status               *replicationdata.Status `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
 	XXX_unrecognized     []byte                  `json:"-"`
 	XXX_sizecache        int32                   `json:"-"`
 }
 
-func (m *SlaveStatusResponse) Reset()         { *m = SlaveStatusResponse{} }
-func (m *SlaveStatusResponse) String() string { return proto.CompactTextString(m) }
-func (*SlaveStatusResponse) ProtoMessage()    {}
-func (*SlaveStatusResponse) Descriptor() ([]byte, []int) {
+func (m *SubordinateStatusResponse) Reset()         { *m = SubordinateStatusResponse{} }
+func (m *SubordinateStatusResponse) String() string { return proto.CompactTextString(m) }
+func (*SubordinateStatusResponse) ProtoMessage()    {}
+func (*SubordinateStatusResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{45}
 }
 
-func (m *SlaveStatusResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveStatusResponse.Unmarshal(m, b)
+func (m *SubordinateStatusResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateStatusResponse.Unmarshal(m, b)
 }
-func (m *SlaveStatusResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveStatusResponse.Marshal(b, m, deterministic)
+func (m *SubordinateStatusResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateStatusResponse.Marshal(b, m, deterministic)
 }
-func (m *SlaveStatusResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveStatusResponse.Merge(m, src)
+func (m *SubordinateStatusResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateStatusResponse.Merge(m, src)
 }
-func (m *SlaveStatusResponse) XXX_Size() int {
-	return xxx_messageInfo_SlaveStatusResponse.Size(m)
+func (m *SubordinateStatusResponse) XXX_Size() int {
+	return xxx_messageInfo_SubordinateStatusResponse.Size(m)
 }
-func (m *SlaveStatusResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveStatusResponse.DiscardUnknown(m)
+func (m *SubordinateStatusResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateStatusResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveStatusResponse proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateStatusResponse proto.InternalMessageInfo
 
-func (m *SlaveStatusResponse) GetStatus() *replicationdata.Status {
+func (m *SubordinateStatusResponse) GetStatus() *replicationdata.Status {
 	if m != nil {
 		return m.Status
 	}
 	return nil
 }
 
-type MasterPositionRequest struct {
+type MainPositionRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *MasterPositionRequest) Reset()         { *m = MasterPositionRequest{} }
-func (m *MasterPositionRequest) String() string { return proto.CompactTextString(m) }
-func (*MasterPositionRequest) ProtoMessage()    {}
-func (*MasterPositionRequest) Descriptor() ([]byte, []int) {
+func (m *MainPositionRequest) Reset()         { *m = MainPositionRequest{} }
+func (m *MainPositionRequest) String() string { return proto.CompactTextString(m) }
+func (*MainPositionRequest) ProtoMessage()    {}
+func (*MainPositionRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{46}
 }
 
-func (m *MasterPositionRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_MasterPositionRequest.Unmarshal(m, b)
+func (m *MainPositionRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MainPositionRequest.Unmarshal(m, b)
 }
-func (m *MasterPositionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_MasterPositionRequest.Marshal(b, m, deterministic)
+func (m *MainPositionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MainPositionRequest.Marshal(b, m, deterministic)
 }
-func (m *MasterPositionRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MasterPositionRequest.Merge(m, src)
+func (m *MainPositionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MainPositionRequest.Merge(m, src)
 }
-func (m *MasterPositionRequest) XXX_Size() int {
-	return xxx_messageInfo_MasterPositionRequest.Size(m)
+func (m *MainPositionRequest) XXX_Size() int {
+	return xxx_messageInfo_MainPositionRequest.Size(m)
 }
-func (m *MasterPositionRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MasterPositionRequest.DiscardUnknown(m)
+func (m *MainPositionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MainPositionRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MasterPositionRequest proto.InternalMessageInfo
+var xxx_messageInfo_MainPositionRequest proto.InternalMessageInfo
 
-type MasterPositionResponse struct {
+type MainPositionResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *MasterPositionResponse) Reset()         { *m = MasterPositionResponse{} }
-func (m *MasterPositionResponse) String() string { return proto.CompactTextString(m) }
-func (*MasterPositionResponse) ProtoMessage()    {}
-func (*MasterPositionResponse) Descriptor() ([]byte, []int) {
+func (m *MainPositionResponse) Reset()         { *m = MainPositionResponse{} }
+func (m *MainPositionResponse) String() string { return proto.CompactTextString(m) }
+func (*MainPositionResponse) ProtoMessage()    {}
+func (*MainPositionResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{47}
 }
 
-func (m *MasterPositionResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_MasterPositionResponse.Unmarshal(m, b)
+func (m *MainPositionResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MainPositionResponse.Unmarshal(m, b)
 }
-func (m *MasterPositionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_MasterPositionResponse.Marshal(b, m, deterministic)
+func (m *MainPositionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MainPositionResponse.Marshal(b, m, deterministic)
 }
-func (m *MasterPositionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MasterPositionResponse.Merge(m, src)
+func (m *MainPositionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MainPositionResponse.Merge(m, src)
 }
-func (m *MasterPositionResponse) XXX_Size() int {
-	return xxx_messageInfo_MasterPositionResponse.Size(m)
+func (m *MainPositionResponse) XXX_Size() int {
+	return xxx_messageInfo_MainPositionResponse.Size(m)
 }
-func (m *MasterPositionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MasterPositionResponse.DiscardUnknown(m)
+func (m *MainPositionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MainPositionResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MasterPositionResponse proto.InternalMessageInfo
+var xxx_messageInfo_MainPositionResponse proto.InternalMessageInfo
 
-func (m *MasterPositionResponse) GetPosition() string {
+func (m *MainPositionResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-type StopSlaveRequest struct {
+type StopSubordinateRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StopSlaveRequest) Reset()         { *m = StopSlaveRequest{} }
-func (m *StopSlaveRequest) String() string { return proto.CompactTextString(m) }
-func (*StopSlaveRequest) ProtoMessage()    {}
-func (*StopSlaveRequest) Descriptor() ([]byte, []int) {
+func (m *StopSubordinateRequest) Reset()         { *m = StopSubordinateRequest{} }
+func (m *StopSubordinateRequest) String() string { return proto.CompactTextString(m) }
+func (*StopSubordinateRequest) ProtoMessage()    {}
+func (*StopSubordinateRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{48}
 }
 
-func (m *StopSlaveRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StopSlaveRequest.Unmarshal(m, b)
+func (m *StopSubordinateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StopSubordinateRequest.Unmarshal(m, b)
 }
-func (m *StopSlaveRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StopSlaveRequest.Marshal(b, m, deterministic)
+func (m *StopSubordinateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StopSubordinateRequest.Marshal(b, m, deterministic)
 }
-func (m *StopSlaveRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StopSlaveRequest.Merge(m, src)
+func (m *StopSubordinateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StopSubordinateRequest.Merge(m, src)
 }
-func (m *StopSlaveRequest) XXX_Size() int {
-	return xxx_messageInfo_StopSlaveRequest.Size(m)
+func (m *StopSubordinateRequest) XXX_Size() int {
+	return xxx_messageInfo_StopSubordinateRequest.Size(m)
 }
-func (m *StopSlaveRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_StopSlaveRequest.DiscardUnknown(m)
+func (m *StopSubordinateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_StopSubordinateRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StopSlaveRequest proto.InternalMessageInfo
+var xxx_messageInfo_StopSubordinateRequest proto.InternalMessageInfo
 
-type StopSlaveResponse struct {
+type StopSubordinateResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StopSlaveResponse) Reset()         { *m = StopSlaveResponse{} }
-func (m *StopSlaveResponse) String() string { return proto.CompactTextString(m) }
-func (*StopSlaveResponse) ProtoMessage()    {}
-func (*StopSlaveResponse) Descriptor() ([]byte, []int) {
+func (m *StopSubordinateResponse) Reset()         { *m = StopSubordinateResponse{} }
+func (m *StopSubordinateResponse) String() string { return proto.CompactTextString(m) }
+func (*StopSubordinateResponse) ProtoMessage()    {}
+func (*StopSubordinateResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{49}
 }
 
-func (m *StopSlaveResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StopSlaveResponse.Unmarshal(m, b)
+func (m *StopSubordinateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StopSubordinateResponse.Unmarshal(m, b)
 }
-func (m *StopSlaveResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StopSlaveResponse.Marshal(b, m, deterministic)
+func (m *StopSubordinateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StopSubordinateResponse.Marshal(b, m, deterministic)
 }
-func (m *StopSlaveResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StopSlaveResponse.Merge(m, src)
+func (m *StopSubordinateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StopSubordinateResponse.Merge(m, src)
 }
-func (m *StopSlaveResponse) XXX_Size() int {
-	return xxx_messageInfo_StopSlaveResponse.Size(m)
+func (m *StopSubordinateResponse) XXX_Size() int {
+	return xxx_messageInfo_StopSubordinateResponse.Size(m)
 }
-func (m *StopSlaveResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_StopSlaveResponse.DiscardUnknown(m)
+func (m *StopSubordinateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_StopSubordinateResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StopSlaveResponse proto.InternalMessageInfo
+var xxx_messageInfo_StopSubordinateResponse proto.InternalMessageInfo
 
-type StopSlaveMinimumRequest struct {
+type StopSubordinateMinimumRequest struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	WaitTimeout          int64    `protobuf:"varint,2,opt,name=wait_timeout,json=waitTimeout,proto3" json:"wait_timeout,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -2116,147 +2116,147 @@ type StopSlaveMinimumRequest struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StopSlaveMinimumRequest) Reset()         { *m = StopSlaveMinimumRequest{} }
-func (m *StopSlaveMinimumRequest) String() string { return proto.CompactTextString(m) }
-func (*StopSlaveMinimumRequest) ProtoMessage()    {}
-func (*StopSlaveMinimumRequest) Descriptor() ([]byte, []int) {
+func (m *StopSubordinateMinimumRequest) Reset()         { *m = StopSubordinateMinimumRequest{} }
+func (m *StopSubordinateMinimumRequest) String() string { return proto.CompactTextString(m) }
+func (*StopSubordinateMinimumRequest) ProtoMessage()    {}
+func (*StopSubordinateMinimumRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{50}
 }
 
-func (m *StopSlaveMinimumRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StopSlaveMinimumRequest.Unmarshal(m, b)
+func (m *StopSubordinateMinimumRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StopSubordinateMinimumRequest.Unmarshal(m, b)
 }
-func (m *StopSlaveMinimumRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StopSlaveMinimumRequest.Marshal(b, m, deterministic)
+func (m *StopSubordinateMinimumRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StopSubordinateMinimumRequest.Marshal(b, m, deterministic)
 }
-func (m *StopSlaveMinimumRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StopSlaveMinimumRequest.Merge(m, src)
+func (m *StopSubordinateMinimumRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StopSubordinateMinimumRequest.Merge(m, src)
 }
-func (m *StopSlaveMinimumRequest) XXX_Size() int {
-	return xxx_messageInfo_StopSlaveMinimumRequest.Size(m)
+func (m *StopSubordinateMinimumRequest) XXX_Size() int {
+	return xxx_messageInfo_StopSubordinateMinimumRequest.Size(m)
 }
-func (m *StopSlaveMinimumRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_StopSlaveMinimumRequest.DiscardUnknown(m)
+func (m *StopSubordinateMinimumRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_StopSubordinateMinimumRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StopSlaveMinimumRequest proto.InternalMessageInfo
+var xxx_messageInfo_StopSubordinateMinimumRequest proto.InternalMessageInfo
 
-func (m *StopSlaveMinimumRequest) GetPosition() string {
+func (m *StopSubordinateMinimumRequest) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-func (m *StopSlaveMinimumRequest) GetWaitTimeout() int64 {
+func (m *StopSubordinateMinimumRequest) GetWaitTimeout() int64 {
 	if m != nil {
 		return m.WaitTimeout
 	}
 	return 0
 }
 
-type StopSlaveMinimumResponse struct {
+type StopSubordinateMinimumResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StopSlaveMinimumResponse) Reset()         { *m = StopSlaveMinimumResponse{} }
-func (m *StopSlaveMinimumResponse) String() string { return proto.CompactTextString(m) }
-func (*StopSlaveMinimumResponse) ProtoMessage()    {}
-func (*StopSlaveMinimumResponse) Descriptor() ([]byte, []int) {
+func (m *StopSubordinateMinimumResponse) Reset()         { *m = StopSubordinateMinimumResponse{} }
+func (m *StopSubordinateMinimumResponse) String() string { return proto.CompactTextString(m) }
+func (*StopSubordinateMinimumResponse) ProtoMessage()    {}
+func (*StopSubordinateMinimumResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{51}
 }
 
-func (m *StopSlaveMinimumResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StopSlaveMinimumResponse.Unmarshal(m, b)
+func (m *StopSubordinateMinimumResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StopSubordinateMinimumResponse.Unmarshal(m, b)
 }
-func (m *StopSlaveMinimumResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StopSlaveMinimumResponse.Marshal(b, m, deterministic)
+func (m *StopSubordinateMinimumResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StopSubordinateMinimumResponse.Marshal(b, m, deterministic)
 }
-func (m *StopSlaveMinimumResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StopSlaveMinimumResponse.Merge(m, src)
+func (m *StopSubordinateMinimumResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StopSubordinateMinimumResponse.Merge(m, src)
 }
-func (m *StopSlaveMinimumResponse) XXX_Size() int {
-	return xxx_messageInfo_StopSlaveMinimumResponse.Size(m)
+func (m *StopSubordinateMinimumResponse) XXX_Size() int {
+	return xxx_messageInfo_StopSubordinateMinimumResponse.Size(m)
 }
-func (m *StopSlaveMinimumResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_StopSlaveMinimumResponse.DiscardUnknown(m)
+func (m *StopSubordinateMinimumResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_StopSubordinateMinimumResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StopSlaveMinimumResponse proto.InternalMessageInfo
+var xxx_messageInfo_StopSubordinateMinimumResponse proto.InternalMessageInfo
 
-func (m *StopSlaveMinimumResponse) GetPosition() string {
+func (m *StopSubordinateMinimumResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-type StartSlaveRequest struct {
+type StartSubordinateRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StartSlaveRequest) Reset()         { *m = StartSlaveRequest{} }
-func (m *StartSlaveRequest) String() string { return proto.CompactTextString(m) }
-func (*StartSlaveRequest) ProtoMessage()    {}
-func (*StartSlaveRequest) Descriptor() ([]byte, []int) {
+func (m *StartSubordinateRequest) Reset()         { *m = StartSubordinateRequest{} }
+func (m *StartSubordinateRequest) String() string { return proto.CompactTextString(m) }
+func (*StartSubordinateRequest) ProtoMessage()    {}
+func (*StartSubordinateRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{52}
 }
 
-func (m *StartSlaveRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StartSlaveRequest.Unmarshal(m, b)
+func (m *StartSubordinateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StartSubordinateRequest.Unmarshal(m, b)
 }
-func (m *StartSlaveRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StartSlaveRequest.Marshal(b, m, deterministic)
+func (m *StartSubordinateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StartSubordinateRequest.Marshal(b, m, deterministic)
 }
-func (m *StartSlaveRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StartSlaveRequest.Merge(m, src)
+func (m *StartSubordinateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartSubordinateRequest.Merge(m, src)
 }
-func (m *StartSlaveRequest) XXX_Size() int {
-	return xxx_messageInfo_StartSlaveRequest.Size(m)
+func (m *StartSubordinateRequest) XXX_Size() int {
+	return xxx_messageInfo_StartSubordinateRequest.Size(m)
 }
-func (m *StartSlaveRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_StartSlaveRequest.DiscardUnknown(m)
+func (m *StartSubordinateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_StartSubordinateRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StartSlaveRequest proto.InternalMessageInfo
+var xxx_messageInfo_StartSubordinateRequest proto.InternalMessageInfo
 
-type StartSlaveResponse struct {
+type StartSubordinateResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StartSlaveResponse) Reset()         { *m = StartSlaveResponse{} }
-func (m *StartSlaveResponse) String() string { return proto.CompactTextString(m) }
-func (*StartSlaveResponse) ProtoMessage()    {}
-func (*StartSlaveResponse) Descriptor() ([]byte, []int) {
+func (m *StartSubordinateResponse) Reset()         { *m = StartSubordinateResponse{} }
+func (m *StartSubordinateResponse) String() string { return proto.CompactTextString(m) }
+func (*StartSubordinateResponse) ProtoMessage()    {}
+func (*StartSubordinateResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{53}
 }
 
-func (m *StartSlaveResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StartSlaveResponse.Unmarshal(m, b)
+func (m *StartSubordinateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StartSubordinateResponse.Unmarshal(m, b)
 }
-func (m *StartSlaveResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StartSlaveResponse.Marshal(b, m, deterministic)
+func (m *StartSubordinateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StartSubordinateResponse.Marshal(b, m, deterministic)
 }
-func (m *StartSlaveResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StartSlaveResponse.Merge(m, src)
+func (m *StartSubordinateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartSubordinateResponse.Merge(m, src)
 }
-func (m *StartSlaveResponse) XXX_Size() int {
-	return xxx_messageInfo_StartSlaveResponse.Size(m)
+func (m *StartSubordinateResponse) XXX_Size() int {
+	return xxx_messageInfo_StartSubordinateResponse.Size(m)
 }
-func (m *StartSlaveResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_StartSlaveResponse.DiscardUnknown(m)
+func (m *StartSubordinateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_StartSubordinateResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StartSlaveResponse proto.InternalMessageInfo
+var xxx_messageInfo_StartSubordinateResponse proto.InternalMessageInfo
 
-type StartSlaveUntilAfterRequest struct {
+type StartSubordinateUntilAfterRequest struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	WaitTimeout          int64    `protobuf:"varint,2,opt,name=wait_timeout,json=waitTimeout,proto3" json:"wait_timeout,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -2264,75 +2264,75 @@ type StartSlaveUntilAfterRequest struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StartSlaveUntilAfterRequest) Reset()         { *m = StartSlaveUntilAfterRequest{} }
-func (m *StartSlaveUntilAfterRequest) String() string { return proto.CompactTextString(m) }
-func (*StartSlaveUntilAfterRequest) ProtoMessage()    {}
-func (*StartSlaveUntilAfterRequest) Descriptor() ([]byte, []int) {
+func (m *StartSubordinateUntilAfterRequest) Reset()         { *m = StartSubordinateUntilAfterRequest{} }
+func (m *StartSubordinateUntilAfterRequest) String() string { return proto.CompactTextString(m) }
+func (*StartSubordinateUntilAfterRequest) ProtoMessage()    {}
+func (*StartSubordinateUntilAfterRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{54}
 }
 
-func (m *StartSlaveUntilAfterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StartSlaveUntilAfterRequest.Unmarshal(m, b)
+func (m *StartSubordinateUntilAfterRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StartSubordinateUntilAfterRequest.Unmarshal(m, b)
 }
-func (m *StartSlaveUntilAfterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StartSlaveUntilAfterRequest.Marshal(b, m, deterministic)
+func (m *StartSubordinateUntilAfterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StartSubordinateUntilAfterRequest.Marshal(b, m, deterministic)
 }
-func (m *StartSlaveUntilAfterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StartSlaveUntilAfterRequest.Merge(m, src)
+func (m *StartSubordinateUntilAfterRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartSubordinateUntilAfterRequest.Merge(m, src)
 }
-func (m *StartSlaveUntilAfterRequest) XXX_Size() int {
-	return xxx_messageInfo_StartSlaveUntilAfterRequest.Size(m)
+func (m *StartSubordinateUntilAfterRequest) XXX_Size() int {
+	return xxx_messageInfo_StartSubordinateUntilAfterRequest.Size(m)
 }
-func (m *StartSlaveUntilAfterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_StartSlaveUntilAfterRequest.DiscardUnknown(m)
+func (m *StartSubordinateUntilAfterRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_StartSubordinateUntilAfterRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StartSlaveUntilAfterRequest proto.InternalMessageInfo
+var xxx_messageInfo_StartSubordinateUntilAfterRequest proto.InternalMessageInfo
 
-func (m *StartSlaveUntilAfterRequest) GetPosition() string {
+func (m *StartSubordinateUntilAfterRequest) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-func (m *StartSlaveUntilAfterRequest) GetWaitTimeout() int64 {
+func (m *StartSubordinateUntilAfterRequest) GetWaitTimeout() int64 {
 	if m != nil {
 		return m.WaitTimeout
 	}
 	return 0
 }
 
-type StartSlaveUntilAfterResponse struct {
+type StartSubordinateUntilAfterResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *StartSlaveUntilAfterResponse) Reset()         { *m = StartSlaveUntilAfterResponse{} }
-func (m *StartSlaveUntilAfterResponse) String() string { return proto.CompactTextString(m) }
-func (*StartSlaveUntilAfterResponse) ProtoMessage()    {}
-func (*StartSlaveUntilAfterResponse) Descriptor() ([]byte, []int) {
+func (m *StartSubordinateUntilAfterResponse) Reset()         { *m = StartSubordinateUntilAfterResponse{} }
+func (m *StartSubordinateUntilAfterResponse) String() string { return proto.CompactTextString(m) }
+func (*StartSubordinateUntilAfterResponse) ProtoMessage()    {}
+func (*StartSubordinateUntilAfterResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{55}
 }
 
-func (m *StartSlaveUntilAfterResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_StartSlaveUntilAfterResponse.Unmarshal(m, b)
+func (m *StartSubordinateUntilAfterResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StartSubordinateUntilAfterResponse.Unmarshal(m, b)
 }
-func (m *StartSlaveUntilAfterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_StartSlaveUntilAfterResponse.Marshal(b, m, deterministic)
+func (m *StartSubordinateUntilAfterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StartSubordinateUntilAfterResponse.Marshal(b, m, deterministic)
 }
-func (m *StartSlaveUntilAfterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StartSlaveUntilAfterResponse.Merge(m, src)
+func (m *StartSubordinateUntilAfterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartSubordinateUntilAfterResponse.Merge(m, src)
 }
-func (m *StartSlaveUntilAfterResponse) XXX_Size() int {
-	return xxx_messageInfo_StartSlaveUntilAfterResponse.Size(m)
+func (m *StartSubordinateUntilAfterResponse) XXX_Size() int {
+	return xxx_messageInfo_StartSubordinateUntilAfterResponse.Size(m)
 }
-func (m *StartSlaveUntilAfterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_StartSlaveUntilAfterResponse.DiscardUnknown(m)
+func (m *StartSubordinateUntilAfterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_StartSubordinateUntilAfterResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_StartSlaveUntilAfterResponse proto.InternalMessageInfo
+var xxx_messageInfo_StartSubordinateUntilAfterResponse proto.InternalMessageInfo
 
 type TabletExternallyReparentedRequest struct {
 	// external_id is an string value that may be provided by an external
@@ -2469,70 +2469,70 @@ func (m *TabletExternallyElectedResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TabletExternallyElectedResponse proto.InternalMessageInfo
 
-type GetSlavesRequest struct {
+type GetSubordinatesRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GetSlavesRequest) Reset()         { *m = GetSlavesRequest{} }
-func (m *GetSlavesRequest) String() string { return proto.CompactTextString(m) }
-func (*GetSlavesRequest) ProtoMessage()    {}
-func (*GetSlavesRequest) Descriptor() ([]byte, []int) {
+func (m *GetSubordinatesRequest) Reset()         { *m = GetSubordinatesRequest{} }
+func (m *GetSubordinatesRequest) String() string { return proto.CompactTextString(m) }
+func (*GetSubordinatesRequest) ProtoMessage()    {}
+func (*GetSubordinatesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{60}
 }
 
-func (m *GetSlavesRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetSlavesRequest.Unmarshal(m, b)
+func (m *GetSubordinatesRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetSubordinatesRequest.Unmarshal(m, b)
 }
-func (m *GetSlavesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetSlavesRequest.Marshal(b, m, deterministic)
+func (m *GetSubordinatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetSubordinatesRequest.Marshal(b, m, deterministic)
 }
-func (m *GetSlavesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetSlavesRequest.Merge(m, src)
+func (m *GetSubordinatesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetSubordinatesRequest.Merge(m, src)
 }
-func (m *GetSlavesRequest) XXX_Size() int {
-	return xxx_messageInfo_GetSlavesRequest.Size(m)
+func (m *GetSubordinatesRequest) XXX_Size() int {
+	return xxx_messageInfo_GetSubordinatesRequest.Size(m)
 }
-func (m *GetSlavesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetSlavesRequest.DiscardUnknown(m)
+func (m *GetSubordinatesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetSubordinatesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetSlavesRequest proto.InternalMessageInfo
+var xxx_messageInfo_GetSubordinatesRequest proto.InternalMessageInfo
 
-type GetSlavesResponse struct {
+type GetSubordinatesResponse struct {
 	Addrs                []string `protobuf:"bytes,1,rep,name=addrs,proto3" json:"addrs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GetSlavesResponse) Reset()         { *m = GetSlavesResponse{} }
-func (m *GetSlavesResponse) String() string { return proto.CompactTextString(m) }
-func (*GetSlavesResponse) ProtoMessage()    {}
-func (*GetSlavesResponse) Descriptor() ([]byte, []int) {
+func (m *GetSubordinatesResponse) Reset()         { *m = GetSubordinatesResponse{} }
+func (m *GetSubordinatesResponse) String() string { return proto.CompactTextString(m) }
+func (*GetSubordinatesResponse) ProtoMessage()    {}
+func (*GetSubordinatesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{61}
 }
 
-func (m *GetSlavesResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetSlavesResponse.Unmarshal(m, b)
+func (m *GetSubordinatesResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetSubordinatesResponse.Unmarshal(m, b)
 }
-func (m *GetSlavesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetSlavesResponse.Marshal(b, m, deterministic)
+func (m *GetSubordinatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetSubordinatesResponse.Marshal(b, m, deterministic)
 }
-func (m *GetSlavesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetSlavesResponse.Merge(m, src)
+func (m *GetSubordinatesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetSubordinatesResponse.Merge(m, src)
 }
-func (m *GetSlavesResponse) XXX_Size() int {
-	return xxx_messageInfo_GetSlavesResponse.Size(m)
+func (m *GetSubordinatesResponse) XXX_Size() int {
+	return xxx_messageInfo_GetSubordinatesResponse.Size(m)
 }
-func (m *GetSlavesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetSlavesResponse.DiscardUnknown(m)
+func (m *GetSubordinatesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetSubordinatesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetSlavesResponse proto.InternalMessageInfo
+var xxx_messageInfo_GetSubordinatesResponse proto.InternalMessageInfo
 
-func (m *GetSlavesResponse) GetAddrs() []string {
+func (m *GetSubordinatesResponse) GetAddrs() []string {
 	if m != nil {
 		return m.Addrs
 	}
@@ -2757,70 +2757,70 @@ func (m *VReplicationWaitForPosResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VReplicationWaitForPosResponse proto.InternalMessageInfo
 
-type InitMasterRequest struct {
+type InitMainRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *InitMasterRequest) Reset()         { *m = InitMasterRequest{} }
-func (m *InitMasterRequest) String() string { return proto.CompactTextString(m) }
-func (*InitMasterRequest) ProtoMessage()    {}
-func (*InitMasterRequest) Descriptor() ([]byte, []int) {
+func (m *InitMainRequest) Reset()         { *m = InitMainRequest{} }
+func (m *InitMainRequest) String() string { return proto.CompactTextString(m) }
+func (*InitMainRequest) ProtoMessage()    {}
+func (*InitMainRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{68}
 }
 
-func (m *InitMasterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InitMasterRequest.Unmarshal(m, b)
+func (m *InitMainRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_InitMainRequest.Unmarshal(m, b)
 }
-func (m *InitMasterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InitMasterRequest.Marshal(b, m, deterministic)
+func (m *InitMainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_InitMainRequest.Marshal(b, m, deterministic)
 }
-func (m *InitMasterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InitMasterRequest.Merge(m, src)
+func (m *InitMainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitMainRequest.Merge(m, src)
 }
-func (m *InitMasterRequest) XXX_Size() int {
-	return xxx_messageInfo_InitMasterRequest.Size(m)
+func (m *InitMainRequest) XXX_Size() int {
+	return xxx_messageInfo_InitMainRequest.Size(m)
 }
-func (m *InitMasterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_InitMasterRequest.DiscardUnknown(m)
+func (m *InitMainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitMainRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InitMasterRequest proto.InternalMessageInfo
+var xxx_messageInfo_InitMainRequest proto.InternalMessageInfo
 
-type InitMasterResponse struct {
+type InitMainResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *InitMasterResponse) Reset()         { *m = InitMasterResponse{} }
-func (m *InitMasterResponse) String() string { return proto.CompactTextString(m) }
-func (*InitMasterResponse) ProtoMessage()    {}
-func (*InitMasterResponse) Descriptor() ([]byte, []int) {
+func (m *InitMainResponse) Reset()         { *m = InitMainResponse{} }
+func (m *InitMainResponse) String() string { return proto.CompactTextString(m) }
+func (*InitMainResponse) ProtoMessage()    {}
+func (*InitMainResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{69}
 }
 
-func (m *InitMasterResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InitMasterResponse.Unmarshal(m, b)
+func (m *InitMainResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_InitMainResponse.Unmarshal(m, b)
 }
-func (m *InitMasterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InitMasterResponse.Marshal(b, m, deterministic)
+func (m *InitMainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_InitMainResponse.Marshal(b, m, deterministic)
 }
-func (m *InitMasterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InitMasterResponse.Merge(m, src)
+func (m *InitMainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitMainResponse.Merge(m, src)
 }
-func (m *InitMasterResponse) XXX_Size() int {
-	return xxx_messageInfo_InitMasterResponse.Size(m)
+func (m *InitMainResponse) XXX_Size() int {
+	return xxx_messageInfo_InitMainResponse.Size(m)
 }
-func (m *InitMasterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_InitMasterResponse.DiscardUnknown(m)
+func (m *InitMainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitMainResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InitMasterResponse proto.InternalMessageInfo
+var xxx_messageInfo_InitMainResponse proto.InternalMessageInfo
 
-func (m *InitMasterResponse) GetPosition() string {
+func (m *InitMainResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
@@ -2830,7 +2830,7 @@ func (m *InitMasterResponse) GetPosition() string {
 type PopulateReparentJournalRequest struct {
 	TimeCreatedNs        int64                 `protobuf:"varint,1,opt,name=time_created_ns,json=timeCreatedNs,proto3" json:"time_created_ns,omitempty"`
 	ActionName           string                `protobuf:"bytes,2,opt,name=action_name,json=actionName,proto3" json:"action_name,omitempty"`
-	MasterAlias          *topodata.TabletAlias `protobuf:"bytes,3,opt,name=master_alias,json=masterAlias,proto3" json:"master_alias,omitempty"`
+	MainAlias          *topodata.TabletAlias `protobuf:"bytes,3,opt,name=main_alias,json=mainAlias,proto3" json:"main_alias,omitempty"`
 	ReplicationPosition  string                `protobuf:"bytes,4,opt,name=replication_position,json=replicationPosition,proto3" json:"replication_position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -2876,9 +2876,9 @@ func (m *PopulateReparentJournalRequest) GetActionName() string {
 	return ""
 }
 
-func (m *PopulateReparentJournalRequest) GetMasterAlias() *topodata.TabletAlias {
+func (m *PopulateReparentJournalRequest) GetMainAlias() *topodata.TabletAlias {
 	if m != nil {
-		return m.MasterAlias
+		return m.MainAlias
 	}
 	return nil
 }
@@ -2921,7 +2921,7 @@ func (m *PopulateReparentJournalResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PopulateReparentJournalResponse proto.InternalMessageInfo
 
-type InitSlaveRequest struct {
+type InitSubordinateRequest struct {
 	Parent               *topodata.TabletAlias `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
 	ReplicationPosition  string                `protobuf:"bytes,2,opt,name=replication_position,json=replicationPosition,proto3" json:"replication_position,omitempty"`
 	TimeCreatedNs        int64                 `protobuf:"varint,3,opt,name=time_created_ns,json=timeCreatedNs,proto3" json:"time_created_ns,omitempty"`
@@ -2930,442 +2930,442 @@ type InitSlaveRequest struct {
 	XXX_sizecache        int32                 `json:"-"`
 }
 
-func (m *InitSlaveRequest) Reset()         { *m = InitSlaveRequest{} }
-func (m *InitSlaveRequest) String() string { return proto.CompactTextString(m) }
-func (*InitSlaveRequest) ProtoMessage()    {}
-func (*InitSlaveRequest) Descriptor() ([]byte, []int) {
+func (m *InitSubordinateRequest) Reset()         { *m = InitSubordinateRequest{} }
+func (m *InitSubordinateRequest) String() string { return proto.CompactTextString(m) }
+func (*InitSubordinateRequest) ProtoMessage()    {}
+func (*InitSubordinateRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{72}
 }
 
-func (m *InitSlaveRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InitSlaveRequest.Unmarshal(m, b)
+func (m *InitSubordinateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_InitSubordinateRequest.Unmarshal(m, b)
 }
-func (m *InitSlaveRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InitSlaveRequest.Marshal(b, m, deterministic)
+func (m *InitSubordinateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_InitSubordinateRequest.Marshal(b, m, deterministic)
 }
-func (m *InitSlaveRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InitSlaveRequest.Merge(m, src)
+func (m *InitSubordinateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitSubordinateRequest.Merge(m, src)
 }
-func (m *InitSlaveRequest) XXX_Size() int {
-	return xxx_messageInfo_InitSlaveRequest.Size(m)
+func (m *InitSubordinateRequest) XXX_Size() int {
+	return xxx_messageInfo_InitSubordinateRequest.Size(m)
 }
-func (m *InitSlaveRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_InitSlaveRequest.DiscardUnknown(m)
+func (m *InitSubordinateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitSubordinateRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InitSlaveRequest proto.InternalMessageInfo
+var xxx_messageInfo_InitSubordinateRequest proto.InternalMessageInfo
 
-func (m *InitSlaveRequest) GetParent() *topodata.TabletAlias {
+func (m *InitSubordinateRequest) GetParent() *topodata.TabletAlias {
 	if m != nil {
 		return m.Parent
 	}
 	return nil
 }
 
-func (m *InitSlaveRequest) GetReplicationPosition() string {
+func (m *InitSubordinateRequest) GetReplicationPosition() string {
 	if m != nil {
 		return m.ReplicationPosition
 	}
 	return ""
 }
 
-func (m *InitSlaveRequest) GetTimeCreatedNs() int64 {
+func (m *InitSubordinateRequest) GetTimeCreatedNs() int64 {
 	if m != nil {
 		return m.TimeCreatedNs
 	}
 	return 0
 }
 
-type InitSlaveResponse struct {
+type InitSubordinateResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *InitSlaveResponse) Reset()         { *m = InitSlaveResponse{} }
-func (m *InitSlaveResponse) String() string { return proto.CompactTextString(m) }
-func (*InitSlaveResponse) ProtoMessage()    {}
-func (*InitSlaveResponse) Descriptor() ([]byte, []int) {
+func (m *InitSubordinateResponse) Reset()         { *m = InitSubordinateResponse{} }
+func (m *InitSubordinateResponse) String() string { return proto.CompactTextString(m) }
+func (*InitSubordinateResponse) ProtoMessage()    {}
+func (*InitSubordinateResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{73}
 }
 
-func (m *InitSlaveResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_InitSlaveResponse.Unmarshal(m, b)
+func (m *InitSubordinateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_InitSubordinateResponse.Unmarshal(m, b)
 }
-func (m *InitSlaveResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_InitSlaveResponse.Marshal(b, m, deterministic)
+func (m *InitSubordinateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_InitSubordinateResponse.Marshal(b, m, deterministic)
 }
-func (m *InitSlaveResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InitSlaveResponse.Merge(m, src)
+func (m *InitSubordinateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitSubordinateResponse.Merge(m, src)
 }
-func (m *InitSlaveResponse) XXX_Size() int {
-	return xxx_messageInfo_InitSlaveResponse.Size(m)
+func (m *InitSubordinateResponse) XXX_Size() int {
+	return xxx_messageInfo_InitSubordinateResponse.Size(m)
 }
-func (m *InitSlaveResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_InitSlaveResponse.DiscardUnknown(m)
+func (m *InitSubordinateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitSubordinateResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_InitSlaveResponse proto.InternalMessageInfo
+var xxx_messageInfo_InitSubordinateResponse proto.InternalMessageInfo
 
-type DemoteMasterRequest struct {
+type DemoteMainRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DemoteMasterRequest) Reset()         { *m = DemoteMasterRequest{} }
-func (m *DemoteMasterRequest) String() string { return proto.CompactTextString(m) }
-func (*DemoteMasterRequest) ProtoMessage()    {}
-func (*DemoteMasterRequest) Descriptor() ([]byte, []int) {
+func (m *DemoteMainRequest) Reset()         { *m = DemoteMainRequest{} }
+func (m *DemoteMainRequest) String() string { return proto.CompactTextString(m) }
+func (*DemoteMainRequest) ProtoMessage()    {}
+func (*DemoteMainRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{74}
 }
 
-func (m *DemoteMasterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DemoteMasterRequest.Unmarshal(m, b)
+func (m *DemoteMainRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DemoteMainRequest.Unmarshal(m, b)
 }
-func (m *DemoteMasterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DemoteMasterRequest.Marshal(b, m, deterministic)
+func (m *DemoteMainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DemoteMainRequest.Marshal(b, m, deterministic)
 }
-func (m *DemoteMasterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DemoteMasterRequest.Merge(m, src)
+func (m *DemoteMainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DemoteMainRequest.Merge(m, src)
 }
-func (m *DemoteMasterRequest) XXX_Size() int {
-	return xxx_messageInfo_DemoteMasterRequest.Size(m)
+func (m *DemoteMainRequest) XXX_Size() int {
+	return xxx_messageInfo_DemoteMainRequest.Size(m)
 }
-func (m *DemoteMasterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_DemoteMasterRequest.DiscardUnknown(m)
+func (m *DemoteMainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DemoteMainRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DemoteMasterRequest proto.InternalMessageInfo
+var xxx_messageInfo_DemoteMainRequest proto.InternalMessageInfo
 
-type DemoteMasterResponse struct {
+type DemoteMainResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DemoteMasterResponse) Reset()         { *m = DemoteMasterResponse{} }
-func (m *DemoteMasterResponse) String() string { return proto.CompactTextString(m) }
-func (*DemoteMasterResponse) ProtoMessage()    {}
-func (*DemoteMasterResponse) Descriptor() ([]byte, []int) {
+func (m *DemoteMainResponse) Reset()         { *m = DemoteMainResponse{} }
+func (m *DemoteMainResponse) String() string { return proto.CompactTextString(m) }
+func (*DemoteMainResponse) ProtoMessage()    {}
+func (*DemoteMainResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{75}
 }
 
-func (m *DemoteMasterResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DemoteMasterResponse.Unmarshal(m, b)
+func (m *DemoteMainResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DemoteMainResponse.Unmarshal(m, b)
 }
-func (m *DemoteMasterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DemoteMasterResponse.Marshal(b, m, deterministic)
+func (m *DemoteMainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DemoteMainResponse.Marshal(b, m, deterministic)
 }
-func (m *DemoteMasterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DemoteMasterResponse.Merge(m, src)
+func (m *DemoteMainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DemoteMainResponse.Merge(m, src)
 }
-func (m *DemoteMasterResponse) XXX_Size() int {
-	return xxx_messageInfo_DemoteMasterResponse.Size(m)
+func (m *DemoteMainResponse) XXX_Size() int {
+	return xxx_messageInfo_DemoteMainResponse.Size(m)
 }
-func (m *DemoteMasterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DemoteMasterResponse.DiscardUnknown(m)
+func (m *DemoteMainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DemoteMainResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DemoteMasterResponse proto.InternalMessageInfo
+var xxx_messageInfo_DemoteMainResponse proto.InternalMessageInfo
 
-func (m *DemoteMasterResponse) GetPosition() string {
+func (m *DemoteMainResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-type UndoDemoteMasterRequest struct {
+type UndoDemoteMainRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UndoDemoteMasterRequest) Reset()         { *m = UndoDemoteMasterRequest{} }
-func (m *UndoDemoteMasterRequest) String() string { return proto.CompactTextString(m) }
-func (*UndoDemoteMasterRequest) ProtoMessage()    {}
-func (*UndoDemoteMasterRequest) Descriptor() ([]byte, []int) {
+func (m *UndoDemoteMainRequest) Reset()         { *m = UndoDemoteMainRequest{} }
+func (m *UndoDemoteMainRequest) String() string { return proto.CompactTextString(m) }
+func (*UndoDemoteMainRequest) ProtoMessage()    {}
+func (*UndoDemoteMainRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{76}
 }
 
-func (m *UndoDemoteMasterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_UndoDemoteMasterRequest.Unmarshal(m, b)
+func (m *UndoDemoteMainRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UndoDemoteMainRequest.Unmarshal(m, b)
 }
-func (m *UndoDemoteMasterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_UndoDemoteMasterRequest.Marshal(b, m, deterministic)
+func (m *UndoDemoteMainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UndoDemoteMainRequest.Marshal(b, m, deterministic)
 }
-func (m *UndoDemoteMasterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UndoDemoteMasterRequest.Merge(m, src)
+func (m *UndoDemoteMainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UndoDemoteMainRequest.Merge(m, src)
 }
-func (m *UndoDemoteMasterRequest) XXX_Size() int {
-	return xxx_messageInfo_UndoDemoteMasterRequest.Size(m)
+func (m *UndoDemoteMainRequest) XXX_Size() int {
+	return xxx_messageInfo_UndoDemoteMainRequest.Size(m)
 }
-func (m *UndoDemoteMasterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UndoDemoteMasterRequest.DiscardUnknown(m)
+func (m *UndoDemoteMainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UndoDemoteMainRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UndoDemoteMasterRequest proto.InternalMessageInfo
+var xxx_messageInfo_UndoDemoteMainRequest proto.InternalMessageInfo
 
-type UndoDemoteMasterResponse struct {
+type UndoDemoteMainResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UndoDemoteMasterResponse) Reset()         { *m = UndoDemoteMasterResponse{} }
-func (m *UndoDemoteMasterResponse) String() string { return proto.CompactTextString(m) }
-func (*UndoDemoteMasterResponse) ProtoMessage()    {}
-func (*UndoDemoteMasterResponse) Descriptor() ([]byte, []int) {
+func (m *UndoDemoteMainResponse) Reset()         { *m = UndoDemoteMainResponse{} }
+func (m *UndoDemoteMainResponse) String() string { return proto.CompactTextString(m) }
+func (*UndoDemoteMainResponse) ProtoMessage()    {}
+func (*UndoDemoteMainResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{77}
 }
 
-func (m *UndoDemoteMasterResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_UndoDemoteMasterResponse.Unmarshal(m, b)
+func (m *UndoDemoteMainResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UndoDemoteMainResponse.Unmarshal(m, b)
 }
-func (m *UndoDemoteMasterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_UndoDemoteMasterResponse.Marshal(b, m, deterministic)
+func (m *UndoDemoteMainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UndoDemoteMainResponse.Marshal(b, m, deterministic)
 }
-func (m *UndoDemoteMasterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UndoDemoteMasterResponse.Merge(m, src)
+func (m *UndoDemoteMainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UndoDemoteMainResponse.Merge(m, src)
 }
-func (m *UndoDemoteMasterResponse) XXX_Size() int {
-	return xxx_messageInfo_UndoDemoteMasterResponse.Size(m)
+func (m *UndoDemoteMainResponse) XXX_Size() int {
+	return xxx_messageInfo_UndoDemoteMainResponse.Size(m)
 }
-func (m *UndoDemoteMasterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UndoDemoteMasterResponse.DiscardUnknown(m)
+func (m *UndoDemoteMainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UndoDemoteMainResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UndoDemoteMasterResponse proto.InternalMessageInfo
+var xxx_messageInfo_UndoDemoteMainResponse proto.InternalMessageInfo
 
-type PromoteSlaveWhenCaughtUpRequest struct {
+type PromoteSubordinateWhenCaughtUpRequest struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PromoteSlaveWhenCaughtUpRequest) Reset()         { *m = PromoteSlaveWhenCaughtUpRequest{} }
-func (m *PromoteSlaveWhenCaughtUpRequest) String() string { return proto.CompactTextString(m) }
-func (*PromoteSlaveWhenCaughtUpRequest) ProtoMessage()    {}
-func (*PromoteSlaveWhenCaughtUpRequest) Descriptor() ([]byte, []int) {
+func (m *PromoteSubordinateWhenCaughtUpRequest) Reset()         { *m = PromoteSubordinateWhenCaughtUpRequest{} }
+func (m *PromoteSubordinateWhenCaughtUpRequest) String() string { return proto.CompactTextString(m) }
+func (*PromoteSubordinateWhenCaughtUpRequest) ProtoMessage()    {}
+func (*PromoteSubordinateWhenCaughtUpRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{78}
 }
 
-func (m *PromoteSlaveWhenCaughtUpRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest.Unmarshal(m, b)
+func (m *PromoteSubordinateWhenCaughtUpRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest.Unmarshal(m, b)
 }
-func (m *PromoteSlaveWhenCaughtUpRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest.Marshal(b, m, deterministic)
+func (m *PromoteSubordinateWhenCaughtUpRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest.Marshal(b, m, deterministic)
 }
-func (m *PromoteSlaveWhenCaughtUpRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest.Merge(m, src)
+func (m *PromoteSubordinateWhenCaughtUpRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest.Merge(m, src)
 }
-func (m *PromoteSlaveWhenCaughtUpRequest) XXX_Size() int {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest.Size(m)
+func (m *PromoteSubordinateWhenCaughtUpRequest) XXX_Size() int {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest.Size(m)
 }
-func (m *PromoteSlaveWhenCaughtUpRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest.DiscardUnknown(m)
+func (m *PromoteSubordinateWhenCaughtUpRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PromoteSlaveWhenCaughtUpRequest proto.InternalMessageInfo
+var xxx_messageInfo_PromoteSubordinateWhenCaughtUpRequest proto.InternalMessageInfo
 
-func (m *PromoteSlaveWhenCaughtUpRequest) GetPosition() string {
+func (m *PromoteSubordinateWhenCaughtUpRequest) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-type PromoteSlaveWhenCaughtUpResponse struct {
+type PromoteSubordinateWhenCaughtUpResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PromoteSlaveWhenCaughtUpResponse) Reset()         { *m = PromoteSlaveWhenCaughtUpResponse{} }
-func (m *PromoteSlaveWhenCaughtUpResponse) String() string { return proto.CompactTextString(m) }
-func (*PromoteSlaveWhenCaughtUpResponse) ProtoMessage()    {}
-func (*PromoteSlaveWhenCaughtUpResponse) Descriptor() ([]byte, []int) {
+func (m *PromoteSubordinateWhenCaughtUpResponse) Reset()         { *m = PromoteSubordinateWhenCaughtUpResponse{} }
+func (m *PromoteSubordinateWhenCaughtUpResponse) String() string { return proto.CompactTextString(m) }
+func (*PromoteSubordinateWhenCaughtUpResponse) ProtoMessage()    {}
+func (*PromoteSubordinateWhenCaughtUpResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{79}
 }
 
-func (m *PromoteSlaveWhenCaughtUpResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse.Unmarshal(m, b)
+func (m *PromoteSubordinateWhenCaughtUpResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse.Unmarshal(m, b)
 }
-func (m *PromoteSlaveWhenCaughtUpResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse.Marshal(b, m, deterministic)
+func (m *PromoteSubordinateWhenCaughtUpResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse.Marshal(b, m, deterministic)
 }
-func (m *PromoteSlaveWhenCaughtUpResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse.Merge(m, src)
+func (m *PromoteSubordinateWhenCaughtUpResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse.Merge(m, src)
 }
-func (m *PromoteSlaveWhenCaughtUpResponse) XXX_Size() int {
-	return xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse.Size(m)
+func (m *PromoteSubordinateWhenCaughtUpResponse) XXX_Size() int {
+	return xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse.Size(m)
 }
-func (m *PromoteSlaveWhenCaughtUpResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse.DiscardUnknown(m)
+func (m *PromoteSubordinateWhenCaughtUpResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PromoteSlaveWhenCaughtUpResponse proto.InternalMessageInfo
+var xxx_messageInfo_PromoteSubordinateWhenCaughtUpResponse proto.InternalMessageInfo
 
-func (m *PromoteSlaveWhenCaughtUpResponse) GetPosition() string {
+func (m *PromoteSubordinateWhenCaughtUpResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
 	return ""
 }
 
-type SlaveWasPromotedRequest struct {
+type SubordinateWasPromotedRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SlaveWasPromotedRequest) Reset()         { *m = SlaveWasPromotedRequest{} }
-func (m *SlaveWasPromotedRequest) String() string { return proto.CompactTextString(m) }
-func (*SlaveWasPromotedRequest) ProtoMessage()    {}
-func (*SlaveWasPromotedRequest) Descriptor() ([]byte, []int) {
+func (m *SubordinateWasPromotedRequest) Reset()         { *m = SubordinateWasPromotedRequest{} }
+func (m *SubordinateWasPromotedRequest) String() string { return proto.CompactTextString(m) }
+func (*SubordinateWasPromotedRequest) ProtoMessage()    {}
+func (*SubordinateWasPromotedRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{80}
 }
 
-func (m *SlaveWasPromotedRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveWasPromotedRequest.Unmarshal(m, b)
+func (m *SubordinateWasPromotedRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateWasPromotedRequest.Unmarshal(m, b)
 }
-func (m *SlaveWasPromotedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveWasPromotedRequest.Marshal(b, m, deterministic)
+func (m *SubordinateWasPromotedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateWasPromotedRequest.Marshal(b, m, deterministic)
 }
-func (m *SlaveWasPromotedRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveWasPromotedRequest.Merge(m, src)
+func (m *SubordinateWasPromotedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateWasPromotedRequest.Merge(m, src)
 }
-func (m *SlaveWasPromotedRequest) XXX_Size() int {
-	return xxx_messageInfo_SlaveWasPromotedRequest.Size(m)
+func (m *SubordinateWasPromotedRequest) XXX_Size() int {
+	return xxx_messageInfo_SubordinateWasPromotedRequest.Size(m)
 }
-func (m *SlaveWasPromotedRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveWasPromotedRequest.DiscardUnknown(m)
+func (m *SubordinateWasPromotedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateWasPromotedRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveWasPromotedRequest proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateWasPromotedRequest proto.InternalMessageInfo
 
-type SlaveWasPromotedResponse struct {
+type SubordinateWasPromotedResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SlaveWasPromotedResponse) Reset()         { *m = SlaveWasPromotedResponse{} }
-func (m *SlaveWasPromotedResponse) String() string { return proto.CompactTextString(m) }
-func (*SlaveWasPromotedResponse) ProtoMessage()    {}
-func (*SlaveWasPromotedResponse) Descriptor() ([]byte, []int) {
+func (m *SubordinateWasPromotedResponse) Reset()         { *m = SubordinateWasPromotedResponse{} }
+func (m *SubordinateWasPromotedResponse) String() string { return proto.CompactTextString(m) }
+func (*SubordinateWasPromotedResponse) ProtoMessage()    {}
+func (*SubordinateWasPromotedResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{81}
 }
 
-func (m *SlaveWasPromotedResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveWasPromotedResponse.Unmarshal(m, b)
+func (m *SubordinateWasPromotedResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateWasPromotedResponse.Unmarshal(m, b)
 }
-func (m *SlaveWasPromotedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveWasPromotedResponse.Marshal(b, m, deterministic)
+func (m *SubordinateWasPromotedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateWasPromotedResponse.Marshal(b, m, deterministic)
 }
-func (m *SlaveWasPromotedResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveWasPromotedResponse.Merge(m, src)
+func (m *SubordinateWasPromotedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateWasPromotedResponse.Merge(m, src)
 }
-func (m *SlaveWasPromotedResponse) XXX_Size() int {
-	return xxx_messageInfo_SlaveWasPromotedResponse.Size(m)
+func (m *SubordinateWasPromotedResponse) XXX_Size() int {
+	return xxx_messageInfo_SubordinateWasPromotedResponse.Size(m)
 }
-func (m *SlaveWasPromotedResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveWasPromotedResponse.DiscardUnknown(m)
+func (m *SubordinateWasPromotedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateWasPromotedResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveWasPromotedResponse proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateWasPromotedResponse proto.InternalMessageInfo
 
-type SetMasterRequest struct {
+type SetMainRequest struct {
 	Parent               *topodata.TabletAlias `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
 	TimeCreatedNs        int64                 `protobuf:"varint,2,opt,name=time_created_ns,json=timeCreatedNs,proto3" json:"time_created_ns,omitempty"`
-	ForceStartSlave      bool                  `protobuf:"varint,3,opt,name=force_start_slave,json=forceStartSlave,proto3" json:"force_start_slave,omitempty"`
+	ForceStartSubordinate      bool                  `protobuf:"varint,3,opt,name=force_start_subordinate,json=forceStartSubordinate,proto3" json:"force_start_subordinate,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
 }
 
-func (m *SetMasterRequest) Reset()         { *m = SetMasterRequest{} }
-func (m *SetMasterRequest) String() string { return proto.CompactTextString(m) }
-func (*SetMasterRequest) ProtoMessage()    {}
-func (*SetMasterRequest) Descriptor() ([]byte, []int) {
+func (m *SetMainRequest) Reset()         { *m = SetMainRequest{} }
+func (m *SetMainRequest) String() string { return proto.CompactTextString(m) }
+func (*SetMainRequest) ProtoMessage()    {}
+func (*SetMainRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{82}
 }
 
-func (m *SetMasterRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SetMasterRequest.Unmarshal(m, b)
+func (m *SetMainRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetMainRequest.Unmarshal(m, b)
 }
-func (m *SetMasterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SetMasterRequest.Marshal(b, m, deterministic)
+func (m *SetMainRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetMainRequest.Marshal(b, m, deterministic)
 }
-func (m *SetMasterRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetMasterRequest.Merge(m, src)
+func (m *SetMainRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetMainRequest.Merge(m, src)
 }
-func (m *SetMasterRequest) XXX_Size() int {
-	return xxx_messageInfo_SetMasterRequest.Size(m)
+func (m *SetMainRequest) XXX_Size() int {
+	return xxx_messageInfo_SetMainRequest.Size(m)
 }
-func (m *SetMasterRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SetMasterRequest.DiscardUnknown(m)
+func (m *SetMainRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetMainRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SetMasterRequest proto.InternalMessageInfo
+var xxx_messageInfo_SetMainRequest proto.InternalMessageInfo
 
-func (m *SetMasterRequest) GetParent() *topodata.TabletAlias {
+func (m *SetMainRequest) GetParent() *topodata.TabletAlias {
 	if m != nil {
 		return m.Parent
 	}
 	return nil
 }
 
-func (m *SetMasterRequest) GetTimeCreatedNs() int64 {
+func (m *SetMainRequest) GetTimeCreatedNs() int64 {
 	if m != nil {
 		return m.TimeCreatedNs
 	}
 	return 0
 }
 
-func (m *SetMasterRequest) GetForceStartSlave() bool {
+func (m *SetMainRequest) GetForceStartSubordinate() bool {
 	if m != nil {
-		return m.ForceStartSlave
+		return m.ForceStartSubordinate
 	}
 	return false
 }
 
-type SetMasterResponse struct {
+type SetMainResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SetMasterResponse) Reset()         { *m = SetMasterResponse{} }
-func (m *SetMasterResponse) String() string { return proto.CompactTextString(m) }
-func (*SetMasterResponse) ProtoMessage()    {}
-func (*SetMasterResponse) Descriptor() ([]byte, []int) {
+func (m *SetMainResponse) Reset()         { *m = SetMainResponse{} }
+func (m *SetMainResponse) String() string { return proto.CompactTextString(m) }
+func (*SetMainResponse) ProtoMessage()    {}
+func (*SetMainResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{83}
 }
 
-func (m *SetMasterResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SetMasterResponse.Unmarshal(m, b)
+func (m *SetMainResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SetMainResponse.Unmarshal(m, b)
 }
-func (m *SetMasterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SetMasterResponse.Marshal(b, m, deterministic)
+func (m *SetMainResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SetMainResponse.Marshal(b, m, deterministic)
 }
-func (m *SetMasterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SetMasterResponse.Merge(m, src)
+func (m *SetMainResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetMainResponse.Merge(m, src)
 }
-func (m *SetMasterResponse) XXX_Size() int {
-	return xxx_messageInfo_SetMasterResponse.Size(m)
+func (m *SetMainResponse) XXX_Size() int {
+	return xxx_messageInfo_SetMainResponse.Size(m)
 }
-func (m *SetMasterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SetMasterResponse.DiscardUnknown(m)
+func (m *SetMainResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetMainResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SetMasterResponse proto.InternalMessageInfo
+var xxx_messageInfo_SetMainResponse proto.InternalMessageInfo
 
-type SlaveWasRestartedRequest struct {
+type SubordinateWasRestartedRequest struct {
 	// the parent alias the tablet should have
 	Parent               *topodata.TabletAlias `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
@@ -3373,68 +3373,68 @@ type SlaveWasRestartedRequest struct {
 	XXX_sizecache        int32                 `json:"-"`
 }
 
-func (m *SlaveWasRestartedRequest) Reset()         { *m = SlaveWasRestartedRequest{} }
-func (m *SlaveWasRestartedRequest) String() string { return proto.CompactTextString(m) }
-func (*SlaveWasRestartedRequest) ProtoMessage()    {}
-func (*SlaveWasRestartedRequest) Descriptor() ([]byte, []int) {
+func (m *SubordinateWasRestartedRequest) Reset()         { *m = SubordinateWasRestartedRequest{} }
+func (m *SubordinateWasRestartedRequest) String() string { return proto.CompactTextString(m) }
+func (*SubordinateWasRestartedRequest) ProtoMessage()    {}
+func (*SubordinateWasRestartedRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{84}
 }
 
-func (m *SlaveWasRestartedRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveWasRestartedRequest.Unmarshal(m, b)
+func (m *SubordinateWasRestartedRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateWasRestartedRequest.Unmarshal(m, b)
 }
-func (m *SlaveWasRestartedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveWasRestartedRequest.Marshal(b, m, deterministic)
+func (m *SubordinateWasRestartedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateWasRestartedRequest.Marshal(b, m, deterministic)
 }
-func (m *SlaveWasRestartedRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveWasRestartedRequest.Merge(m, src)
+func (m *SubordinateWasRestartedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateWasRestartedRequest.Merge(m, src)
 }
-func (m *SlaveWasRestartedRequest) XXX_Size() int {
-	return xxx_messageInfo_SlaveWasRestartedRequest.Size(m)
+func (m *SubordinateWasRestartedRequest) XXX_Size() int {
+	return xxx_messageInfo_SubordinateWasRestartedRequest.Size(m)
 }
-func (m *SlaveWasRestartedRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveWasRestartedRequest.DiscardUnknown(m)
+func (m *SubordinateWasRestartedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateWasRestartedRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveWasRestartedRequest proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateWasRestartedRequest proto.InternalMessageInfo
 
-func (m *SlaveWasRestartedRequest) GetParent() *topodata.TabletAlias {
+func (m *SubordinateWasRestartedRequest) GetParent() *topodata.TabletAlias {
 	if m != nil {
 		return m.Parent
 	}
 	return nil
 }
 
-type SlaveWasRestartedResponse struct {
+type SubordinateWasRestartedResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SlaveWasRestartedResponse) Reset()         { *m = SlaveWasRestartedResponse{} }
-func (m *SlaveWasRestartedResponse) String() string { return proto.CompactTextString(m) }
-func (*SlaveWasRestartedResponse) ProtoMessage()    {}
-func (*SlaveWasRestartedResponse) Descriptor() ([]byte, []int) {
+func (m *SubordinateWasRestartedResponse) Reset()         { *m = SubordinateWasRestartedResponse{} }
+func (m *SubordinateWasRestartedResponse) String() string { return proto.CompactTextString(m) }
+func (*SubordinateWasRestartedResponse) ProtoMessage()    {}
+func (*SubordinateWasRestartedResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{85}
 }
 
-func (m *SlaveWasRestartedResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SlaveWasRestartedResponse.Unmarshal(m, b)
+func (m *SubordinateWasRestartedResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SubordinateWasRestartedResponse.Unmarshal(m, b)
 }
-func (m *SlaveWasRestartedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SlaveWasRestartedResponse.Marshal(b, m, deterministic)
+func (m *SubordinateWasRestartedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SubordinateWasRestartedResponse.Marshal(b, m, deterministic)
 }
-func (m *SlaveWasRestartedResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SlaveWasRestartedResponse.Merge(m, src)
+func (m *SubordinateWasRestartedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubordinateWasRestartedResponse.Merge(m, src)
 }
-func (m *SlaveWasRestartedResponse) XXX_Size() int {
-	return xxx_messageInfo_SlaveWasRestartedResponse.Size(m)
+func (m *SubordinateWasRestartedResponse) XXX_Size() int {
+	return xxx_messageInfo_SubordinateWasRestartedResponse.Size(m)
 }
-func (m *SlaveWasRestartedResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SlaveWasRestartedResponse.DiscardUnknown(m)
+func (m *SubordinateWasRestartedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubordinateWasRestartedResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SlaveWasRestartedResponse proto.InternalMessageInfo
+var xxx_messageInfo_SubordinateWasRestartedResponse proto.InternalMessageInfo
 
 type StopReplicationAndGetStatusRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -3506,70 +3506,70 @@ func (m *StopReplicationAndGetStatusResponse) GetStatus() *replicationdata.Statu
 	return nil
 }
 
-type PromoteSlaveRequest struct {
+type PromoteSubordinateRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PromoteSlaveRequest) Reset()         { *m = PromoteSlaveRequest{} }
-func (m *PromoteSlaveRequest) String() string { return proto.CompactTextString(m) }
-func (*PromoteSlaveRequest) ProtoMessage()    {}
-func (*PromoteSlaveRequest) Descriptor() ([]byte, []int) {
+func (m *PromoteSubordinateRequest) Reset()         { *m = PromoteSubordinateRequest{} }
+func (m *PromoteSubordinateRequest) String() string { return proto.CompactTextString(m) }
+func (*PromoteSubordinateRequest) ProtoMessage()    {}
+func (*PromoteSubordinateRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{88}
 }
 
-func (m *PromoteSlaveRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PromoteSlaveRequest.Unmarshal(m, b)
+func (m *PromoteSubordinateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoteSubordinateRequest.Unmarshal(m, b)
 }
-func (m *PromoteSlaveRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PromoteSlaveRequest.Marshal(b, m, deterministic)
+func (m *PromoteSubordinateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoteSubordinateRequest.Marshal(b, m, deterministic)
 }
-func (m *PromoteSlaveRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoteSlaveRequest.Merge(m, src)
+func (m *PromoteSubordinateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoteSubordinateRequest.Merge(m, src)
 }
-func (m *PromoteSlaveRequest) XXX_Size() int {
-	return xxx_messageInfo_PromoteSlaveRequest.Size(m)
+func (m *PromoteSubordinateRequest) XXX_Size() int {
+	return xxx_messageInfo_PromoteSubordinateRequest.Size(m)
 }
-func (m *PromoteSlaveRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PromoteSlaveRequest.DiscardUnknown(m)
+func (m *PromoteSubordinateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoteSubordinateRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PromoteSlaveRequest proto.InternalMessageInfo
+var xxx_messageInfo_PromoteSubordinateRequest proto.InternalMessageInfo
 
-type PromoteSlaveResponse struct {
+type PromoteSubordinateResponse struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PromoteSlaveResponse) Reset()         { *m = PromoteSlaveResponse{} }
-func (m *PromoteSlaveResponse) String() string { return proto.CompactTextString(m) }
-func (*PromoteSlaveResponse) ProtoMessage()    {}
-func (*PromoteSlaveResponse) Descriptor() ([]byte, []int) {
+func (m *PromoteSubordinateResponse) Reset()         { *m = PromoteSubordinateResponse{} }
+func (m *PromoteSubordinateResponse) String() string { return proto.CompactTextString(m) }
+func (*PromoteSubordinateResponse) ProtoMessage()    {}
+func (*PromoteSubordinateResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ff9ac4f89e61ffa4, []int{89}
 }
 
-func (m *PromoteSlaveResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PromoteSlaveResponse.Unmarshal(m, b)
+func (m *PromoteSubordinateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoteSubordinateResponse.Unmarshal(m, b)
 }
-func (m *PromoteSlaveResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PromoteSlaveResponse.Marshal(b, m, deterministic)
+func (m *PromoteSubordinateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoteSubordinateResponse.Marshal(b, m, deterministic)
 }
-func (m *PromoteSlaveResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoteSlaveResponse.Merge(m, src)
+func (m *PromoteSubordinateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoteSubordinateResponse.Merge(m, src)
 }
-func (m *PromoteSlaveResponse) XXX_Size() int {
-	return xxx_messageInfo_PromoteSlaveResponse.Size(m)
+func (m *PromoteSubordinateResponse) XXX_Size() int {
+	return xxx_messageInfo_PromoteSubordinateResponse.Size(m)
 }
-func (m *PromoteSlaveResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PromoteSlaveResponse.DiscardUnknown(m)
+func (m *PromoteSubordinateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoteSubordinateResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PromoteSlaveResponse proto.InternalMessageInfo
+var xxx_messageInfo_PromoteSubordinateResponse proto.InternalMessageInfo
 
-func (m *PromoteSlaveResponse) GetPosition() string {
+func (m *PromoteSubordinateResponse) GetPosition() string {
 	if m != nil {
 		return m.Position
 	}
@@ -3578,7 +3578,7 @@ func (m *PromoteSlaveResponse) GetPosition() string {
 
 type BackupRequest struct {
 	Concurrency          int64    `protobuf:"varint,1,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
-	AllowMaster          bool     `protobuf:"varint,2,opt,name=allowMaster,proto3" json:"allowMaster,omitempty"`
+	AllowMain          bool     `protobuf:"varint,2,opt,name=allowMain,proto3" json:"allowMain,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -3616,9 +3616,9 @@ func (m *BackupRequest) GetConcurrency() int64 {
 	return 0
 }
 
-func (m *BackupRequest) GetAllowMaster() bool {
+func (m *BackupRequest) GetAllowMain() bool {
 	if m != nil {
-		return m.AllowMaster
+		return m.AllowMain
 	}
 	return false
 }
@@ -3780,52 +3780,52 @@ func init() {
 	proto.RegisterType((*ExecuteFetchAsAllPrivsResponse)(nil), "tabletmanagerdata.ExecuteFetchAsAllPrivsResponse")
 	proto.RegisterType((*ExecuteFetchAsAppRequest)(nil), "tabletmanagerdata.ExecuteFetchAsAppRequest")
 	proto.RegisterType((*ExecuteFetchAsAppResponse)(nil), "tabletmanagerdata.ExecuteFetchAsAppResponse")
-	proto.RegisterType((*SlaveStatusRequest)(nil), "tabletmanagerdata.SlaveStatusRequest")
-	proto.RegisterType((*SlaveStatusResponse)(nil), "tabletmanagerdata.SlaveStatusResponse")
-	proto.RegisterType((*MasterPositionRequest)(nil), "tabletmanagerdata.MasterPositionRequest")
-	proto.RegisterType((*MasterPositionResponse)(nil), "tabletmanagerdata.MasterPositionResponse")
-	proto.RegisterType((*StopSlaveRequest)(nil), "tabletmanagerdata.StopSlaveRequest")
-	proto.RegisterType((*StopSlaveResponse)(nil), "tabletmanagerdata.StopSlaveResponse")
-	proto.RegisterType((*StopSlaveMinimumRequest)(nil), "tabletmanagerdata.StopSlaveMinimumRequest")
-	proto.RegisterType((*StopSlaveMinimumResponse)(nil), "tabletmanagerdata.StopSlaveMinimumResponse")
-	proto.RegisterType((*StartSlaveRequest)(nil), "tabletmanagerdata.StartSlaveRequest")
-	proto.RegisterType((*StartSlaveResponse)(nil), "tabletmanagerdata.StartSlaveResponse")
-	proto.RegisterType((*StartSlaveUntilAfterRequest)(nil), "tabletmanagerdata.StartSlaveUntilAfterRequest")
-	proto.RegisterType((*StartSlaveUntilAfterResponse)(nil), "tabletmanagerdata.StartSlaveUntilAfterResponse")
+	proto.RegisterType((*SubordinateStatusRequest)(nil), "tabletmanagerdata.SubordinateStatusRequest")
+	proto.RegisterType((*SubordinateStatusResponse)(nil), "tabletmanagerdata.SubordinateStatusResponse")
+	proto.RegisterType((*MainPositionRequest)(nil), "tabletmanagerdata.MainPositionRequest")
+	proto.RegisterType((*MainPositionResponse)(nil), "tabletmanagerdata.MainPositionResponse")
+	proto.RegisterType((*StopSubordinateRequest)(nil), "tabletmanagerdata.StopSubordinateRequest")
+	proto.RegisterType((*StopSubordinateResponse)(nil), "tabletmanagerdata.StopSubordinateResponse")
+	proto.RegisterType((*StopSubordinateMinimumRequest)(nil), "tabletmanagerdata.StopSubordinateMinimumRequest")
+	proto.RegisterType((*StopSubordinateMinimumResponse)(nil), "tabletmanagerdata.StopSubordinateMinimumResponse")
+	proto.RegisterType((*StartSubordinateRequest)(nil), "tabletmanagerdata.StartSubordinateRequest")
+	proto.RegisterType((*StartSubordinateResponse)(nil), "tabletmanagerdata.StartSubordinateResponse")
+	proto.RegisterType((*StartSubordinateUntilAfterRequest)(nil), "tabletmanagerdata.StartSubordinateUntilAfterRequest")
+	proto.RegisterType((*StartSubordinateUntilAfterResponse)(nil), "tabletmanagerdata.StartSubordinateUntilAfterResponse")
 	proto.RegisterType((*TabletExternallyReparentedRequest)(nil), "tabletmanagerdata.TabletExternallyReparentedRequest")
 	proto.RegisterType((*TabletExternallyReparentedResponse)(nil), "tabletmanagerdata.TabletExternallyReparentedResponse")
 	proto.RegisterType((*TabletExternallyElectedRequest)(nil), "tabletmanagerdata.TabletExternallyElectedRequest")
 	proto.RegisterType((*TabletExternallyElectedResponse)(nil), "tabletmanagerdata.TabletExternallyElectedResponse")
-	proto.RegisterType((*GetSlavesRequest)(nil), "tabletmanagerdata.GetSlavesRequest")
-	proto.RegisterType((*GetSlavesResponse)(nil), "tabletmanagerdata.GetSlavesResponse")
+	proto.RegisterType((*GetSubordinatesRequest)(nil), "tabletmanagerdata.GetSubordinatesRequest")
+	proto.RegisterType((*GetSubordinatesResponse)(nil), "tabletmanagerdata.GetSubordinatesResponse")
 	proto.RegisterType((*ResetReplicationRequest)(nil), "tabletmanagerdata.ResetReplicationRequest")
 	proto.RegisterType((*ResetReplicationResponse)(nil), "tabletmanagerdata.ResetReplicationResponse")
 	proto.RegisterType((*VReplicationExecRequest)(nil), "tabletmanagerdata.VReplicationExecRequest")
 	proto.RegisterType((*VReplicationExecResponse)(nil), "tabletmanagerdata.VReplicationExecResponse")
 	proto.RegisterType((*VReplicationWaitForPosRequest)(nil), "tabletmanagerdata.VReplicationWaitForPosRequest")
 	proto.RegisterType((*VReplicationWaitForPosResponse)(nil), "tabletmanagerdata.VReplicationWaitForPosResponse")
-	proto.RegisterType((*InitMasterRequest)(nil), "tabletmanagerdata.InitMasterRequest")
-	proto.RegisterType((*InitMasterResponse)(nil), "tabletmanagerdata.InitMasterResponse")
+	proto.RegisterType((*InitMainRequest)(nil), "tabletmanagerdata.InitMainRequest")
+	proto.RegisterType((*InitMainResponse)(nil), "tabletmanagerdata.InitMainResponse")
 	proto.RegisterType((*PopulateReparentJournalRequest)(nil), "tabletmanagerdata.PopulateReparentJournalRequest")
 	proto.RegisterType((*PopulateReparentJournalResponse)(nil), "tabletmanagerdata.PopulateReparentJournalResponse")
-	proto.RegisterType((*InitSlaveRequest)(nil), "tabletmanagerdata.InitSlaveRequest")
-	proto.RegisterType((*InitSlaveResponse)(nil), "tabletmanagerdata.InitSlaveResponse")
-	proto.RegisterType((*DemoteMasterRequest)(nil), "tabletmanagerdata.DemoteMasterRequest")
-	proto.RegisterType((*DemoteMasterResponse)(nil), "tabletmanagerdata.DemoteMasterResponse")
-	proto.RegisterType((*UndoDemoteMasterRequest)(nil), "tabletmanagerdata.UndoDemoteMasterRequest")
-	proto.RegisterType((*UndoDemoteMasterResponse)(nil), "tabletmanagerdata.UndoDemoteMasterResponse")
-	proto.RegisterType((*PromoteSlaveWhenCaughtUpRequest)(nil), "tabletmanagerdata.PromoteSlaveWhenCaughtUpRequest")
-	proto.RegisterType((*PromoteSlaveWhenCaughtUpResponse)(nil), "tabletmanagerdata.PromoteSlaveWhenCaughtUpResponse")
-	proto.RegisterType((*SlaveWasPromotedRequest)(nil), "tabletmanagerdata.SlaveWasPromotedRequest")
-	proto.RegisterType((*SlaveWasPromotedResponse)(nil), "tabletmanagerdata.SlaveWasPromotedResponse")
-	proto.RegisterType((*SetMasterRequest)(nil), "tabletmanagerdata.SetMasterRequest")
-	proto.RegisterType((*SetMasterResponse)(nil), "tabletmanagerdata.SetMasterResponse")
-	proto.RegisterType((*SlaveWasRestartedRequest)(nil), "tabletmanagerdata.SlaveWasRestartedRequest")
-	proto.RegisterType((*SlaveWasRestartedResponse)(nil), "tabletmanagerdata.SlaveWasRestartedResponse")
+	proto.RegisterType((*InitSubordinateRequest)(nil), "tabletmanagerdata.InitSubordinateRequest")
+	proto.RegisterType((*InitSubordinateResponse)(nil), "tabletmanagerdata.InitSubordinateResponse")
+	proto.RegisterType((*DemoteMainRequest)(nil), "tabletmanagerdata.DemoteMainRequest")
+	proto.RegisterType((*DemoteMainResponse)(nil), "tabletmanagerdata.DemoteMainResponse")
+	proto.RegisterType((*UndoDemoteMainRequest)(nil), "tabletmanagerdata.UndoDemoteMainRequest")
+	proto.RegisterType((*UndoDemoteMainResponse)(nil), "tabletmanagerdata.UndoDemoteMainResponse")
+	proto.RegisterType((*PromoteSubordinateWhenCaughtUpRequest)(nil), "tabletmanagerdata.PromoteSubordinateWhenCaughtUpRequest")
+	proto.RegisterType((*PromoteSubordinateWhenCaughtUpResponse)(nil), "tabletmanagerdata.PromoteSubordinateWhenCaughtUpResponse")
+	proto.RegisterType((*SubordinateWasPromotedRequest)(nil), "tabletmanagerdata.SubordinateWasPromotedRequest")
+	proto.RegisterType((*SubordinateWasPromotedResponse)(nil), "tabletmanagerdata.SubordinateWasPromotedResponse")
+	proto.RegisterType((*SetMainRequest)(nil), "tabletmanagerdata.SetMainRequest")
+	proto.RegisterType((*SetMainResponse)(nil), "tabletmanagerdata.SetMainResponse")
+	proto.RegisterType((*SubordinateWasRestartedRequest)(nil), "tabletmanagerdata.SubordinateWasRestartedRequest")
+	proto.RegisterType((*SubordinateWasRestartedResponse)(nil), "tabletmanagerdata.SubordinateWasRestartedResponse")
 	proto.RegisterType((*StopReplicationAndGetStatusRequest)(nil), "tabletmanagerdata.StopReplicationAndGetStatusRequest")
 	proto.RegisterType((*StopReplicationAndGetStatusResponse)(nil), "tabletmanagerdata.StopReplicationAndGetStatusResponse")
-	proto.RegisterType((*PromoteSlaveRequest)(nil), "tabletmanagerdata.PromoteSlaveRequest")
-	proto.RegisterType((*PromoteSlaveResponse)(nil), "tabletmanagerdata.PromoteSlaveResponse")
+	proto.RegisterType((*PromoteSubordinateRequest)(nil), "tabletmanagerdata.PromoteSubordinateRequest")
+	proto.RegisterType((*PromoteSubordinateResponse)(nil), "tabletmanagerdata.PromoteSubordinateResponse")
 	proto.RegisterType((*BackupRequest)(nil), "tabletmanagerdata.BackupRequest")
 	proto.RegisterType((*BackupResponse)(nil), "tabletmanagerdata.BackupResponse")
 	proto.RegisterType((*RestoreFromBackupRequest)(nil), "tabletmanagerdata.RestoreFromBackupRequest")

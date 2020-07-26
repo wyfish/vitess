@@ -20,14 +20,14 @@ import (
 	"testing"
 )
 
-func TestMariadbSetMasterCommands(t *testing.T) {
+func TestMariadbSetMainCommands(t *testing.T) {
 	params := &ConnParams{
 		Uname: "username",
 		Pass:  "password",
 	}
-	masterHost := "localhost"
-	masterPort := 123
-	masterConnectRetry := 1234
+	mainHost := "localhost"
+	mainPort := 123
+	mainConnectRetry := 1234
 	want := `CHANGE MASTER TO
   MASTER_HOST = 'localhost',
   MASTER_PORT = 123,
@@ -37,13 +37,13 @@ func TestMariadbSetMasterCommands(t *testing.T) {
   MASTER_USE_GTID = current_pos`
 
 	conn := &Conn{flavor: mariadbFlavor{}}
-	got := conn.SetMasterCommand(params, masterHost, masterPort, masterConnectRetry)
+	got := conn.SetMainCommand(params, mainHost, mainPort, mainConnectRetry)
 	if got != want {
-		t.Errorf("mariadbFlavor.SetMasterCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, masterHost, masterPort, masterConnectRetry, got, want)
+		t.Errorf("mariadbFlavor.SetMainCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, mainHost, mainPort, mainConnectRetry, got, want)
 	}
 }
 
-func TestMariadbSetMasterCommandsSSL(t *testing.T) {
+func TestMariadbSetMainCommandsSSL(t *testing.T) {
 	params := &ConnParams{
 		Uname:     "username",
 		Pass:      "password",
@@ -53,9 +53,9 @@ func TestMariadbSetMasterCommandsSSL(t *testing.T) {
 		SslKey:    "ssl-key",
 	}
 	params.EnableSSL()
-	masterHost := "localhost"
-	masterPort := 123
-	masterConnectRetry := 1234
+	mainHost := "localhost"
+	mainPort := 123
+	mainConnectRetry := 1234
 	want := `CHANGE MASTER TO
   MASTER_HOST = 'localhost',
   MASTER_PORT = 123,
@@ -70,8 +70,8 @@ func TestMariadbSetMasterCommandsSSL(t *testing.T) {
   MASTER_USE_GTID = current_pos`
 
 	conn := &Conn{flavor: mariadbFlavor{}}
-	got := conn.SetMasterCommand(params, masterHost, masterPort, masterConnectRetry)
+	got := conn.SetMainCommand(params, mainHost, mainPort, mainConnectRetry)
 	if got != want {
-		t.Errorf("mariadbFlavor.SetMasterCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, masterHost, masterPort, masterConnectRetry, got, want)
+		t.Errorf("mariadbFlavor.SetMainCommands(%#v, %#v, %#v, %#v) = %#v, want %#v", params, mainHost, mainPort, mainConnectRetry, got, want)
 	}
 }

@@ -244,7 +244,7 @@ class VitessKubernetesSandbox(sandbox.Sandbox):
           'initial_reparent_%s_%d' % (name, shard_count), self.name,
           'initial_reparent.py', self.log_dir, namespace=self.name,
           keyspace=name, shard_count=shard_count,
-          master_cell=self.app_options.cells[0])
+          main_cell=self.app_options.cells[0])
       initial_reparent_subprocess.dependencies = [
           wait_for_mysql_subprocess.name,
           fix_served_types_subprocess.name,

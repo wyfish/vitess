@@ -29,9 +29,9 @@ import (
 )
 
 var (
-	// ErrNotSlave means there is no slave status.
-	// Returned by ShowSlaveStatus().
-	ErrNotSlave = errors.New("no slave status")
+	// ErrNotSubordinate means there is no subordinate status.
+	// Returned by ShowSubordinateStatus().
+	ErrNotSubordinate = errors.New("no subordinate status")
 )
 
 const (
@@ -49,22 +49,22 @@ const (
 // 1. Oracle MySQL 5.6, 5.7, 8.0, ...
 // 2. MariaDB 10.X
 type flavor interface {
-	// masterGTIDSet returns the current GTIDSet of a server.
-	masterGTIDSet(c *Conn) (GTIDSet, error)
+	// mainGTIDSet returns the current GTIDSet of a server.
+	mainGTIDSet(c *Conn) (GTIDSet, error)
 
-	// startSlave returns the command to start the slave.
-	startSlaveCommand() string
+	// startSubordinate returns the command to start the subordinate.
+	startSubordinateCommand() string
 
-	// startSlaveUntilAfter will restart replication, but only allow it
+	// startSubordinateUntilAfter will restart replication, but only allow it
 	// to run until `pos` is reached. After reaching pos, replication will be stopped again
-	startSlaveUntilAfter(pos Position) string
+	startSubordinateUntilAfter(pos Position) string
 
-	// stopSlave returns the command to stop the slave.
-	stopSlaveCommand() string
+	// stopSubordinate returns the command to stop the subordinate.
+	stopSubordinateCommand() string
 
 	// sendBinlogDumpCommand sends the packet required to start
 	// dumping binlogs from the specified location.
-	sendBinlogDumpCommand(c *Conn, slaveID uint32, startPos Position) error
+	sendBinlogDumpCommand(c *Conn, subordinateID uint32, startPos Position) error
 
 	// readBinlogEvent reads the next BinlogEvent from the connection.
 	readBinlogEvent(c *Conn) (BinlogEvent, error)
@@ -73,17 +73,17 @@ type flavor interface {
 	// replication on the host.
 	resetReplicationCommands() []string
 
-	// setSlavePositionCommands returns the commands to set the
-	// replication position at which the slave will resume.
-	setSlavePositionCommands(pos Position) []string
+	// setSubordinatePositionCommands returns the commands to set the
+	// replication position at which the subordinate will resume.
+	setSubordinatePositionCommands(pos Position) []string
 
-	// changeMasterArg returns the specific parameter to add to
-	// a change master command.
-	changeMasterArg() string
+	// changeMainArg returns the specific parameter to add to
+	// a change main command.
+	changeMainArg() string
 
 	// status returns the result of 'SHOW SLAVE STATUS',
 	// with parsed replication position.
-	status(c *Conn) (SlaveStatus, error)
+	status(c *Conn) (SubordinateStatus, error)
 
 	// waitUntilPositionCommand returns the SQL command to issue
 	// to wait until the given position, until the context
@@ -137,9 +137,9 @@ func (c *Conn) IsMariaDB() bool {
 	return ok
 }
 
-// MasterPosition returns the current master replication position.
-func (c *Conn) MasterPosition() (Position, error) {
-	gtidSet, err := c.flavor.masterGTIDSet(c)
+// MainPosition returns the current main replication position.
+func (c *Conn) MainPosition() (Position, error) {
+	gtidSet, err := c.flavor.mainGTIDSet(c)
 	if err != nil {
 		return Position{}, err
 	}
@@ -148,26 +148,26 @@ func (c *Conn) MasterPosition() (Position, error) {
 	}, nil
 }
 
-// StartSlaveCommand returns the command to start the slave.
-func (c *Conn) StartSlaveCommand() string {
-	return c.flavor.startSlaveCommand()
+// StartSubordinateCommand returns the command to start the subordinate.
+func (c *Conn) StartSubordinateCommand() string {
+	return c.flavor.startSubordinateCommand()
 }
 
-// StartSlaveUntilAfterCommand returns the command to start the slave.
-func (c *Conn) StartSlaveUntilAfterCommand(pos Position) string {
-	return c.flavor.startSlaveUntilAfter(pos)
+// StartSubordinateUntilAfterCommand returns the command to start the subordinate.
+func (c *Conn) StartSubordinateUntilAfterCommand(pos Position) string {
+	return c.flavor.startSubordinateUntilAfter(pos)
 }
 
-// StopSlaveCommand returns the command to stop the slave.
-func (c *Conn) StopSlaveCommand() string {
-	return c.flavor.stopSlaveCommand()
+// StopSubordinateCommand returns the command to stop the subordinate.
+func (c *Conn) StopSubordinateCommand() string {
+	return c.flavor.stopSubordinateCommand()
 }
 
 // SendBinlogDumpCommand sends the flavor-specific version of
 // the COM_BINLOG_DUMP command to start dumping raw binlog
-// events over a slave connection, starting at a given GTID.
-func (c *Conn) SendBinlogDumpCommand(slaveID uint32, startPos Position) error {
-	return c.flavor.sendBinlogDumpCommand(c, slaveID, startPos)
+// events over a subordinate connection, starting at a given GTID.
+func (c *Conn) SendBinlogDumpCommand(subordinateID uint32, startPos Position) error {
+	return c.flavor.sendBinlogDumpCommand(c, subordinateID, startPos)
 }
 
 // ReadBinlogEvent reads the next BinlogEvent. This must be used
@@ -182,24 +182,24 @@ func (c *Conn) ResetReplicationCommands() []string {
 	return c.flavor.resetReplicationCommands()
 }
 
-// SetSlavePositionCommands returns the commands to set the
-// replication position at which the slave will resume
-// when it is later reparented with SetMasterCommands.
-func (c *Conn) SetSlavePositionCommands(pos Position) []string {
-	return c.flavor.setSlavePositionCommands(pos)
+// SetSubordinatePositionCommands returns the commands to set the
+// replication position at which the subordinate will resume
+// when it is later reparented with SetMainCommands.
+func (c *Conn) SetSubordinatePositionCommands(pos Position) []string {
+	return c.flavor.setSubordinatePositionCommands(pos)
 }
 
-// SetMasterCommand returns the command to use the provided master
-// as the new master (without changing any GTID position).
+// SetMainCommand returns the command to use the provided main
+// as the new main (without changing any GTID position).
 // It is guaranteed to be called with replication stopped.
 // It should not start or stop replication.
-func (c *Conn) SetMasterCommand(params *ConnParams, masterHost string, masterPort int, masterConnectRetry int) string {
+func (c *Conn) SetMainCommand(params *ConnParams, mainHost string, mainPort int, mainConnectRetry int) string {
 	args := []string{
-		fmt.Sprintf("MASTER_HOST = '%s'", masterHost),
-		fmt.Sprintf("MASTER_PORT = %d", masterPort),
+		fmt.Sprintf("MASTER_HOST = '%s'", mainHost),
+		fmt.Sprintf("MASTER_PORT = %d", mainPort),
 		fmt.Sprintf("MASTER_USER = '%s'", params.Uname),
 		fmt.Sprintf("MASTER_PASSWORD = '%s'", params.Pass),
-		fmt.Sprintf("MASTER_CONNECT_RETRY = %d", masterConnectRetry),
+		fmt.Sprintf("MASTER_CONNECT_RETRY = %d", mainConnectRetry),
 	}
 	if params.SslEnabled() {
 		args = append(args, "MASTER_SSL = 1")
@@ -216,11 +216,11 @@ func (c *Conn) SetMasterCommand(params *ConnParams, masterHost string, masterPor
 	if params.SslKey != "" {
 		args = append(args, fmt.Sprintf("MASTER_SSL_KEY = '%s'", params.SslKey))
 	}
-	args = append(args, c.flavor.changeMasterArg())
+	args = append(args, c.flavor.changeMainArg())
 	return "CHANGE MASTER TO\n  " + strings.Join(args, ",\n  ")
 }
 
-// resultToMap is a helper function used by ShowSlaveStatus.
+// resultToMap is a helper function used by ShowSubordinateStatus.
 func resultToMap(qr *sqltypes.Result) (map[string]string, error) {
 	if len(qr.Rows) == 0 {
 		// The query succeeded, but there is no data.
@@ -240,25 +240,25 @@ func resultToMap(qr *sqltypes.Result) (map[string]string, error) {
 	return result, nil
 }
 
-// parseSlaveStatus parses the common fields of SHOW SLAVE STATUS.
-func parseSlaveStatus(fields map[string]string) SlaveStatus {
-	status := SlaveStatus{
-		MasterHost:      fields["Master_Host"],
-		SlaveIORunning:  fields["Slave_IO_Running"] == "Yes",
-		SlaveSQLRunning: fields["Slave_SQL_Running"] == "Yes",
+// parseSubordinateStatus parses the common fields of SHOW SLAVE STATUS.
+func parseSubordinateStatus(fields map[string]string) SubordinateStatus {
+	status := SubordinateStatus{
+		MainHost:      fields["Main_Host"],
+		SubordinateIORunning:  fields["Subordinate_IO_Running"] == "Yes",
+		SubordinateSQLRunning: fields["Subordinate_SQL_Running"] == "Yes",
 	}
-	parseInt, _ := strconv.ParseInt(fields["Master_Port"], 10, 0)
-	status.MasterPort = int(parseInt)
+	parseInt, _ := strconv.ParseInt(fields["Main_Port"], 10, 0)
+	status.MainPort = int(parseInt)
 	parseInt, _ = strconv.ParseInt(fields["Connect_Retry"], 10, 0)
-	status.MasterConnectRetry = int(parseInt)
-	parseUint, _ := strconv.ParseUint(fields["Seconds_Behind_Master"], 10, 0)
-	status.SecondsBehindMaster = uint(parseUint)
+	status.MainConnectRetry = int(parseInt)
+	parseUint, _ := strconv.ParseUint(fields["Seconds_Behind_Main"], 10, 0)
+	status.SecondsBehindMain = uint(parseUint)
 	return status
 }
 
-// ShowSlaveStatus executes the right SHOW SLAVE STATUS command,
+// ShowSubordinateStatus executes the right SHOW SLAVE STATUS command,
 // and returns a parse Position with other fields.
-func (c *Conn) ShowSlaveStatus() (SlaveStatus, error) {
+func (c *Conn) ShowSubordinateStatus() (SubordinateStatus, error) {
 	return c.flavor.status(c)
 }
 

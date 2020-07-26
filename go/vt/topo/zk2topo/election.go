@@ -28,11 +28,11 @@ import (
 	"vitess.io/vitess/go/vt/topo"
 )
 
-// This file contains the master election code for zk2topo.Server.
+// This file contains the main election code for zk2topo.Server.
 
-// NewMasterParticipation is part of the topo.Server interface.
+// NewMainParticipation is part of the topo.Server interface.
 // We use the full path: <root path>/election/<name>
-func (zs *Server) NewMasterParticipation(name, id string) (topo.MasterParticipation, error) {
+func (zs *Server) NewMainParticipation(name, id string) (topo.MainParticipation, error) {
 	ctx := context.TODO()
 
 	zkPath := path.Join(zs.root, electionsPath, name)
@@ -43,7 +43,7 @@ func (zs *Server) NewMasterParticipation(name, id string) (topo.MasterParticipat
 		return nil, convertError(err, zkPath)
 	}
 
-	result := &zkMasterParticipation{
+	result := &zkMainParticipation{
 		zs:   zs,
 		name: name,
 		id:   []byte(id),
@@ -53,18 +53,18 @@ func (zs *Server) NewMasterParticipation(name, id string) (topo.MasterParticipat
 	return result, nil
 }
 
-// zkMasterParticipation implements topo.MasterParticipation.
+// zkMainParticipation implements topo.MainParticipation.
 //
 // We use a directory with files created as sequence and ephemeral,
 // see https://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection
 // From the toplevel election directory, we'll have one sub-directory
 // per name, with the sequence files in there. Each sequence file also contains
 // the id.
-type zkMasterParticipation struct {
+type zkMainParticipation struct {
 	// zs is our parent zk topo Server
 	zs *Server
 
-	// name is the name of this MasterParticipation
+	// name is the name of this MainParticipation
 	name string
 
 	// id is the process's current id.
@@ -80,12 +80,12 @@ type zkMasterParticipation struct {
 	done chan struct{}
 }
 
-// WaitForMastership is part of the topo.MasterParticipation interface.
-func (mp *zkMasterParticipation) WaitForMastership() (context.Context, error) {
+// WaitForMainship is part of the topo.MainParticipation interface.
+func (mp *zkMainParticipation) WaitForMainship() (context.Context, error) {
 	// If Stop was already called, mp.done is closed, so we are interrupted.
 	select {
 	case <-mp.done:
-		return nil, topo.NewError(topo.Interrupted, "mastership")
+		return nil, topo.NewError(topo.Interrupted, "mainship")
 	default:
 	}
 
@@ -96,7 +96,7 @@ func (mp *zkMasterParticipation) WaitForMastership() (context.Context, error) {
 	select {
 	case <-mp.stopCtx.Done():
 		close(mp.done)
-		return nil, topo.NewError(topo.Interrupted, "mastership")
+		return nil, topo.NewError(topo.Interrupted, "mainship")
 	default:
 	}
 
@@ -115,7 +115,7 @@ func (mp *zkMasterParticipation) WaitForMastership() (context.Context, error) {
 		break
 	case context.Canceled:
 		close(mp.done)
-		return nil, topo.NewError(topo.Interrupted, "mastership")
+		return nil, topo.NewError(topo.Interrupted, "mainship")
 	default:
 		// something else went wrong
 		return nil, err
@@ -123,24 +123,24 @@ func (mp *zkMasterParticipation) WaitForMastership() (context.Context, error) {
 
 	// we got the lock, create our background context
 	ctx, cancel := context.WithCancel(context.Background())
-	go mp.watchMastership(ctx, mp.zs.conn, proposal, cancel)
+	go mp.watchMainship(ctx, mp.zs.conn, proposal, cancel)
 	return ctx, nil
 }
 
-// watchMastership is the background go routine we run while we are the master.
+// watchMainship is the background go routine we run while we are the main.
 // We will do two things:
 // - watch for changes to the proposal file. If anything happens there,
 //   it most likely means we lost the ZK session, so we want to stop
-//   being the master.
+//   being the main.
 // - wait for mp.stop.
-func (mp *zkMasterParticipation) watchMastership(ctx context.Context, conn *ZkConn, proposal string, cancel context.CancelFunc) {
-	// any interruption of this routine means we're not master any more.
+func (mp *zkMainParticipation) watchMainship(ctx context.Context, conn *ZkConn, proposal string, cancel context.CancelFunc) {
+	// any interruption of this routine means we're not main any more.
 	defer cancel()
 
 	// get to work watching our own proposal
 	_, stats, events, err := conn.GetW(ctx, proposal)
 	if err != nil {
-		log.Warningf("Cannot watch proposal while being master, stopping: %v", err)
+		log.Warningf("Cannot watch proposal while being main, stopping: %v", err)
 		return
 	}
 
@@ -160,15 +160,15 @@ func (mp *zkMasterParticipation) watchMastership(ctx context.Context, conn *ZkCo
 	}
 }
 
-// Stop is part of the topo.MasterParticipation interface
-func (mp *zkMasterParticipation) Stop() {
+// Stop is part of the topo.MainParticipation interface
+func (mp *zkMainParticipation) Stop() {
 	mp.stopCtxCancel()
 	<-mp.done
 }
 
-// GetCurrentMasterID is part of the topo.MasterParticipation interface.
+// GetCurrentMainID is part of the topo.MainParticipation interface.
 // We just read the smallest (first) node content, that is the id.
-func (mp *zkMasterParticipation) GetCurrentMasterID(ctx context.Context) (string, error) {
+func (mp *zkMainParticipation) GetCurrentMainID(ctx context.Context) (string, error) {
 	zkPath := path.Join(mp.zs.root, electionsPath, mp.name)
 
 	for {
@@ -177,7 +177,7 @@ func (mp *zkMasterParticipation) GetCurrentMasterID(ctx context.Context) (string
 			return "", convertError(err, zkPath)
 		}
 		if len(children) == 0 {
-			// no current master
+			// no current main
 			return "", nil
 		}
 		sort.Strings(children)
@@ -186,7 +186,7 @@ func (mp *zkMasterParticipation) GetCurrentMasterID(ctx context.Context) (string
 		data, _, err := mp.zs.conn.Get(ctx, childPath)
 		if err != nil {
 			if err == zk.ErrNoNode {
-				// master terminated in front of our own eyes,
+				// main terminated in front of our own eyes,
 				// try again
 				continue
 			}
