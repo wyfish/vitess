@@ -32,10 +32,10 @@ import (
 
 // TabletStatsCache is a HealthCheckStatsListener that keeps both the
 // current list of available TabletStats, and a serving list:
-// - for master tablets, only the current master is kept.
-// - for non-master tablets, we filter the list using FilterByReplicationLag.
+// - for main tablets, only the current main is kept.
+// - for non-main tablets, we filter the list using FilterByReplicationLag.
 // It keeps entries for all tablets in the cell(s) it's configured to serve for,
-// and for the master independently of which cell it's in.
+// and for the main independently of which cell it's in.
 // Note the healthy tablet computation is done when we receive a tablet
 // update only, not at serving time.
 // Also note the cache may not have the last entry received by the tablet.
@@ -43,7 +43,7 @@ import (
 // keep its new update.
 type TabletStatsCache struct {
 	// cell is the cell we are keeping all tablets for.
-	// Note we keep track of all master tablets in all cells.
+	// Note we keep track of all main tablets in all cells.
 	cell string
 	// ts is the topo server in use.
 	ts *topo.Server
@@ -74,9 +74,9 @@ type tabletStatsCacheEntry struct {
 	aggregates map[string]*querypb.AggregateStats
 }
 
-func (e *tabletStatsCacheEntry) updateHealthyMapForMaster(ts *TabletStats) {
+func (e *tabletStatsCacheEntry) updateHealthyMapForMain(ts *TabletStats) {
 	if ts.Up {
-		// We have an Up master.
+		// We have an Up main.
 		if len(e.healthy) == 0 {
 			// We have a new Up server, just remember it.
 			e.healthy = append(e.healthy, ts)
@@ -86,7 +86,7 @@ func (e *tabletStatsCacheEntry) updateHealthyMapForMaster(ts *TabletStats) {
 		// We already have one up server, see if we
 		// need to replace it.
 		if ts.TabletExternallyReparentedTimestamp < e.healthy[0].TabletExternallyReparentedTimestamp {
-			log.Warningf("not marking healthy master %s as Up for %s because its externally reparented timestamp is smaller than the highest known timestamp from previous MASTERs %s: %d < %d ",
+			log.Warningf("not marking healthy main %s as Up for %s because its externally reparented timestamp is smaller than the highest known timestamp from previous MASTERs %s: %d < %d ",
 				topoproto.TabletAliasString(ts.Tablet.Alias),
 				topoproto.KeyspaceShardString(ts.Target.Keyspace, ts.Target.Shard),
 				topoproto.TabletAliasString(e.healthy[0].Tablet.Alias),
@@ -100,7 +100,7 @@ func (e *tabletStatsCacheEntry) updateHealthyMapForMaster(ts *TabletStats) {
 		return
 	}
 
-	// We have a Down master, remove it only if it's exactly the same.
+	// We have a Down main, remove it only if it's exactly the same.
 	if len(e.healthy) != 0 {
 		if ts.Key == e.healthy[0].Key {
 			// Same guy, remove it.
@@ -215,7 +215,7 @@ func (tc *TabletStatsCache) StatsUpdate(ts *TabletStats) {
 	if ts.Target.TabletType != topodatapb.TabletType_MASTER &&
 		ts.Tablet.Alias.Cell != tc.cell &&
 		tc.getAliasByCell(ts.Tablet.Alias.Cell) != tc.getAliasByCell(tc.cell) {
-		// this is for a non-master tablet in a different cell and a different alias, drop it
+		// this is for a non-main tablet in a different cell and a different alias, drop it
 		return
 	}
 
@@ -224,17 +224,17 @@ func (tc *TabletStatsCache) StatsUpdate(ts *TabletStats) {
 	defer e.mu.Unlock()
 
 	// Update our full map.
-	trivialNonMasterUpdate := false
+	trivialNonMainUpdate := false
 	if existing, ok := e.all[ts.Key]; ok {
 		if ts.Up {
 			// We have an existing entry, and a new entry.
 			// Remember if they are both good (most common case).
-			trivialNonMasterUpdate = existing.LastError == nil && existing.Serving && ts.LastError == nil && ts.Serving && ts.Target.TabletType != topodatapb.TabletType_MASTER && TrivialStatsUpdate(existing, ts)
+			trivialNonMainUpdate = existing.LastError == nil && existing.Serving && ts.LastError == nil && ts.Serving && ts.Target.TabletType != topodatapb.TabletType_MASTER && TrivialStatsUpdate(existing, ts)
 
 			// We already have the entry, update the
 			// values if necessary.  (will update both
 			// 'all' and 'healthy' as they use pointers).
-			if !trivialNonMasterUpdate {
+			if !trivialNonMainUpdate {
 				*existing = *ts
 			}
 		} else {
@@ -257,15 +257,15 @@ func (tc *TabletStatsCache) StatsUpdate(ts *TabletStats) {
 	if ts.Target.TabletType == topodatapb.TabletType_MASTER {
 		// The healthy list is different for TabletType_MASTER: we
 		// only keep the most recent one.
-		e.updateHealthyMapForMaster(ts)
+		e.updateHealthyMapForMain(ts)
 		for _, s := range e.all {
 			allArray = append(allArray, s)
 		}
 	} else {
-		// For non-master, if it is a trivial update,
+		// For non-main, if it is a trivial update,
 		// we just skip everything else. We don't even update the
 		// aggregate stats.
-		if trivialNonMasterUpdate {
+		if trivialNonMainUpdate {
 			return
 		}
 
@@ -289,18 +289,18 @@ func (tc *TabletStatsCache) makeAggregateMap(stats []*TabletStats) map[string]*q
 		agg, ok := result[alias]
 		if !ok {
 			agg = &querypb.AggregateStats{
-				SecondsBehindMasterMin: math.MaxUint32,
+				SecondsBehindMainMin: math.MaxUint32,
 			}
 			result[alias] = agg
 		}
 
 		if ts.Serving && ts.LastError == nil {
 			agg.HealthyTabletCount++
-			if ts.Stats.SecondsBehindMaster < agg.SecondsBehindMasterMin {
-				agg.SecondsBehindMasterMin = ts.Stats.SecondsBehindMaster
+			if ts.Stats.SecondsBehindMain < agg.SecondsBehindMainMin {
+				agg.SecondsBehindMainMin = ts.Stats.SecondsBehindMain
 			}
-			if ts.Stats.SecondsBehindMaster > agg.SecondsBehindMasterMax {
-				agg.SecondsBehindMasterMax = ts.Stats.SecondsBehindMaster
+			if ts.Stats.SecondsBehindMain > agg.SecondsBehindMainMax {
+				agg.SecondsBehindMainMax = ts.Stats.SecondsBehindMain
 			}
 		} else {
 			agg.UnhealthyTabletCount++
@@ -337,7 +337,7 @@ func (tc *TabletStatsCache) GetTabletStats(keyspace, shard string, tabletType to
 // GetHealthyTabletStats returns only the healthy targets.
 // The returned array is owned by the caller.
 // For TabletType_MASTER, this will only return at most one entry,
-// the most recent tablet of type master.
+// the most recent tablet of type main.
 func (tc *TabletStatsCache) GetHealthyTabletStats(keyspace, shard string, tabletType topodatapb.TabletType) []TabletStats {
 	e := tc.getEntry(keyspace, shard, tabletType)
 	if e == nil {
@@ -386,8 +386,8 @@ func (tc *TabletStatsCache) GetAggregateStats(target *querypb.Target) (*querypb.
 	return agg, nil
 }
 
-// GetMasterCell is part of the TargetStatsListener interface.
-func (tc *TabletStatsCache) GetMasterCell(keyspace, shard string) (cell string, err error) {
+// GetMainCell is part of the TargetStatsListener interface.
+func (tc *TabletStatsCache) GetMainCell(keyspace, shard string) (cell string, err error) {
 	e := tc.getEntry(keyspace, shard, topodatapb.TabletType_MASTER)
 	if e == nil {
 		return "", topo.NewError(topo.NoNode, topotools.TargetIdent(&querypb.Target{

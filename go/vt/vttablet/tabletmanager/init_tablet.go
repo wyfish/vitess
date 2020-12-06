@@ -72,8 +72,8 @@ func (agent *ActionAgent) InitTablet(port, gRPCPort int32) error {
 	}
 	if tabletType == topodatapb.TabletType_MASTER {
 		// We disallow MASTER, so we don't have to change
-		// shard.MasterAlias, and deal with the corner cases.
-		return fmt.Errorf("init_tablet_type cannot be master, use replica instead")
+		// shard.MainAlias, and deal with the corner cases.
+		return fmt.Errorf("init_tablet_type cannot be main, use replica instead")
 	}
 
 	// parse and validate shard name
@@ -97,11 +97,11 @@ func (agent *ActionAgent) InitTablet(port, gRPCPort int32) error {
 	}); err != nil {
 		return vterrors.Wrap(err, "InitTablet cannot GetOrCreateShard shard")
 	}
-	if si.MasterAlias != nil && topoproto.TabletAliasEqual(si.MasterAlias, agent.TabletAlias) {
-		// We're marked as master in the shard record, which could mean the master
+	if si.MainAlias != nil && topoproto.TabletAliasEqual(si.MainAlias, agent.TabletAlias) {
+		// We're marked as main in the shard record, which could mean the main
 		// tablet process was just restarted. However, we need to check if a new
-		// master is in the process of taking over. In that case, it will let us
-		// know by forcibly updating the old master's tablet record.
+		// main is in the process of taking over. In that case, it will let us
+		// know by forcibly updating the old main's tablet record.
 		oldTablet, err := agent.TopoServer.GetTablet(ctx, agent.TabletAlias)
 		switch {
 		case topo.IsErrType(err, topo.NoNode):
@@ -114,7 +114,7 @@ func (agent *ActionAgent) InitTablet(port, gRPCPort int32) error {
 			agent.setExternallyReparentedTime(time.Now())
 		case err == nil:
 			if oldTablet.Type == topodatapb.TabletType_MASTER {
-				// We're marked as master in the shard record,
+				// We're marked as main in the shard record,
 				// and our existing tablet record agrees.
 				tabletType = topodatapb.TabletType_MASTER
 				// Same comment as above. Update tiebreaking timestamp to now.

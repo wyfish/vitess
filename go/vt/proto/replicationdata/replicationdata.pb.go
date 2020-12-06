@@ -20,16 +20,16 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// Status is the replication status for MySQL (returned by 'show slave status'
+// Status is the replication status for MySQL (returned by 'show subordinate status'
 // and parsed into a Position and fields).
 type Status struct {
 	Position             string   `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
-	SlaveIoRunning       bool     `protobuf:"varint,2,opt,name=slave_io_running,json=slaveIoRunning,proto3" json:"slave_io_running,omitempty"`
-	SlaveSqlRunning      bool     `protobuf:"varint,3,opt,name=slave_sql_running,json=slaveSqlRunning,proto3" json:"slave_sql_running,omitempty"`
-	SecondsBehindMaster  uint32   `protobuf:"varint,4,opt,name=seconds_behind_master,json=secondsBehindMaster,proto3" json:"seconds_behind_master,omitempty"`
-	MasterHost           string   `protobuf:"bytes,5,opt,name=master_host,json=masterHost,proto3" json:"master_host,omitempty"`
-	MasterPort           int32    `protobuf:"varint,6,opt,name=master_port,json=masterPort,proto3" json:"master_port,omitempty"`
-	MasterConnectRetry   int32    `protobuf:"varint,7,opt,name=master_connect_retry,json=masterConnectRetry,proto3" json:"master_connect_retry,omitempty"`
+	SubordinateIoRunning       bool     `protobuf:"varint,2,opt,name=subordinate_io_running,json=subordinateIoRunning,proto3" json:"subordinate_io_running,omitempty"`
+	SubordinateSqlRunning      bool     `protobuf:"varint,3,opt,name=subordinate_sql_running,json=subordinateSqlRunning,proto3" json:"subordinate_sql_running,omitempty"`
+	SecondsBehindMain  uint32   `protobuf:"varint,4,opt,name=seconds_behind_main,json=secondsBehindMain,proto3" json:"seconds_behind_main,omitempty"`
+	MainHost           string   `protobuf:"bytes,5,opt,name=main_host,json=mainHost,proto3" json:"main_host,omitempty"`
+	MainPort           int32    `protobuf:"varint,6,opt,name=main_port,json=mainPort,proto3" json:"main_port,omitempty"`
+	MainConnectRetry   int32    `protobuf:"varint,7,opt,name=main_connect_retry,json=mainConnectRetry,proto3" json:"main_connect_retry,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -67,44 +67,44 @@ func (m *Status) GetPosition() string {
 	return ""
 }
 
-func (m *Status) GetSlaveIoRunning() bool {
+func (m *Status) GetSubordinateIoRunning() bool {
 	if m != nil {
-		return m.SlaveIoRunning
+		return m.SubordinateIoRunning
 	}
 	return false
 }
 
-func (m *Status) GetSlaveSqlRunning() bool {
+func (m *Status) GetSubordinateSqlRunning() bool {
 	if m != nil {
-		return m.SlaveSqlRunning
+		return m.SubordinateSqlRunning
 	}
 	return false
 }
 
-func (m *Status) GetSecondsBehindMaster() uint32 {
+func (m *Status) GetSecondsBehindMain() uint32 {
 	if m != nil {
-		return m.SecondsBehindMaster
+		return m.SecondsBehindMain
 	}
 	return 0
 }
 
-func (m *Status) GetMasterHost() string {
+func (m *Status) GetMainHost() string {
 	if m != nil {
-		return m.MasterHost
+		return m.MainHost
 	}
 	return ""
 }
 
-func (m *Status) GetMasterPort() int32 {
+func (m *Status) GetMainPort() int32 {
 	if m != nil {
-		return m.MasterPort
+		return m.MainPort
 	}
 	return 0
 }
 
-func (m *Status) GetMasterConnectRetry() int32 {
+func (m *Status) GetMainConnectRetry() int32 {
 	if m != nil {
-		return m.MasterConnectRetry
+		return m.MainConnectRetry
 	}
 	return 0
 }

@@ -36,27 +36,27 @@ import utils
 
 # initial shards
 # shard -40
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica = tablet.Tablet()
 shard_0_rdonly = tablet.Tablet()
 # shard 40-80
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 shard_1_replica = tablet.Tablet()
 shard_1_rdonly = tablet.Tablet()
 # shard 80-
-shard_2_master = tablet.Tablet()
+shard_2_main = tablet.Tablet()
 shard_2_replica = tablet.Tablet()
 shard_2_rdonly = tablet.Tablet()
 
 # merged shard -80
-shard_dest_master = tablet.Tablet()
+shard_dest_main = tablet.Tablet()
 shard_dest_replica = tablet.Tablet()
 shard_dest_rdonly = tablet.Tablet()
 
-all_tablets = [shard_0_master, shard_0_replica, shard_0_rdonly,
-               shard_1_master, shard_1_replica, shard_1_rdonly,
-               shard_2_master, shard_2_replica, shard_2_rdonly,
-               shard_dest_master, shard_dest_replica, shard_dest_rdonly]
+all_tablets = [shard_0_main, shard_0_replica, shard_0_rdonly,
+               shard_1_main, shard_1_replica, shard_1_rdonly,
+               shard_2_main, shard_2_replica, shard_2_rdonly,
+               shard_dest_main, shard_dest_replica, shard_dest_rdonly]
 
 
 def setUpModule():
@@ -123,25 +123,25 @@ index by_msg (msg)
 
   def _insert_startup_values(self):
     # row covered by shard -40 (should be merged).
-    self._insert_value(shard_0_master, 'resharding1', 1, 'msg1',
+    self._insert_value(shard_0_main, 'resharding1', 1, 'msg1',
                        0x1000000000000000)
     # row covered by shard 40-80 (should be merged).
-    self._insert_value(shard_1_master, 'resharding1', 2, 'msg2',
+    self._insert_value(shard_1_main, 'resharding1', 2, 'msg2',
                        0x5000000000000000)
     # row covered by shard 80- (must not be merged).
-    self._insert_value(shard_2_master, 'resharding1', 3, 'msg3',
+    self._insert_value(shard_2_main, 'resharding1', 3, 'msg3',
                        0xD000000000000000)
 
   def _check_startup_values(self):
     # check first two values are in the right shard
-    self._check_value(shard_dest_master, 'resharding1', 1, 'msg1',
+    self._check_value(shard_dest_main, 'resharding1', 1, 'msg1',
                       0x1000000000000000)
     self._check_value(shard_dest_replica, 'resharding1', 1, 'msg1',
                       0x1000000000000000)
     self._check_value(shard_dest_rdonly, 'resharding1', 1, 'msg1',
                       0x1000000000000000)
 
-    self._check_value(shard_dest_master, 'resharding1', 2, 'msg2',
+    self._check_value(shard_dest_main, 'resharding1', 2, 'msg2',
                       0x5000000000000000)
     self._check_value(shard_dest_replica, 'resharding1', 2, 'msg2',
                       0x5000000000000000)
@@ -152,9 +152,9 @@ index by_msg (msg)
     if count > 10000:
       self.assertFail('bad count passed in, only support up to 10000')
     for i in xrange(count):
-      self._insert_value(shard_0_master, 'resharding1', 1000000 + base + i,
+      self._insert_value(shard_0_main, 'resharding1', 1000000 + base + i,
                          'msg-range0-%d' % i, 0x2000000000000000 + base + i)
-      self._insert_value(shard_1_master, 'resharding1', 1010000 + base + i,
+      self._insert_value(shard_1_main, 'resharding1', 1010000 + base + i,
                          'msg-range1-%d' % i, 0x6000000000000000 + base + i)
 
   # _check_lots returns how many of the values we have, in percents.
@@ -189,13 +189,13 @@ index by_msg (msg)
                      '--sharding_column_type', base_sharding.keyspace_id_type,
                      'test_keyspace'])
 
-    shard_0_master.init_tablet('replica', 'test_keyspace', '-40')
+    shard_0_main.init_tablet('replica', 'test_keyspace', '-40')
     shard_0_replica.init_tablet('replica', 'test_keyspace', '-40')
     shard_0_rdonly.init_tablet('rdonly', 'test_keyspace', '-40')
-    shard_1_master.init_tablet('replica', 'test_keyspace', '40-80')
+    shard_1_main.init_tablet('replica', 'test_keyspace', '40-80')
     shard_1_replica.init_tablet('replica', 'test_keyspace', '40-80')
     shard_1_rdonly.init_tablet('rdonly', 'test_keyspace', '40-80')
-    shard_2_master.init_tablet('replica', 'test_keyspace', '80-')
+    shard_2_main.init_tablet('replica', 'test_keyspace', '80-')
     shard_2_replica.init_tablet('replica', 'test_keyspace', '80-')
     shard_2_rdonly.init_tablet('rdonly', 'test_keyspace', '80-')
 
@@ -205,26 +205,26 @@ index by_msg (msg)
     self.assertEqual(ks['sharding_column_name'], 'custom_ksid_col')
 
     # create databases so vttablet can start behaving normally
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly,
-              shard_2_master, shard_2_replica, shard_2_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly,
+              shard_2_main, shard_2_replica, shard_2_rdonly]:
       t.create_db('vt_test_keyspace')
       t.start_vttablet(wait_for_state=None,
                        binlog_use_v3_resharding_mode=False)
 
     # won't be serving, no replication state
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly,
-              shard_2_master, shard_2_replica, shard_2_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly,
+              shard_2_main, shard_2_replica, shard_2_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
     # reparent to make the tablets work
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-40',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/40-80',
-                     shard_1_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_2_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-40',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/40-80',
+                     shard_1_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_2_main.tablet_alias], auto_log=True)
 
     # create the tables
     self._create_schema()
@@ -238,26 +238,26 @@ index by_msg (msg)
       utils.run_vtctl(['RunHealthCheck', t.tablet_alias])
 
     # create the merge shards
-    shard_dest_master.init_tablet('replica', 'test_keyspace', '-80')
+    shard_dest_main.init_tablet('replica', 'test_keyspace', '-80')
     shard_dest_replica.init_tablet('replica', 'test_keyspace', '-80')
     shard_dest_rdonly.init_tablet('rdonly', 'test_keyspace', '-80')
 
     # start vttablet on the destination shard (no db created,
     # so they're all not serving)
-    for t in [shard_dest_master, shard_dest_replica, shard_dest_rdonly]:
+    for t in [shard_dest_main, shard_dest_replica, shard_dest_rdonly]:
       t.start_vttablet(wait_for_state=None,
                        binlog_use_v3_resharding_mode=False)
-    for t in [shard_dest_master, shard_dest_replica, shard_dest_rdonly]:
+    for t in [shard_dest_main, shard_dest_replica, shard_dest_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_dest_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_dest_main.tablet_alias], auto_log=True)
 
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'],
                     auto_log=True)
     utils.check_srv_keyspace(
         'test_nj', 'test_keyspace',
-        'Partitions(master): -40 40-80 80-\n'
+        'Partitions(main): -40 40-80 80-\n'
         'Partitions(rdonly): -40 40-80 80-\n'
         'Partitions(replica): -40 40-80 80-\n',
         keyspace_id_type=base_sharding.keyspace_id_type,
@@ -293,14 +293,14 @@ index by_msg (msg)
 
     # Modify the destination shard. SplitClone will revert the changes.
     # Delete row 1 (provokes an insert).
-    shard_dest_master.mquery('vt_test_keyspace',
+    shard_dest_main.mquery('vt_test_keyspace',
                              'delete from resharding1 where id=1', write=True)
     # Update row 2 (provokes an update).
-    shard_dest_master.mquery(
+    shard_dest_main.mquery(
         'vt_test_keyspace', "update resharding1 set msg='msg-not-2' where id=2",
         write=True)
     # Insert row 0 (provokes a delete).
-    self._insert_value(shard_dest_master, 'resharding1', 0, 'msg0',
+    self._insert_value(shard_dest_main, 'resharding1', 0, 'msg0',
                        0x5000000000000000)
 
     workerclient_proc = utils.run_vtworker_client_bg(
@@ -312,9 +312,9 @@ index by_msg (msg)
         worker_rpc_port)
     utils.wait_procs([workerclient_proc])
     # Change tablets, which were taken offline, back to rdonly.
-    utils.run_vtctl(['ChangeSlaveType', shard_0_rdonly.tablet_alias,
+    utils.run_vtctl(['ChangeSubordinateType', shard_0_rdonly.tablet_alias,
                      'rdonly'], auto_log=True)
-    utils.run_vtctl(['ChangeSlaveType', shard_1_rdonly.tablet_alias,
+    utils.run_vtctl(['ChangeSubordinateType', shard_1_rdonly.tablet_alias,
                      'rdonly'], auto_log=True)
     self.verify_reconciliation_counters(worker_port, 'Online', 'resharding1',
                                         1, 1, 1, 0)
@@ -330,7 +330,7 @@ index by_msg (msg)
     utils.run_vtctl(['ValidateSchemaKeyspace', 'test_keyspace'], auto_log=True)
 
     # check binlog player variables
-    self.check_destination_master(shard_dest_master,
+    self.check_destination_main(shard_dest_main,
                                   ['test_keyspace/-40', 'test_keyspace/40-80'])
 
     # check that binlog server exported the stats vars
@@ -349,9 +349,9 @@ index by_msg (msg)
       # already anyway.
       logging.debug('Checking all data goes through eventually')
       self._check_lots_timeout(1000, 100, 30)
-    self.check_binlog_player_vars(shard_dest_master,
+    self.check_binlog_player_vars(shard_dest_main,
                                   ['test_keyspace/-40', 'test_keyspace/40-80'],
-                                  seconds_behind_master_max=30)
+                                  seconds_behind_main_max=30)
     self.check_binlog_server_vars(shard_0_replica, horizontal=True,
                                   min_statements=1000, min_transactions=1000)
     self.check_binlog_server_vars(shard_1_replica, horizontal=True,
@@ -369,9 +369,9 @@ index by_msg (msg)
                         '--source_uid', '1',
                         'test_keyspace/-80'],
                        auto_log=True)
-    utils.run_vtctl(['ChangeSlaveType', shard_0_rdonly.tablet_alias, 'rdonly'],
+    utils.run_vtctl(['ChangeSubordinateType', shard_0_rdonly.tablet_alias, 'rdonly'],
                     auto_log=True)
-    utils.run_vtctl(['ChangeSlaveType', shard_dest_rdonly.tablet_alias,
+    utils.run_vtctl(['ChangeSubordinateType', shard_dest_rdonly.tablet_alias,
                      'rdonly'], auto_log=True)
     logging.debug('Running vtworker SplitDiff on second half')
     utils.run_vtworker(['-cell', 'test_nj',
@@ -382,32 +382,32 @@ index by_msg (msg)
                         '--source_uid', '2',
                         'test_keyspace/-80'],
                        auto_log=True)
-    utils.run_vtctl(['ChangeSlaveType', shard_1_rdonly.tablet_alias, 'rdonly'],
+    utils.run_vtctl(['ChangeSubordinateType', shard_1_rdonly.tablet_alias, 'rdonly'],
                     auto_log=True)
-    utils.run_vtctl(['ChangeSlaveType', shard_dest_rdonly.tablet_alias,
+    utils.run_vtctl(['ChangeSubordinateType', shard_dest_rdonly.tablet_alias,
                      'rdonly'], auto_log=True)
 
-    # get status for the destination master tablet, make sure we have it all
-    self.check_running_binlog_player(shard_dest_master, 3000, 1000)
+    # get status for the destination main tablet, make sure we have it all
+    self.check_running_binlog_player(shard_dest_main, 3000, 1000)
 
-    # check destination master query service is not running
-    utils.check_tablet_query_service(self, shard_dest_master, False, False)
+    # check destination main query service is not running
+    utils.check_tablet_query_service(self, shard_dest_main, False, False)
     stream_health = utils.run_vtctl_json(['VtTabletStreamHealth',
                                           '-count', '1',
-                                          shard_dest_master.tablet_alias])
+                                          shard_dest_main.tablet_alias])
     logging.debug('Got health: %s', str(stream_health))
     self.assertIn('realtime_stats', stream_health)
     self.assertNotIn('serving', stream_health)
 
-    # check the destination master 3 is healthy, even though its query
+    # check the destination main 3 is healthy, even though its query
     # service is not running (if not healthy this would exception out)
-    shard_dest_master.get_healthz()
+    shard_dest_main.get_healthz()
 
     # now serve rdonly from the split shards
     utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/-80', 'rdonly'],
                     auto_log=True)
     utils.check_srv_keyspace('test_nj', 'test_keyspace',
-                             'Partitions(master): -40 40-80 80-\n'
+                             'Partitions(main): -40 40-80 80-\n'
                              'Partitions(rdonly): -80 80-\n'
                              'Partitions(replica): -40 40-80 80-\n',
                              keyspace_id_type=base_sharding.keyspace_id_type,
@@ -417,35 +417,35 @@ index by_msg (msg)
     utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/-80', 'replica'],
                     auto_log=True)
     utils.check_srv_keyspace('test_nj', 'test_keyspace',
-                             'Partitions(master): -40 40-80 80-\n'
+                             'Partitions(main): -40 40-80 80-\n'
                              'Partitions(rdonly): -80 80-\n'
                              'Partitions(replica): -80 80-\n',
                              keyspace_id_type=base_sharding.keyspace_id_type,
                              sharding_column_name='custom_ksid_col')
 
-    # now serve master from the split shards
-    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/-80', 'master'],
+    # now serve main from the split shards
+    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/-80', 'main'],
                     auto_log=True)
     utils.check_srv_keyspace('test_nj', 'test_keyspace',
-                             'Partitions(master): -80 80-\n'
+                             'Partitions(main): -80 80-\n'
                              'Partitions(rdonly): -80 80-\n'
                              'Partitions(replica): -80 80-\n',
                              keyspace_id_type=base_sharding.keyspace_id_type,
                              sharding_column_name='custom_ksid_col')
-    utils.check_tablet_query_service(self, shard_0_master, False, True)
-    utils.check_tablet_query_service(self, shard_1_master, False, True)
+    utils.check_tablet_query_service(self, shard_0_main, False, True)
+    utils.check_tablet_query_service(self, shard_1_main, False, True)
 
     # check the binlog players are gone now
-    self.check_no_binlog_player(shard_dest_master)
+    self.check_no_binlog_player(shard_dest_main)
 
     # kill the original tablets in the original shards
-    tablet.kill_tablets([shard_0_master, shard_0_replica, shard_0_rdonly,
-                         shard_1_master, shard_1_replica, shard_1_rdonly])
+    tablet.kill_tablets([shard_0_main, shard_0_replica, shard_0_rdonly,
+                         shard_1_main, shard_1_replica, shard_1_rdonly])
     for t in [shard_0_replica, shard_0_rdonly,
               shard_1_replica, shard_1_rdonly]:
       utils.run_vtctl(['DeleteTablet', t.tablet_alias], auto_log=True)
-    for t in [shard_0_master, shard_1_master]:
-      utils.run_vtctl(['DeleteTablet', '-allow_master', t.tablet_alias],
+    for t in [shard_0_main, shard_1_main]:
+      utils.run_vtctl(['DeleteTablet', '-allow_main', t.tablet_alias],
                       auto_log=True)
 
     # delete the original shards
@@ -456,8 +456,8 @@ index by_msg (msg)
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'], auto_log=True)
 
     # kill everything else
-    tablet.kill_tablets([shard_2_master, shard_2_replica, shard_2_rdonly,
-                         shard_dest_master, shard_dest_replica,
+    tablet.kill_tablets([shard_2_main, shard_2_replica, shard_2_rdonly,
+                         shard_dest_main, shard_dest_replica,
                          shard_dest_rdonly])
 
 

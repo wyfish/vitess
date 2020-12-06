@@ -23,7 +23,7 @@ import optparse
 import re
 
 # TODO: Handle angle brackets that appear in command definitions --
-#       e.g. ChangeSlaveType
+#       e.g. ChangeSubordinateType
 
 
 # Traverse directory to get list of all files in the directory.
@@ -772,7 +772,7 @@ def main(root_directory):
 
   # Handle arguments that have different names but same meaning
   new_arg_definitions = {}
-  modifiers = ['destination', 'new master', 'original', 'parent', 'served',
+  modifiers = ['destination', 'new main', 'original', 'parent', 'served',
                'source', 'target']
 
   for defined_argument in arg_definitions:

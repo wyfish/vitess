@@ -36,42 +36,42 @@ func TestParseDestination(t *testing.T) {
 		keyspace     string
 		tabletType   topodatapb.TabletType
 	}{{
-		targetString: "ks[10-20]@master",
+		targetString: "ks[10-20]@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationExactKeyRange{KeyRange: &topodatapb.KeyRange{Start: tenHexBytes, End: twentyHexBytes}},
 	}, {
-		targetString: "ks[-]@master",
+		targetString: "ks[-]@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationExactKeyRange{KeyRange: &topodatapb.KeyRange{}},
 	}, {
-		targetString: "ks[deadbeef]@master",
+		targetString: "ks[deadbeef]@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationKeyspaceID([]byte("\xde\xad\xbe\xef")),
 	}, {
-		targetString: "ks[10-]@master",
+		targetString: "ks[10-]@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationExactKeyRange{KeyRange: &topodatapb.KeyRange{Start: tenHexBytes}},
 	}, {
-		targetString: "ks[-20]@master",
+		targetString: "ks[-20]@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationExactKeyRange{KeyRange: &topodatapb.KeyRange{End: twentyHexBytes}},
 	}, {
-		targetString: "ks:-80@master",
+		targetString: "ks:-80@main",
 		keyspace:     "ks",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationShard("-80"),
 	}, {
-		targetString: ":-80@master",
+		targetString: ":-80@main",
 		keyspace:     "",
 		tabletType:   topodatapb.TabletType_MASTER,
 		dest:         key.DestinationShard("-80"),
 	}, {
-		targetString: "@master",
+		targetString: "@main",
 		keyspace:     "",
 		tabletType:   topodatapb.TabletType_MASTER,
 	}, {
@@ -115,7 +115,7 @@ func TestParseDestination(t *testing.T) {
 		t.Errorf("executorExec error: %v, want %s", err, want)
 	}
 
-	_, _, _, err = ParseDestination("ks[qrnqorrs]@master", topodatapb.TabletType_MASTER)
+	_, _, _, err = ParseDestination("ks[qrnqorrs]@main", topodatapb.TabletType_MASTER)
 	want = "expected valid hex in keyspace id qrnqorrs"
 	if err == nil || err.Error() != want {
 		t.Errorf("executorExec error: %v, want %s", err, want)

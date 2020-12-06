@@ -73,8 +73,8 @@ var (
 	socketFile        = flag.String("mysqlctl_socket", "", "socket file to use for remote mysqlctl actions (empty for local actions)")
 	mycnfTemplateFile = flag.String("mysqlctl_mycnf_template", "", "template file to use for generating the my.cnf file during server init")
 
-	// masterConnectRetry is used in 'SET MASTER' commands
-	masterConnectRetry = flag.Duration("master_connect_retry", 10*time.Second, "how long to wait in between slave -> connection attempts. Only precise to the second.")
+	// mainConnectRetry is used in 'SET MASTER' commands
+	mainConnectRetry = flag.Duration("main_connect_retry", 10*time.Second, "how long to wait in between subordinate -> connection attempts. Only precise to the second.")
 
 	dbaMysqlStats      = stats.NewTimings("MysqlDba", "MySQL DBA stats", "operation")
 	allprivsMysqlStats = stats.NewTimings("MysqlAllPrivs", "MySQl Stats for all privs", "operation")
@@ -762,7 +762,7 @@ func (mysqld *Mysqld) getMycnfTemplates(root string) []string {
 
 	cnfTemplatePaths := []string{
 		path.Join(root, "config/mycnf/default.cnf"),
-		path.Join(root, "config/mycnf/master.cnf"),
+		path.Join(root, "config/mycnf/main.cnf"),
 		path.Join(root, "config/mycnf/replica.cnf"),
 	}
 
@@ -772,7 +772,7 @@ func (mysqld *Mysqld) getMycnfTemplates(root string) []string {
 	}
 
 	// Only include these files if they exist.
-	// master_{flavor}.cnf
+	// main_{flavor}.cnf
 	// Percona Server == MySQL in this context
 
 	f := flavorMariaDB
@@ -780,14 +780,14 @@ func (mysqld *Mysqld) getMycnfTemplates(root string) []string {
 		f = flavorMySQL
 	}
 
-	p := path.Join(root, fmt.Sprintf("config/mycnf/master_%s.cnf", f))
+	p := path.Join(root, fmt.Sprintf("config/mycnf/main_%s.cnf", f))
 	_, err := os.Stat(p)
 	if err == nil && !contains(cnfTemplatePaths, p) {
 		cnfTemplatePaths = append(cnfTemplatePaths, p)
 	}
 
-	// master_{flavor}{major}{minor}.cnf
-	p = path.Join(root, fmt.Sprintf("config/mycnf/master_%s%d%d.cnf", f, mysqld.capabilities.version.Major, mysqld.capabilities.version.Minor))
+	// main_{flavor}{major}{minor}.cnf
+	p = path.Join(root, fmt.Sprintf("config/mycnf/main_%s%d%d.cnf", f, mysqld.capabilities.version.Major, mysqld.capabilities.version.Minor))
 	_, err = os.Stat(p)
 	if err == nil && !contains(cnfTemplatePaths, p) {
 		cnfTemplatePaths = append(cnfTemplatePaths, p)

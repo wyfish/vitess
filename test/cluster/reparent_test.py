@@ -44,11 +44,11 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
     # number of reparent iterations
     cls.num_reparents = int(cls.test_params.get('num_reparents', '1'))
 
-    # max allowable median master downtime in seconds
-    cls.master_downtime_threshold = int(cls.test_params.get(
-        'master_downtime_threshold', '20'))
+    # max allowable median main downtime in seconds
+    cls.main_downtime_threshold = int(cls.test_params.get(
+        'main_downtime_threshold', '20'))
 
-    # seconds to wait for reparent to result in a new master
+    # seconds to wait for reparent to result in a new main
     cls.reparent_timeout_threshold = int(cls.test_params.get(
         'reparent_timeout_threshold', '60'))
 
@@ -76,7 +76,7 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
                         cross_cell=False):
     """Performs an explicit reparent.
 
-    This function will explicitly select a new master and verify that the
+    This function will explicitly select a new main and verify that the
     topology is updated.
 
     Args:
@@ -91,31 +91,31 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
       This is a list of floats, one for each shard.
       For cross-cell reparents, it returns [].
     """
-    next_masters = []
+    next_mains = []
     durations = []
 
     for shard in xrange(num_shards):
       shard_name = sharding_utils.get_shard_name(shard, num_shards)
-      original_master = self.env.get_current_master_name(keyspace, shard_name)
+      original_main = self.env.get_current_main_name(keyspace, shard_name)
 
-      next_master = self.env.get_next_master(keyspace, shard_name, cross_cell)
-      next_masters.append(next_master)
+      next_main = self.env.get_next_main(keyspace, shard_name, cross_cell)
+      next_mains.append(next_main)
 
       self.env.wait_for_good_failover_status(keyspace, shard_name)
 
       # Call Reparent in a separate thread.
-      def reparent_shard(shard_name, original_master, next_master):
+      def reparent_shard(shard_name, original_main, next_main):
         logging.info('Reparenting %s/%s from %s to %s', keyspace, shard_name,
-                     original_master, next_master[2])
+                     original_main, next_main[2])
         reparent_fn = self.env.external_reparent if external else (
             self.env.internal_reparent)
         return_code, return_output = reparent_fn(
-            keyspace, shard_name, next_master[2])
+            keyspace, shard_name, next_main[2])
         logging.info('Reparent returned %d for %s/%s: %s',
                      return_code, keyspace, shard_name, return_output)
 
       thread = threading.Thread(target=reparent_shard,
-                                args=[shard_name, original_master, next_master])
+                                args=[shard_name, original_main, next_main])
       start_time = time.time()
       thread.start()
 
@@ -124,7 +124,7 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
         try:
           tablet_health = json.loads(
               self.env.vtctl_helper.execute_vtctl_command(
-                  ['VtTabletStreamHealth', next_master[2]]))
+                  ['VtTabletStreamHealth', next_main[2]]))
           if tablet_health['target']['tablet_type'] == topodata_pb2.MASTER:
             duration = time.time() - start_time
             durations.append(duration)
@@ -145,8 +145,8 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
       self, keyspace, shard, num_shards, perform_emergency_reparent=False):
     """Performs an implicit reparent.
 
-    This function will restart the current master task and verify that a new
-    task was selected to be the master.
+    This function will restart the current main task and verify that a new
+    task was selected to be the main.
 
     Args:
       keyspace: Name of the keyspace to reparent (string)
@@ -157,35 +157,35 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
 
     shard_name = sharding_utils.get_shard_name(shard, num_shards)
 
-    original_master_name = (
-        self.env.get_current_master_name(keyspace, shard_name))
+    original_main_name = (
+        self.env.get_current_main_name(keyspace, shard_name))
 
-    logging.info('Restarting %s/%s, current master: %s',
-                 keyspace, shard_name, original_master_name)
-    ret_val = self.env.restart_mysql_task(original_master_name, 'mysql', True)
+    logging.info('Restarting %s/%s, current main: %s',
+                 keyspace, shard_name, original_main_name)
+    ret_val = self.env.restart_mysql_task(original_main_name, 'mysql', True)
 
     self.assertEquals(ret_val, 0,
                       msg='restart failed (returned %d)' % ret_val)
 
     if perform_emergency_reparent:
-      next_master = self.env.get_next_master(keyspace, shard_name)[2]
+      next_main = self.env.get_next_main(keyspace, shard_name)[2]
       logging.info('Emergency reparenting %s/%s to %s', keyspace, shard_name,
-                   next_master)
+                   next_main)
       self.env.internal_reparent(
-          keyspace, shard_name, next_master, emergency=True)
+          keyspace, shard_name, next_main, emergency=True)
 
     start_time = time.time()
     while time.time() - start_time < self.reparent_timeout_threshold:
-      new_master_name = self.env.get_current_master_name(keyspace, shard_name)
-      if new_master_name != original_master_name:
+      new_main_name = self.env.get_current_main_name(keyspace, shard_name)
+      if new_main_name != original_main_name:
         break
       time.sleep(1)
     self.assertNotEquals(
-        new_master_name, original_master_name,
-        msg='Expected master tablet to change, but it remained as %s' % (
-            new_master_name))
-    logging.info('restart on %s/%s resulted in new master: %s',
-                 keyspace, shard_name, new_master_name)
+        new_main_name, original_main_name,
+        msg='Expected main tablet to change, but it remained as %s' % (
+            new_main_name))
+    logging.info('restart on %s/%s resulted in new main: %s',
+                 keyspace, shard_name, new_main_name)
 
   def test_implicit_reparent(self):
     logging.info('Performing %s implicit reparents', self.num_reparents)
@@ -202,11 +202,11 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
 
   def _test_explicit_emergency_reparent(self):
     # This test is currently disabled until the emergency reparent can be
-    # fleshed out better. If a master tablet is killed and there is no
+    # fleshed out better. If a main tablet is killed and there is no
     # tool performing automatic reparents (like Orchestrator), then there may be
     # a race condition between restarting the tablet (in which it would resume
-    # being the master), and the EmergencyReparentShard call. This can sometimes
-    # result in two tablets being master.
+    # being the main), and the EmergencyReparentShard call. This can sometimes
+    # result in two tablets being main.
     logging.info('Performing %s explicit emergency reparents',
                  self.num_reparents)
     if self.env.automatic_reparent_available():
@@ -239,8 +239,8 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
     median_duration = numpy.median(durations)
     logging.info('%d total reparents, median duration %f seconds',
                  len(durations), median_duration)
-    self.assertLessEqual(median_duration, self.master_downtime_threshold,
-                         'master downtime too high (performance regression)')
+    self.assertLessEqual(median_duration, self.main_downtime_threshold,
+                         'main downtime too high (performance regression)')
 
   def test_explicit_external_reparent(self):
     logging.info('Performing %s explicit external reparents',
@@ -260,8 +260,8 @@ class ReparentTest(base_cluster_test.BaseClusterTest):
     median_duration = numpy.median(durations)
     logging.info('%d total reparents, median duration %f seconds',
                  len(durations), median_duration)
-    self.assertLessEqual(median_duration, self.master_downtime_threshold,
-                         'master downtime too high (performance regression)')
+    self.assertLessEqual(median_duration, self.main_downtime_threshold,
+                         'main downtime too high (performance regression)')
 
   def test_explicit_reparent_cross_cell(self):
     if len(self.env.cells) < 2:

@@ -45,7 +45,7 @@ func CreateReparentJournal() []string {
 		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS _vt.reparent_journal (
   time_created_ns BIGINT UNSIGNED NOT NULL,
   action_name VARBINARY(250) NOT NULL,
-  master_alias VARBINARY(32) NOT NULL,
+  main_alias VARBINARY(32) NOT NULL,
   replication_position VARBINARY(%v) DEFAULT NULL,
   PRIMARY KEY (time_created_ns))
 ENGINE=InnoDB`, mysql.MaximumPositionSize)}
@@ -54,21 +54,21 @@ ENGINE=InnoDB`, mysql.MaximumPositionSize)}
 // PopulateReparentJournal returns the SQL command to use to populate
 // the _vt.reparent_journal table, as well as the time_created_ns
 // value used.
-func PopulateReparentJournal(timeCreatedNS int64, actionName, masterAlias string, pos mysql.Position) string {
+func PopulateReparentJournal(timeCreatedNS int64, actionName, mainAlias string, pos mysql.Position) string {
 	posStr := mysql.EncodePosition(pos)
 	if len(posStr) > mysql.MaximumPositionSize {
 		posStr = posStr[:mysql.MaximumPositionSize]
 	}
 	return fmt.Sprintf("INSERT INTO _vt.reparent_journal "+
-		"(time_created_ns, action_name, master_alias, replication_position) "+
+		"(time_created_ns, action_name, main_alias, replication_position) "+
 		"VALUES (%v, '%v', '%v', '%v')",
-		timeCreatedNS, actionName, masterAlias, posStr)
+		timeCreatedNS, actionName, mainAlias, posStr)
 }
 
 // queryReparentJournal returns the SQL query to use to query the database
 // for a reparent_journal row.
 func queryReparentJournal(timeCreatedNS int64) string {
-	return fmt.Sprintf("SELECT action_name, master_alias, replication_position FROM _vt.reparent_journal WHERE time_created_ns=%v", timeCreatedNS)
+	return fmt.Sprintf("SELECT action_name, main_alias, replication_position FROM _vt.reparent_journal WHERE time_created_ns=%v", timeCreatedNS)
 }
 
 // WaitForReparentJournal will wait until the context is done for
@@ -92,13 +92,13 @@ func (mysqld *Mysqld) WaitForReparentJournal(ctx context.Context, timeCreatedNS 
 	}
 }
 
-// Deprecated: use mysqld.MasterPosition() instead
-func (mysqld *Mysqld) DemoteMaster() (rp mysql.Position, err error) {
-	return mysqld.MasterPosition()
+// Deprecated: use mysqld.MainPosition() instead
+func (mysqld *Mysqld) DemoteMain() (rp mysql.Position, err error) {
+	return mysqld.MainPosition()
 }
 
-// PromoteSlave will promote a slave to be the new master.
-func (mysqld *Mysqld) PromoteSlave(hookExtraEnv map[string]string) (mysql.Position, error) {
+// PromoteSubordinate will promote a subordinate to be the new main.
+func (mysqld *Mysqld) PromoteSubordinate(hookExtraEnv map[string]string) (mysql.Position, error) {
 	ctx := context.TODO()
 	conn, err := getPoolReconnect(ctx, mysqld.dbaPool)
 	if err != nil {
@@ -108,11 +108,11 @@ func (mysqld *Mysqld) PromoteSlave(hookExtraEnv map[string]string) (mysql.Positi
 
 	// Since we handle replication, just stop it.
 	cmds := []string{
-		conn.StopSlaveCommand(),
-		"RESET SLAVE ALL", // "ALL" makes it forget master host:port.
-		// When using semi-sync and GTID, a replica first connects to the new master with a given GTID set,
+		conn.StopSubordinateCommand(),
+		"RESET SLAVE ALL", // "ALL" makes it forget main host:port.
+		// When using semi-sync and GTID, a replica first connects to the new main with a given GTID set,
 		// it can take a long time to scan the current binlog file to find the corresponding position.
-		// This can cause commits that occur soon after the master is promoted to take a long time waiting
+		// This can cause commits that occur soon after the main is promoted to take a long time waiting
 		// for a semi-sync ACK, since replication is not fully set up.
 		// More details in: https://github.com/vitessio/vitess/issues/4161
 		"FLUSH BINARY LOGS",
@@ -121,5 +121,5 @@ func (mysqld *Mysqld) PromoteSlave(hookExtraEnv map[string]string) (mysql.Positi
 	if err := mysqld.executeSuperQueryListConn(ctx, conn, cmds); err != nil {
 		return mysql.Position{}, err
 	}
-	return conn.MasterPosition()
+	return conn.MainPosition()
 }

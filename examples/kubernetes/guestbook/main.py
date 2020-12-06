@@ -61,8 +61,8 @@ def list_guestbook(page):
 
 @app.route('/rpush/guestbook/<int:page>/<value>')
 def add_entry(page, value):
-  """Insert a row on the master."""
-  cursor = conn.cursor(tablet_type='master', keyspace=keyspace, writable=True)
+  """Insert a row on the main."""
+  cursor = conn.cursor(tablet_type='main', keyspace=keyspace, writable=True)
 
   cursor.begin()
   cursor.execute(
@@ -75,7 +75,7 @@ def add_entry(page, value):
       })
   cursor.commit()
 
-  # Read the list back from master (critical read) because it's
+  # Read the list back from main (critical read) because it's
   # important that the user sees their own addition immediately.
   cursor.execute(
       'SELECT message, time_created_ns FROM messages WHERE page=:page'

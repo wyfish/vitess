@@ -119,7 +119,7 @@ func TestDiscoveryGatewayGetTablets(t *testing.T) {
 		t.Errorf("want %+v, got %+v", ep1, tsl)
 	}
 
-	// master should use the one with newer timestamp regardless of cell
+	// main should use the one with newer timestamp regardless of cell
 	hc.Reset()
 	dg.tsc.ResetForTesting()
 	hc.AddTestTablet("remote", "1.1.1.1", 1001, keyspace, shard, topodatapb.TabletType_MASTER, true, 5, nil)
@@ -137,7 +137,7 @@ func TestShuffleTablets(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 1, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 1, CpuUsage: 0.2},
 	}
 
 	ts2 := discovery.TabletStats{
@@ -146,7 +146,7 @@ func TestShuffleTablets(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 1, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 1, CpuUsage: 0.2},
 	}
 
 	ts3 := discovery.TabletStats{
@@ -155,7 +155,7 @@ func TestShuffleTablets(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 1, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 1, CpuUsage: 0.2},
 	}
 
 	ts4 := discovery.TabletStats{
@@ -164,7 +164,7 @@ func TestShuffleTablets(t *testing.T) {
 		Target:  &querypb.Target{Keyspace: "k", Shard: "s", TabletType: topodatapb.TabletType_REPLICA},
 		Up:      true,
 		Serving: true,
-		Stats:   &querypb.RealtimeStats{SecondsBehindMaster: 1, CpuUsage: 0.2},
+		Stats:   &querypb.RealtimeStats{SecondsBehindMain: 1, CpuUsage: 0.2},
 	}
 
 	sameCellTablets := []discovery.TabletStats{ts1, ts2}
@@ -252,7 +252,7 @@ func TestDiscoveryGatewayGetAggregateStatsRegion(t *testing.T) {
 	hc.AddTestTablet("local-west", "2.2.2.2", 1001, keyspace, shard, topodatapb.TabletType_REPLICA, true, 10, nil)
 	hc.AddTestTablet("local-east", "3.3.3.3", 1001, keyspace, shard, topodatapb.TabletType_REPLICA, true, 10, nil)
 
-	// Non master targets in the same region as the gateway should be discoverable
+	// Non main targets in the same region as the gateway should be discoverable
 	target := &querypb.Target{
 		Keyspace:   keyspace,
 		Shard:      shard,
@@ -268,7 +268,7 @@ func TestDiscoveryGatewayGetAggregateStatsRegion(t *testing.T) {
 	}
 }
 
-func TestDiscoveryGatewayGetAggregateStatsMaster(t *testing.T) {
+func TestDiscoveryGatewayGetAggregateStatsMain(t *testing.T) {
 	keyspace := "ks"
 	shard := "0"
 	hc := discovery.NewFakeHealthCheck()
@@ -289,10 +289,10 @@ func TestDiscoveryGatewayGetAggregateStatsMaster(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 	if tsl.HealthyTabletCount != 1 {
-		t.Errorf("Expected one healthy master, got: %v", tsl.HealthyTabletCount)
+		t.Errorf("Expected one healthy main, got: %v", tsl.HealthyTabletCount)
 	}
 
-	// You can get aggregate regardless of the cell when requesting a master
+	// You can get aggregate regardless of the cell when requesting a main
 	target = &querypb.Target{
 		Keyspace:   keyspace,
 		Shard:      shard,
@@ -305,7 +305,7 @@ func TestDiscoveryGatewayGetAggregateStatsMaster(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 	if tsl.HealthyTabletCount != 1 {
-		t.Errorf("Expected one healthy master, got: %v", tsl.HealthyTabletCount)
+		t.Errorf("Expected one healthy main, got: %v", tsl.HealthyTabletCount)
 	}
 }
 

@@ -40,7 +40,7 @@ class TestEnv(object):
       raise Exception('replica_count=%d < 1; tests now use semi-sync'
                       ' and must have at least one replica' % replica_count)
     self.tablets = []
-    self.master_tablets = []
+    self.main_tablets = []
     utils.run_vtctl(['CreateKeyspace', keyspace])
     if not shards or shards[0] == '0':
       shards = ['0']
@@ -48,7 +48,7 @@ class TestEnv(object):
     # Create tablets and start mysqld.
     procs = []
     for shard in shards:
-      procs.append(self._new_tablet(keyspace, shard, 'master', None))
+      procs.append(self._new_tablet(keyspace, shard, 'main', None))
       for i in xrange(replica_count):
         procs.append(self._new_tablet(keyspace, shard, 'replica', i))
       for i in xrange(rdonly_count):
@@ -58,7 +58,7 @@ class TestEnv(object):
     # init tablets.
     for shard in shards:
       tablet_index = 0
-      self._init_tablet(keyspace, shard, 'master', None, tablet_index)
+      self._init_tablet(keyspace, shard, 'main', None, tablet_index)
       tablet_index += 1
       for i in xrange(replica_count):
         self._init_tablet(keyspace, shard, 'replica', i, tablet_index)
@@ -70,7 +70,7 @@ class TestEnv(object):
     # Start tablets.
     for shard in shards:
       self._start_tablet(
-          keyspace, shard, 'master', None, twopc_coordinator_address)
+          keyspace, shard, 'main', None, twopc_coordinator_address)
       for i in xrange(replica_count):
         self._start_tablet(
             keyspace, shard, 'replica', i, twopc_coordinator_address)
@@ -81,10 +81,10 @@ class TestEnv(object):
     for t in self.tablets:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    for t in self.master_tablets:
-      utils.run_vtctl(['InitShardMaster', '-force', keyspace+'/'+t.shard,
+    for t in self.main_tablets:
+      utils.run_vtctl(['InitShardMain', '-force', keyspace+'/'+t.shard,
                        t.tablet_alias], auto_log=True)
-      t.tablet_type = 'master'
+      t.tablet_type = 'main'
 
     for t in self.tablets:
       t.wait_for_vttablet_state('SERVING')
@@ -107,8 +107,8 @@ class TestEnv(object):
     """Create a tablet and start mysqld."""
     t = tablet.Tablet()
     self.tablets.append(t)
-    if tablet_type == 'master':
-      self.master_tablets.append(t)
+    if tablet_type == 'main':
+      self.main_tablets.append(t)
       key = '%s.%s.%s' % (keyspace, shard, tablet_type)
     else:
       key = '%s.%s.%s.%s' % (keyspace, shard, tablet_type, index)
@@ -117,7 +117,7 @@ class TestEnv(object):
 
   def _init_tablet(self, keyspace, shard, tablet_type, index, tablet_index):
     init_tablet_type = tablet_type
-    if tablet_type == 'master':
+    if tablet_type == 'main':
       init_tablet_type = 'replica'
       key = '%s.%s.%s' % (keyspace, shard, tablet_type)
     else:
@@ -129,7 +129,7 @@ class TestEnv(object):
       self, keyspace, shard, tablet_type, index, twopc_coordinator_address):
     """Start a tablet."""
     init_tablet_type = tablet_type
-    if tablet_type == 'master':
+    if tablet_type == 'main':
       init_tablet_type = 'replica'
       key = '%s.%s.%s' % (keyspace, shard, tablet_type)
     else:

@@ -36,18 +36,18 @@ const (
 )
 
 // Backup takes a db backup and sends it to the BackupStorage
-func (agent *ActionAgent) Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMaster bool) error {
+func (agent *ActionAgent) Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMain bool) error {
 	if agent.Cnf == nil {
 		return fmt.Errorf("cannot perform backup without my.cnf, please restart vttablet with a my.cnf file specified")
 	}
 
 	// Check tablet type current process has.
-	// During a network partition it is possible that from the topology perspective this is no longer the master,
+	// During a network partition it is possible that from the topology perspective this is no longer the main,
 	// but the process didn't find out about this.
 	// It is not safe to take backups from tablet in this state
 	currentTablet := agent.Tablet()
-	if !allowMaster && currentTablet.Type == topodatapb.TabletType_MASTER {
-		return fmt.Errorf("type MASTER cannot take backup. if you really need to do this, rerun the backup command with -allow_master")
+	if !allowMain && currentTablet.Type == topodatapb.TabletType_MASTER {
+		return fmt.Errorf("type MASTER cannot take backup. if you really need to do this, rerun the backup command with -allow_main")
 	}
 	engine, err := mysqlctl.GetBackupEngine()
 	if err != nil {
@@ -58,8 +58,8 @@ func (agent *ActionAgent) Backup(ctx context.Context, concurrency int, logger lo
 	if err != nil {
 		return err
 	}
-	if !allowMaster && tablet.Type == topodatapb.TabletType_MASTER {
-		return fmt.Errorf("type MASTER cannot take backup. if you really need to do this, rerun the backup command with -allow_master")
+	if !allowMain && tablet.Type == topodatapb.TabletType_MASTER {
+		return fmt.Errorf("type MASTER cannot take backup. if you really need to do this, rerun the backup command with -allow_main")
 	}
 
 	// prevent concurrent backups, and record stats

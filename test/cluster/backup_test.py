@@ -61,10 +61,10 @@ class BackupTest(base_cluster_test.BaseClusterTest):
         kr = keyrange.KeyRange('') if num_shards == 1 else keyrange.KeyRange(
             shard_name)
 
-        master_tablet = self.env.get_current_master_name(keyspace, shard_name)
-        master_cell = self.env.get_tablet_cell(master_tablet)
-        conn = self.env.get_vtgate_conn(master_cell)
-        cursor = conn.cursor(tablet_type='master', keyspace=keyspace,
+        main_tablet = self.env.get_current_main_name(keyspace, shard_name)
+        main_cell = self.env.get_tablet_cell(main_tablet)
+        conn = self.env.get_vtgate_conn(main_cell)
+        cursor = conn.cursor(tablet_type='main', keyspace=keyspace,
                              keyranges=[kr], writable=True)
         for i in xrange(self.num_inserts):
           cursor.begin()

@@ -39,7 +39,7 @@ func init() {
 		"AddCellsAlias",
 		commandAddCellsAlias,
 		"[-cells <cell,cell2...>] <alias>",
-		"Defines a group of cells within which replica/rdonly traffic can be routed across cells. Between cells that are not in the same group (alias), only master traffic can be routed."})
+		"Defines a group of cells within which replica/rdonly traffic can be routed across cells. Between cells that are not in the same group (alias), only main traffic can be routed."})
 
 	addCommand(cellsAliasesGroupName, command{
 		"UpdateCellsAlias",

@@ -161,11 +161,11 @@ class Vtbackup(object):
                                                        'relay-log.info'),
             '-mycnf_bin_log_path', os.path.join(
                 self.tablet_dir, 'bin-logs', 'vt-%010d-bin' % self.tablet_uid),
-            '-mycnf_master_info_file', os.path.join(self.tablet_dir,
-                                                    'master.info'),
+            '-mycnf_main_info_file', os.path.join(self.tablet_dir,
+                                                    'main.info'),
             '-mycnf_pid_file', os.path.join(self.tablet_dir, 'mysql.pid'),
             '-mycnf_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
-            '-mycnf_slave_load_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
+            '-mycnf_subordinate_load_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
         ])
         if include_mysql_port:
           args.extend(['-mycnf_mysql_port', str(self.mysql_port)])

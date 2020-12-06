@@ -291,11 +291,11 @@ class Tablet(object):
   def reset_replication(self):
     self.mquery('', mysql_flavor().reset_replication_commands())
 
-  def set_semi_sync_enabled(self, master=None, slave=None):
-    logging.debug('mysql(%s): setting semi-sync mode: master=%s, slave=%s',
-                  self.tablet_uid, master, slave)
+  def set_semi_sync_enabled(self, main=None, subordinate=None):
+    logging.debug('mysql(%s): setting semi-sync mode: main=%s, subordinate=%s',
+                  self.tablet_uid, main, subordinate)
     self.mquery('',
-                mysql_flavor().set_semi_sync_enabled_commands(master, slave))
+                mysql_flavor().set_semi_sync_enabled_commands(main, subordinate))
 
   def populate(self, dbname, create_sql, insert_sqls=None):
     self.create_db(dbname)
@@ -417,7 +417,7 @@ class Tablet(object):
     if start:
       if not wait_for_start:
         expected_state = None
-      elif tablet_type == 'master':
+      elif tablet_type == 'main':
         expected_state = 'SERVING'
       else:
         expected_state = 'NOT_SERVING'
@@ -521,11 +521,11 @@ class Tablet(object):
                                                      'relay-log.info'),
           '-mycnf_bin_log_path', os.path.join(
               self.tablet_dir, 'bin-logs', 'vt-%010d-bin' % self.tablet_uid),
-          '-mycnf_master_info_file', os.path.join(self.tablet_dir,
-                                                  'master.info'),
+          '-mycnf_main_info_file', os.path.join(self.tablet_dir,
+                                                  'main.info'),
           '-mycnf_pid_file', os.path.join(self.tablet_dir, 'mysql.pid'),
           '-mycnf_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
-          '-mycnf_slave_load_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
+          '-mycnf_subordinate_load_tmp_dir', os.path.join(self.tablet_dir, 'tmp'),
       ])
       if include_mysql_port:
         args.extend(['-mycnf_mysql_port', str(self.mysql_port)])

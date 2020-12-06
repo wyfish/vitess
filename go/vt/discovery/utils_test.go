@@ -51,8 +51,8 @@ func TestRemoveUnhealthyTablets(t *testing.T) {
 		},
 		{
 			desc:  "no filtering by tablet type",
-			input: []TabletStats{healthy(master(1)), healthy(replica(2)), healthy(rdonly(3))},
-			want:  []TabletStats{healthy(master(1)), healthy(replica(2)), healthy(rdonly(3))},
+			input: []TabletStats{healthy(main(1)), healthy(replica(2)), healthy(rdonly(3))},
+			want:  []TabletStats{healthy(main(1)), healthy(replica(2)), healthy(rdonly(3))},
 		},
 		{
 			desc:  "non-serving tablets won't be removed",
@@ -75,7 +75,7 @@ func TestRemoveUnhealthyTablets(t *testing.T) {
 	}
 }
 
-func master(uid uint32) TabletStats {
+func main(uid uint32) TabletStats {
 	return minimalTabletStats(uid, topodatapb.TabletType_MASTER)
 }
 
@@ -104,14 +104,14 @@ func minimalTabletStats(uid uint32, tabletType topodatapb.TabletType) TabletStat
 
 func healthy(ts TabletStats) TabletStats {
 	ts.Stats = &querypb.RealtimeStats{
-		SecondsBehindMaster: uint32(1),
+		SecondsBehindMain: uint32(1),
 	}
 	return ts
 }
 
 func unhealthyLag(ts TabletStats) TabletStats {
 	ts.Stats = &querypb.RealtimeStats{
-		SecondsBehindMaster: uint32(3600),
+		SecondsBehindMain: uint32(3600),
 	}
 	return ts
 }

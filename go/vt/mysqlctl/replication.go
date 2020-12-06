@@ -37,17 +37,17 @@ import (
 	"vitess.io/vitess/go/vt/log"
 )
 
-// WaitForSlaveStart waits until the deadline for replication to start.
-// This validates the current master is correct and can be connected to.
-func WaitForSlaveStart(mysqld MysqlDaemon, slaveStartDeadline int) error {
+// WaitForSubordinateStart waits until the deadline for replication to start.
+// This validates the current main is correct and can be connected to.
+func WaitForSubordinateStart(mysqld MysqlDaemon, subordinateStartDeadline int) error {
 	var rowMap map[string]string
-	for slaveWait := 0; slaveWait < slaveStartDeadline; slaveWait++ {
-		status, err := mysqld.SlaveStatus()
+	for subordinateWait := 0; subordinateWait < subordinateStartDeadline; subordinateWait++ {
+		status, err := mysqld.SubordinateStatus()
 		if err != nil {
 			return err
 		}
 
-		if status.SlaveRunning() {
+		if status.SubordinateRunning() {
 			return nil
 		}
 		time.Sleep(time.Second)
@@ -66,8 +66,8 @@ func WaitForSlaveStart(mysqld MysqlDaemon, slaveStartDeadline int) error {
 	return nil
 }
 
-// StartSlave starts a slave.
-func (mysqld *Mysqld) StartSlave(hookExtraEnv map[string]string) error {
+// StartSubordinate starts a subordinate.
+func (mysqld *Mysqld) StartSubordinate(hookExtraEnv map[string]string) error {
 	ctx := context.TODO()
 	conn, err := getPoolReconnect(ctx, mysqld.dbaPool)
 	if err != nil {
@@ -75,31 +75,31 @@ func (mysqld *Mysqld) StartSlave(hookExtraEnv map[string]string) error {
 	}
 	defer conn.Recycle()
 
-	if err := mysqld.executeSuperQueryListConn(ctx, conn, []string{conn.StartSlaveCommand()}); err != nil {
+	if err := mysqld.executeSuperQueryListConn(ctx, conn, []string{conn.StartSubordinateCommand()}); err != nil {
 		return err
 	}
 
-	h := hook.NewSimpleHook("postflight_start_slave")
+	h := hook.NewSimpleHook("postflight_start_subordinate")
 	h.ExtraEnv = hookExtraEnv
 	return h.ExecuteOptional()
 }
 
-// StartSlaveUntilAfter starts a slave until replication has come to `targetPos`, then it stops replication
-func (mysqld *Mysqld) StartSlaveUntilAfter(ctx context.Context, targetPos mysql.Position) error {
+// StartSubordinateUntilAfter starts a subordinate until replication has come to `targetPos`, then it stops replication
+func (mysqld *Mysqld) StartSubordinateUntilAfter(ctx context.Context, targetPos mysql.Position) error {
 	conn, err := getPoolReconnect(ctx, mysqld.dbaPool)
 	if err != nil {
 		return err
 	}
 	defer conn.Recycle()
 
-	queries := []string{conn.StartSlaveUntilAfterCommand(targetPos)}
+	queries := []string{conn.StartSubordinateUntilAfterCommand(targetPos)}
 
 	return mysqld.executeSuperQueryListConn(ctx, conn, queries)
 }
 
-// StopSlave stops a slave.
-func (mysqld *Mysqld) StopSlave(hookExtraEnv map[string]string) error {
-	h := hook.NewSimpleHook("preflight_stop_slave")
+// StopSubordinate stops a subordinate.
+func (mysqld *Mysqld) StopSubordinate(hookExtraEnv map[string]string) error {
+	h := hook.NewSimpleHook("preflight_stop_subordinate")
 	h.ExtraEnv = hookExtraEnv
 	if err := h.ExecuteOptional(); err != nil {
 		return err
@@ -111,7 +111,7 @@ func (mysqld *Mysqld) StopSlave(hookExtraEnv map[string]string) error {
 	}
 	defer conn.Recycle()
 
-	return mysqld.executeSuperQueryListConn(ctx, conn, []string{conn.StopSlaveCommand()})
+	return mysqld.executeSuperQueryListConn(ctx, conn, []string{conn.StopSubordinateCommand()})
 }
 
 // GetMysqlPort returns mysql port
@@ -157,8 +157,8 @@ func (mysqld *Mysqld) SetReadOnly(on bool) error {
 }
 
 var (
-	// ErrNotMaster means there is no master status
-	ErrNotMaster = errors.New("no master status")
+	// ErrNotMain means there is no main status
+	ErrNotMain = errors.New("no main status")
 )
 
 // SetSuperReadOnly set/unset the super_read_only flag
@@ -172,8 +172,8 @@ func (mysqld *Mysqld) SetSuperReadOnly(on bool) error {
 	return mysqld.ExecuteSuperQuery(context.TODO(), query)
 }
 
-// WaitMasterPos lets slaves wait to given replication position
-func (mysqld *Mysqld) WaitMasterPos(ctx context.Context, targetPos mysql.Position) error {
+// WaitMainPos lets subordinates wait to given replication position
+func (mysqld *Mysqld) WaitMainPos(ctx context.Context, targetPos mysql.Position) error {
 	// Get a connection.
 	conn, err := getPoolReconnect(ctx, mysqld.dbaPool)
 	if err != nil {
@@ -203,45 +203,45 @@ func (mysqld *Mysqld) WaitMasterPos(ctx context.Context, targetPos mysql.Positio
 	return nil
 }
 
-// SlaveStatus returns the slave replication statuses
-func (mysqld *Mysqld) SlaveStatus() (mysql.SlaveStatus, error) {
+// SubordinateStatus returns the subordinate replication statuses
+func (mysqld *Mysqld) SubordinateStatus() (mysql.SubordinateStatus, error) {
 	conn, err := getPoolReconnect(context.TODO(), mysqld.dbaPool)
 	if err != nil {
-		return mysql.SlaveStatus{}, err
+		return mysql.SubordinateStatus{}, err
 	}
 	defer conn.Recycle()
 
-	return conn.ShowSlaveStatus()
+	return conn.ShowSubordinateStatus()
 }
 
-// MasterPosition returns the master replication position.
-func (mysqld *Mysqld) MasterPosition() (mysql.Position, error) {
+// MainPosition returns the main replication position.
+func (mysqld *Mysqld) MainPosition() (mysql.Position, error) {
 	conn, err := getPoolReconnect(context.TODO(), mysqld.dbaPool)
 	if err != nil {
 		return mysql.Position{}, err
 	}
 	defer conn.Recycle()
 
-	return conn.MasterPosition()
+	return conn.MainPosition()
 }
 
-// SetSlavePosition sets the replication position at which the slave will resume
+// SetSubordinatePosition sets the replication position at which the subordinate will resume
 // when its replication is started.
-func (mysqld *Mysqld) SetSlavePosition(ctx context.Context, pos mysql.Position) error {
+func (mysqld *Mysqld) SetSubordinatePosition(ctx context.Context, pos mysql.Position) error {
 	conn, err := getPoolReconnect(ctx, mysqld.dbaPool)
 	if err != nil {
 		return err
 	}
 	defer conn.Recycle()
 
-	cmds := conn.SetSlavePositionCommands(pos)
-	log.Infof("Executing commands to set slave position: %v", cmds)
+	cmds := conn.SetSubordinatePositionCommands(pos)
+	log.Infof("Executing commands to set subordinate position: %v", cmds)
 	return mysqld.executeSuperQueryListConn(ctx, conn, cmds)
 }
 
-// SetMaster makes the provided host / port the master. It optionally
+// SetMain makes the provided host / port the main. It optionally
 // stops replication before, and starts it after.
-func (mysqld *Mysqld) SetMaster(ctx context.Context, masterHost string, masterPort int, slaveStopBefore bool, slaveStartAfter bool) error {
+func (mysqld *Mysqld) SetMain(ctx context.Context, mainHost string, mainPort int, subordinateStopBefore bool, subordinateStartAfter bool) error {
 	params, err := dbconfigs.WithCredentials(mysqld.dbcfgs.Repl())
 	if err != nil {
 		return err
@@ -253,13 +253,13 @@ func (mysqld *Mysqld) SetMaster(ctx context.Context, masterHost string, masterPo
 	defer conn.Recycle()
 
 	cmds := []string{}
-	if slaveStopBefore {
-		cmds = append(cmds, conn.StopSlaveCommand())
+	if subordinateStopBefore {
+		cmds = append(cmds, conn.StopSubordinateCommand())
 	}
-	smc := conn.SetMasterCommand(params, masterHost, masterPort, int(masterConnectRetry.Seconds()))
+	smc := conn.SetMainCommand(params, mainHost, mainPort, int(mainConnectRetry.Seconds()))
 	cmds = append(cmds, smc)
-	if slaveStartAfter {
-		cmds = append(cmds, conn.StartSlaveCommand())
+	if subordinateStartAfter {
+		cmds = append(cmds, conn.StartSubordinateCommand())
 	}
 	return mysqld.executeSuperQueryListConn(ctx, conn, cmds)
 }
@@ -279,7 +279,7 @@ func (mysqld *Mysqld) ResetReplication(ctx context.Context) error {
 // +------+---------+---------------------+------+-------------+------+----------------------------------------------------------------+------------------+
 // | Id   | User    | Host                | db   | Command     | Time | State                                                          | Info             |
 // +------+---------+---------------------+------+-------------+------+----------------------------------------------------------------+------------------+
-// | 9792 | vt_repl | host:port           | NULL | Binlog Dump |   54 | Has sent all binlog to slave; waiting for binlog to be updated | NULL             |
+// | 9792 | vt_repl | host:port           | NULL | Binlog Dump |   54 | Has sent all binlog to subordinate; waiting for binlog to be updated | NULL             |
 // | 9797 | vt_dba  | localhost           | NULL | Query       |    0 | NULL                                                           | show processlist |
 // +------+---------+---------------------+------+-------------+------+----------------------------------------------------------------+------------------+
 //
@@ -293,12 +293,12 @@ const (
 )
 
 const (
-	// this is the command used by mysql slaves
+	// this is the command used by mysql subordinates
 	binlogDumpCommand = "Binlog Dump"
 )
 
-// FindSlaves gets IP addresses for all currently connected slaves.
-func FindSlaves(mysqld MysqlDaemon) ([]string, error) {
+// FindSubordinates gets IP addresses for all currently connected subordinates.
+func FindSubordinates(mysqld MysqlDaemon) ([]string, error) {
 	qr, err := mysqld.FetchSuperQuery(context.TODO(), "SHOW PROCESSLIST")
 	if err != nil {
 		return nil, err
@@ -317,12 +317,12 @@ func FindSlaves(mysqld MysqlDaemon) ([]string, error) {
 			}
 			host, _, err = netutil.SplitHostPort(host)
 			if err != nil {
-				return nil, fmt.Errorf("FindSlaves: malformed addr %v", err)
+				return nil, fmt.Errorf("FindSubordinates: malformed addr %v", err)
 			}
 			var ips []string
 			ips, err = net.LookupHost(host)
 			if err != nil {
-				return nil, fmt.Errorf("FindSlaves: LookupHost failed %v", err)
+				return nil, fmt.Errorf("FindSubordinates: LookupHost failed %v", err)
 			}
 			addrs = append(addrs, ips...)
 		}
@@ -380,21 +380,21 @@ func (mysqld *Mysqld) DisableBinlogPlayback() error {
 }
 
 // SetSemiSyncEnabled enables or disables semi-sync replication for
-// master and/or slave mode.
-func (mysqld *Mysqld) SetSemiSyncEnabled(master, slave bool) error {
-	log.Infof("Setting semi-sync mode: master=%v, slave=%v", master, slave)
+// main and/or subordinate mode.
+func (mysqld *Mysqld) SetSemiSyncEnabled(main, subordinate bool) error {
+	log.Infof("Setting semi-sync mode: main=%v, subordinate=%v", main, subordinate)
 
 	// Convert bool to int.
 	var m, s int
-	if master {
+	if main {
 		m = 1
 	}
-	if slave {
+	if subordinate {
 		s = 1
 	}
 
 	err := mysqld.ExecuteSuperQuery(context.TODO(), fmt.Sprintf(
-		"SET GLOBAL rpl_semi_sync_master_enabled = %v, GLOBAL rpl_semi_sync_slave_enabled = %v",
+		"SET GLOBAL rpl_semi_sync_main_enabled = %v, GLOBAL rpl_semi_sync_subordinate_enabled = %v",
 		m, s))
 	if err != nil {
 		return fmt.Errorf("can't set semi-sync mode: %v; make sure plugins are loaded in my.cnf", err)
@@ -402,26 +402,26 @@ func (mysqld *Mysqld) SetSemiSyncEnabled(master, slave bool) error {
 	return nil
 }
 
-// SemiSyncEnabled returns whether semi-sync is enabled for master or slave.
+// SemiSyncEnabled returns whether semi-sync is enabled for main or subordinate.
 // If the semi-sync plugin is not loaded, we assume semi-sync is disabled.
-func (mysqld *Mysqld) SemiSyncEnabled() (master, slave bool) {
+func (mysqld *Mysqld) SemiSyncEnabled() (main, subordinate bool) {
 	vars, err := mysqld.fetchVariables(context.TODO(), "rpl_semi_sync_%_enabled")
 	if err != nil {
 		return false, false
 	}
-	master = (vars["rpl_semi_sync_master_enabled"] == "ON")
-	slave = (vars["rpl_semi_sync_slave_enabled"] == "ON")
-	return master, slave
+	main = (vars["rpl_semi_sync_main_enabled"] == "ON")
+	subordinate = (vars["rpl_semi_sync_subordinate_enabled"] == "ON")
+	return main, subordinate
 }
 
-// SemiSyncSlaveStatus returns whether semi-sync is currently used by replication.
-func (mysqld *Mysqld) SemiSyncSlaveStatus() (bool, error) {
-	qr, err := mysqld.FetchSuperQuery(context.TODO(), "SHOW STATUS LIKE 'rpl_semi_sync_slave_status'")
+// SemiSyncSubordinateStatus returns whether semi-sync is currently used by replication.
+func (mysqld *Mysqld) SemiSyncSubordinateStatus() (bool, error) {
+	qr, err := mysqld.FetchSuperQuery(context.TODO(), "SHOW STATUS LIKE 'rpl_semi_sync_subordinate_status'")
 	if err != nil {
 		return false, err
 	}
 	if len(qr.Rows) != 1 {
-		return false, errors.New("no rpl_semi_sync_slave_status variable in mysql")
+		return false, errors.New("no rpl_semi_sync_subordinate_status variable in mysql")
 	}
 	if qr.Rows[0][1].ToString() == "ON" {
 		return true, nil

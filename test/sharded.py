@@ -24,10 +24,10 @@ import tablet
 import utils
 
 # range "" - 80
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica = tablet.Tablet()
 # range 80 - ""
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 shard_1_replica = tablet.Tablet()
 
 
@@ -36,9 +36,9 @@ def setUpModule():
     environment.topo_server().setup()
 
     setup_procs = [
-        shard_0_master.init_mysql(),
+        shard_0_main.init_mysql(),
         shard_0_replica.init_mysql(),
-        shard_1_master.init_mysql(),
+        shard_1_main.init_mysql(),
         shard_1_replica.init_mysql(),
         ]
     utils.wait_procs(setup_procs)
@@ -53,9 +53,9 @@ def tearDownModule():
     return
 
   teardown_procs = [
-      shard_0_master.teardown_mysql(),
+      shard_0_main.teardown_mysql(),
       shard_0_replica.teardown_mysql(),
-      shard_1_master.teardown_mysql(),
+      shard_1_main.teardown_mysql(),
       shard_1_replica.teardown_mysql(),
       ]
   utils.wait_procs(teardown_procs, raise_on_error=False)
@@ -64,9 +64,9 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  shard_0_master.remove_tree()
+  shard_0_main.remove_tree()
   shard_0_replica.remove_tree()
-  shard_1_master.remove_tree()
+  shard_1_main.remove_tree()
   shard_1_replica.remove_tree()
 
 # both shards will have similar tables, but with different column order,
@@ -94,50 +94,50 @@ class TestSharded(unittest.TestCase):
                      '--sharding_column_type', 'uint64',
                      'test_keyspace'])
 
-    shard_0_master.init_tablet('replica', 'test_keyspace', '-80')
+    shard_0_main.init_tablet('replica', 'test_keyspace', '-80')
     shard_0_replica.init_tablet('replica', 'test_keyspace', '-80')
-    shard_1_master.init_tablet('replica', 'test_keyspace', '80-')
+    shard_1_main.init_tablet('replica', 'test_keyspace', '80-')
     shard_1_replica.init_tablet('replica', 'test_keyspace', '80-')
 
     # create databases, start the tablets, wait for them to start
-    for t in [shard_0_master, shard_0_replica, shard_1_master, shard_1_replica]:
+    for t in [shard_0_main, shard_0_replica, shard_1_main, shard_1_replica]:
       t.create_db('vt_test_keyspace')
       t.start_vttablet(wait_for_state=None)
-    for t in [shard_0_master, shard_1_master, shard_0_replica, shard_1_replica]:
+    for t in [shard_0_main, shard_1_main, shard_0_replica, shard_1_replica]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
     # apply the schema on the first shard through vtctl, so all tablets
     # are the same.
-    shard_0_master.mquery('vt_test_keyspace',
+    shard_0_main.mquery('vt_test_keyspace',
                           create_vt_select_test.replace('\n', ''), write=True)
     shard_0_replica.mquery('vt_test_keyspace',
                            create_vt_select_test.replace('\n', ''), write=True)
 
     # apply the schema on the second shard.
-    shard_1_master.mquery(
+    shard_1_main.mquery(
         'vt_test_keyspace',
         create_vt_select_test_reverse.replace('\n', ''), write=True)
     shard_1_replica.mquery(
         'vt_test_keyspace',
         create_vt_select_test_reverse.replace('\n', ''), write=True)
 
-    for t in [shard_0_master, shard_0_replica, shard_1_master, shard_1_replica]:
+    for t in [shard_0_main, shard_0_replica, shard_1_main, shard_1_replica]:
       utils.run_vtctl(['ReloadSchema', t.tablet_alias])
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_1_main.tablet_alias], auto_log=True)
 
     # insert some values directly (db is RO after minority reparent)
     # FIXME(alainjobart) these values don't match the shard map
-    utils.run_vtctl(['SetReadWrite', shard_0_master.tablet_alias])
-    utils.run_vtctl(['SetReadWrite', shard_1_master.tablet_alias])
-    shard_0_master.mquery(
+    utils.run_vtctl(['SetReadWrite', shard_0_main.tablet_alias])
+    utils.run_vtctl(['SetReadWrite', shard_1_main.tablet_alias])
+    shard_0_main.mquery(
         'vt_test_keyspace',
         "insert into vt_select_test (id, msg) values (1, 'test 1')",
         write=True)
-    shard_1_master.mquery(
+    shard_1_main.mquery(
         'vt_test_keyspace',
         "insert into vt_select_test (id, msg) values (10, 'test 10')",
         write=True)
@@ -147,7 +147,7 @@ class TestSharded(unittest.TestCase):
     utils.pause('Before the sql scatter query')
 
     # make sure the '1' value was written on first shard
-    rows = shard_0_master.mquery(
+    rows = shard_0_main.mquery(
         'vt_test_keyspace', 'select id, msg from vt_select_test order by id')
     self.assertEqual(rows, ((1, 'test 1'),),
                      'wrong mysql_query output: %s' % str(rows))
@@ -180,13 +180,13 @@ class TestSharded(unittest.TestCase):
     # their own shard
     sql = 'select id, msg from vt_select_test order by id'
 
-    qr = shard_0_master.execute(sql)
+    qr = shard_0_main.execute(sql)
     self.assertEqual(qr['rows'], [[1, 'test 1'],])
 
-    qr = shard_1_master.execute(sql)
+    qr = shard_1_main.execute(sql)
     self.assertEqual(qr['rows'], [[10, 'test 10'],])
 
-    tablet.kill_tablets([shard_0_master, shard_0_replica, shard_1_master,
+    tablet.kill_tablets([shard_0_main, shard_0_replica, shard_1_main,
                          shard_1_replica])
 
 if __name__ == '__main__':

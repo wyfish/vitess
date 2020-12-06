@@ -886,7 +886,7 @@ func TestGetShardServingCells(t *testing.T) {
 	}
 }
 
-func TestMasterMigrateServedType(t *testing.T) {
+func TestMainMigrateServedType(t *testing.T) {
 	cell := "cell1"
 	cell2 := "cell2"
 	keyspace := "ks1"
@@ -1103,7 +1103,7 @@ func TestMasterMigrateServedType(t *testing.T) {
 		t.Errorf("MigrateServedType() failure. Got %v, want: %v", string(got), string(want))
 	}
 
-	// migrating master type cleans up shard tablet controls records
+	// migrating main type cleans up shard tablet controls records
 
 	targetKs = &topodatapb.SrvKeyspace{
 		Partitions: []*topodatapb.SrvKeyspace_KeyspacePartition{

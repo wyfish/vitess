@@ -26,16 +26,16 @@ from vtproto import topodata_pb2
 from vtdb import vtgate_client
 
 # shards need at least 1 replica for semi-sync ACK, and 1 rdonly for SplitQuery.
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica = tablet.Tablet()
 shard_0_rdonly = tablet.Tablet()
 
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 shard_1_replica = tablet.Tablet()
 shard_1_rdonly = tablet.Tablet()
 
-all_tablets = [shard_0_master, shard_0_replica, shard_0_rdonly,
-               shard_1_master, shard_1_replica, shard_1_rdonly]
+all_tablets = [shard_0_main, shard_0_replica, shard_0_rdonly,
+               shard_1_main, shard_1_replica, shard_1_rdonly]
 
 
 def setUpModule():
@@ -77,7 +77,7 @@ class TestCustomSharding(unittest.TestCase):
     sql = 'insert into ' + table + '(id, name) values (:id, :name)'
     conn = self._vtdb_conn()
     cursor = conn.cursor(
-        tablet_type='master', keyspace='test_keyspace',
+        tablet_type='main', keyspace='test_keyspace',
         shards=[shard],
         writable=True)
     for x in xrange(count):
@@ -94,7 +94,7 @@ class TestCustomSharding(unittest.TestCase):
     sql = 'select name from ' + table + ' where id=:id'
     conn = self._vtdb_conn()
     cursor = conn.cursor(
-        tablet_type='master', keyspace='test_keyspace',
+        tablet_type='main', keyspace='test_keyspace',
         shards=[shard])
     for x in xrange(count):
       bindvars = {
@@ -119,7 +119,7 @@ class TestCustomSharding(unittest.TestCase):
     utils.run_vtctl(['CreateKeyspace', 'test_keyspace'])
 
     # start the first shard only for now
-    shard_0_master.init_tablet(
+    shard_0_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='0',
@@ -135,23 +135,23 @@ class TestCustomSharding(unittest.TestCase):
         shard='0',
         tablet_index=2)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly]:
       t.create_db('vt_test_keyspace')
       t.start_vttablet(wait_for_state=None)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     shard_0_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     shard_0_main.tablet_alias], auto_log=True)
     utils.wait_for_tablet_type(shard_0_replica.tablet_alias, 'replica')
     utils.wait_for_tablet_type(shard_0_rdonly.tablet_alias, 'rdonly')
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly]:
       t.wait_for_vttablet_state('SERVING')
 
     self._check_shards_count_in_srv_keyspace(1)
     s = utils.run_vtctl_json(['GetShard', 'test_keyspace/0'])
-    self.assertEqual(s['is_master_serving'], True)
+    self.assertEqual(s['is_main_serving'], True)
 
     # create a table on shard 0
     sql = '''create table data(
@@ -163,11 +163,11 @@ primary key (id)
                     auto_log=True)
 
     # reload schema everywhere so the QueryService knows about the tables
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly]:
       utils.run_vtctl(['ReloadSchema', t.tablet_alias], auto_log=True)
 
     # create shard 1
-    shard_1_master.init_tablet(
+    shard_1_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='1',
@@ -183,21 +183,21 @@ primary key (id)
         shard='1',
         tablet_index=2)
 
-    for t in [shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.create_db('vt_test_keyspace')
       t.start_vttablet(wait_for_state=None)
 
-    for t in [shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
     s = utils.run_vtctl_json(['GetShard', 'test_keyspace/1'])
-    self.assertEqual(s['is_master_serving'], True)
+    self.assertEqual(s['is_main_serving'], True)
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/1',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/1',
+                     shard_1_main.tablet_alias], auto_log=True)
     utils.wait_for_tablet_type(shard_1_replica.tablet_alias, 'replica')
     utils.wait_for_tablet_type(shard_1_rdonly.tablet_alias, 'rdonly')
-    for t in [shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.wait_for_vttablet_state('SERVING')
     utils.run_vtctl(['CopySchemaShard', shard_0_rdonly.tablet_alias,
                      'test_keyspace/1'], auto_log=True)
@@ -208,12 +208,12 @@ primary key (id)
 
     # must start vtgate after tablets are up, or else wait until 1min refresh
     utils.VtGate().start(tablets=[
-        shard_0_master, shard_0_replica, shard_0_rdonly,
-        shard_1_master, shard_1_replica, shard_1_rdonly])
-    utils.vtgate.wait_for_endpoints('test_keyspace.0.master', 1)
+        shard_0_main, shard_0_replica, shard_0_rdonly,
+        shard_1_main, shard_1_replica, shard_1_rdonly])
+    utils.vtgate.wait_for_endpoints('test_keyspace.0.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.0.replica', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.0.rdonly', 1)
-    utils.vtgate.wait_for_endpoints('test_keyspace.1.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.1.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.1.replica', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.1.rdonly', 1)
 
@@ -269,7 +269,7 @@ primary key (id)
       qr = utils.vtgate.execute_shards(
           q['query']['sql'],
           'test_keyspace', ','.join(q['shard_part']['shards']),
-          tablet_type='master', bindvars=bindvars)
+          tablet_type='main', bindvars=bindvars)
       for r in qr['rows']:
         rows[int(r[0])] = r[1]
     self.assertEqual(len(rows), 20)

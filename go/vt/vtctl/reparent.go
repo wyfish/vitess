@@ -35,23 +35,23 @@ func init() {
 		"ReparentTablet",
 		commandReparentTablet,
 		"<tablet alias>",
-		"Reparent a tablet to the current master in the shard. This only works if the current slave position matches the last known reparent action."})
+		"Reparent a tablet to the current main in the shard. This only works if the current subordinate position matches the last known reparent action."})
 
 	addCommand("Shards", command{
-		"InitShardMaster",
-		commandInitShardMaster,
-		"[-force] [-wait_slave_timeout=<duration>] <keyspace/shard> <tablet alias>",
-		"Sets the initial master for a shard. Will make all other tablets in the shard slaves of the provided master. WARNING: this could cause data loss on an already replicating shard. PlannedReparentShard or EmergencyReparentShard should be used instead."})
+		"InitShardMain",
+		commandInitShardMain,
+		"[-force] [-wait_subordinate_timeout=<duration>] <keyspace/shard> <tablet alias>",
+		"Sets the initial main for a shard. Will make all other tablets in the shard subordinates of the provided main. WARNING: this could cause data loss on an already replicating shard. PlannedReparentShard or EmergencyReparentShard should be used instead."})
 	addCommand("Shards", command{
 		"PlannedReparentShard",
 		commandPlannedReparentShard,
-		"-keyspace_shard=<keyspace/shard> [-new_master=<tablet alias>] [-avoid_master=<tablet alias>]",
-		"Reparents the shard to the new master, or away from old master. Both old and new master need to be up and running."})
+		"-keyspace_shard=<keyspace/shard> [-new_main=<tablet alias>] [-avoid_main=<tablet alias>]",
+		"Reparents the shard to the new main, or away from old main. Both old and new main need to be up and running."})
 	addCommand("Shards", command{
 		"EmergencyReparentShard",
 		commandEmergencyReparentShard,
-		"-keyspace_shard=<keyspace/shard> -new_master=<tablet alias>",
-		"Reparents the shard to the new master. Assumes the old master is dead and not responsding."})
+		"-keyspace_shard=<keyspace/shard> -new_main=<tablet alias>",
+		"Reparents the shard to the new main. Assumes the old main is dead and not responsding."})
 }
 
 func commandReparentTablet(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
@@ -72,18 +72,18 @@ func commandReparentTablet(ctx context.Context, wr *wrangler.Wrangler, subFlags 
 	return wr.ReparentTablet(ctx, tabletAlias)
 }
 
-func commandInitShardMaster(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
+func commandInitShardMain(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
 	if *mysqlctl.DisableActiveReparents {
 		return fmt.Errorf("active reparent commands disabled (unset the -disable_active_reparents flag to enable)")
 	}
 
-	force := subFlags.Bool("force", false, "will force the reparent even if the provided tablet is not a master or the shard master")
-	waitSlaveTimeout := subFlags.Duration("wait_slave_timeout", 30*time.Second, "time to wait for slaves to catch up in reparenting")
+	force := subFlags.Bool("force", false, "will force the reparent even if the provided tablet is not a main or the shard main")
+	waitSubordinateTimeout := subFlags.Duration("wait_subordinate_timeout", 30*time.Second, "time to wait for subordinates to catch up in reparenting")
 	if err := subFlags.Parse(args); err != nil {
 		return err
 	}
 	if subFlags.NArg() != 2 {
-		return fmt.Errorf("action InitShardMaster requires <keyspace/shard> <tablet alias>")
+		return fmt.Errorf("action InitShardMain requires <keyspace/shard> <tablet alias>")
 	}
 	keyspace, shard, err := topoproto.ParseKeyspaceShard(subFlags.Arg(0))
 	if err != nil {
@@ -93,7 +93,7 @@ func commandInitShardMaster(ctx context.Context, wr *wrangler.Wrangler, subFlags
 	if err != nil {
 		return err
 	}
-	return wr.InitShardMaster(ctx, keyspace, shard, tabletAlias, *force, *waitSlaveTimeout)
+	return wr.InitShardMain(ctx, keyspace, shard, tabletAlias, *force, *waitSubordinateTimeout)
 }
 
 func commandPlannedReparentShard(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
@@ -101,42 +101,42 @@ func commandPlannedReparentShard(ctx context.Context, wr *wrangler.Wrangler, sub
 		return fmt.Errorf("active reparent commands disabled (unset the -disable_active_reparents flag to enable)")
 	}
 
-	waitSlaveTimeout := subFlags.Duration("wait_slave_timeout", *topo.RemoteOperationTimeout, "time to wait for slaves to catch up in reparenting")
+	waitSubordinateTimeout := subFlags.Duration("wait_subordinate_timeout", *topo.RemoteOperationTimeout, "time to wait for subordinates to catch up in reparenting")
 	keyspaceShard := subFlags.String("keyspace_shard", "", "keyspace/shard of the shard that needs to be reparented")
-	newMaster := subFlags.String("new_master", "", "alias of a tablet that should be the new master")
-	avoidMaster := subFlags.String("avoid_master", "", "alias of a tablet that should not be the master, i.e. reparent to any other tablet if this one is the master")
+	newMain := subFlags.String("new_main", "", "alias of a tablet that should be the new main")
+	avoidMain := subFlags.String("avoid_main", "", "alias of a tablet that should not be the main, i.e. reparent to any other tablet if this one is the main")
 	if err := subFlags.Parse(args); err != nil {
 		return err
 	}
 	if subFlags.NArg() == 2 {
 		// Legacy syntax: "<keyspace/shard> <tablet alias>".
-		if *keyspaceShard != "" || *newMaster != "" {
-			return fmt.Errorf("cannot use legacy syntax and flags -keyspace_shard and -new_master for action PlannedReparentShard at the same time")
+		if *keyspaceShard != "" || *newMain != "" {
+			return fmt.Errorf("cannot use legacy syntax and flags -keyspace_shard and -new_main for action PlannedReparentShard at the same time")
 		}
 		*keyspaceShard = subFlags.Arg(0)
-		*newMaster = subFlags.Arg(1)
+		*newMain = subFlags.Arg(1)
 	} else if subFlags.NArg() != 0 {
-		return fmt.Errorf("action PlannedReparentShard requires -keyspace_shard=<keyspace/shard> [-new_master=<tablet alias>] [-avoid_master=<tablet alias>]")
+		return fmt.Errorf("action PlannedReparentShard requires -keyspace_shard=<keyspace/shard> [-new_main=<tablet alias>] [-avoid_main=<tablet alias>]")
 	}
 
 	keyspace, shard, err := topoproto.ParseKeyspaceShard(*keyspaceShard)
 	if err != nil {
 		return err
 	}
-	var newMasterAlias, avoidMasterAlias *topodatapb.TabletAlias
-	if *newMaster != "" {
-		newMasterAlias, err = topoproto.ParseTabletAlias(*newMaster)
+	var newMainAlias, avoidMainAlias *topodatapb.TabletAlias
+	if *newMain != "" {
+		newMainAlias, err = topoproto.ParseTabletAlias(*newMain)
 		if err != nil {
 			return err
 		}
 	}
-	if *avoidMaster != "" {
-		avoidMasterAlias, err = topoproto.ParseTabletAlias(*avoidMaster)
+	if *avoidMain != "" {
+		avoidMainAlias, err = topoproto.ParseTabletAlias(*avoidMain)
 		if err != nil {
 			return err
 		}
 	}
-	return wr.PlannedReparentShard(ctx, keyspace, shard, newMasterAlias, avoidMasterAlias, *waitSlaveTimeout)
+	return wr.PlannedReparentShard(ctx, keyspace, shard, newMainAlias, avoidMainAlias, *waitSubordinateTimeout)
 }
 
 func commandEmergencyReparentShard(ctx context.Context, wr *wrangler.Wrangler, subFlags *flag.FlagSet, args []string) error {
@@ -144,30 +144,30 @@ func commandEmergencyReparentShard(ctx context.Context, wr *wrangler.Wrangler, s
 		return fmt.Errorf("active reparent commands disabled (unset the -disable_active_reparents flag to enable)")
 	}
 
-	waitSlaveTimeout := subFlags.Duration("wait_slave_timeout", 30*time.Second, "time to wait for slaves to catch up in reparenting")
+	waitSubordinateTimeout := subFlags.Duration("wait_subordinate_timeout", 30*time.Second, "time to wait for subordinates to catch up in reparenting")
 	keyspaceShard := subFlags.String("keyspace_shard", "", "keyspace/shard of the shard that needs to be reparented")
-	newMaster := subFlags.String("new_master", "", "alias of a tablet that should be the new master")
+	newMain := subFlags.String("new_main", "", "alias of a tablet that should be the new main")
 	if err := subFlags.Parse(args); err != nil {
 		return err
 	}
 	if subFlags.NArg() == 2 {
 		// Legacy syntax: "<keyspace/shard> <tablet alias>".
-		if *newMaster != "" {
-			return fmt.Errorf("cannot use legacy syntax and flag -new_master for action EmergencyReparentShard at the same time")
+		if *newMain != "" {
+			return fmt.Errorf("cannot use legacy syntax and flag -new_main for action EmergencyReparentShard at the same time")
 		}
 		*keyspaceShard = subFlags.Arg(0)
-		*newMaster = subFlags.Arg(1)
+		*newMain = subFlags.Arg(1)
 	} else if subFlags.NArg() != 0 {
-		return fmt.Errorf("action EmergencyReparentShard requires -keyspace_shard=<keyspace/shard> -new_master=<tablet alias>")
+		return fmt.Errorf("action EmergencyReparentShard requires -keyspace_shard=<keyspace/shard> -new_main=<tablet alias>")
 	}
 
 	keyspace, shard, err := topoproto.ParseKeyspaceShard(*keyspaceShard)
 	if err != nil {
 		return err
 	}
-	tabletAlias, err := topoproto.ParseTabletAlias(*newMaster)
+	tabletAlias, err := topoproto.ParseTabletAlias(*newMain)
 	if err != nil {
 		return err
 	}
-	return wr.EmergencyReparentShard(ctx, keyspace, shard, tabletAlias, *waitSlaveTimeout)
+	return wr.EmergencyReparentShard(ctx, keyspace, shard, tabletAlias, *waitSubordinateTimeout)
 }

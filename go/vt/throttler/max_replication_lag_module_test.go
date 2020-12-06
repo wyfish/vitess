@@ -500,7 +500,7 @@ func TestMaxReplicationLagModule_Increase_MinimumProgress(t *testing.T) {
 }
 
 // TestMaxReplicationLagModule_Decrease verifies that we correctly calculate the
-// replica (slave) rate in the decreaseAndGuessRate state.
+// replica (subordinate) rate in the decreaseAndGuessRate state.
 func TestMaxReplicationLagModule_Decrease(t *testing.T) {
 	tf, err := newTestFixtureWithMaxReplicationLag(5)
 	if err != nil {
@@ -519,7 +519,7 @@ func TestMaxReplicationLagModule_Decrease(t *testing.T) {
 	tf.ratesHistory.add(sinceZero(70*time.Second), 100)
 	tf.ratesHistory.add(sinceZero(89*time.Second), 200)
 	tf.process(lagRecord(sinceZero(90*time.Second), r2, 3))
-	// The guessed replica (slave) rate is 140 because of the 3s lag increase
+	// The guessed replica (subordinate) rate is 140 because of the 3s lag increase
 	// within the elapsed 20s.
 	// The replica processed only 17s worth of work (20s duration - 3s lag increase)
 	// 17s / 20s * 200 QPS actual rate => 170 QPS replica rate
@@ -933,7 +933,7 @@ func TestMaxReplicationLagModule_NoIncreaseIfMaxRateWasNotApproached(t *testing.
 		t.Fatal(err)
 	}
 
-	// Master gets 10 QPS in second 69.
+	// Main gets 10 QPS in second 69.
 	// r1 @  70s, 0s lag.
 	// Rate does not double to 200 as it does in the other tests because
 	// the actual rate is much smaller than the current rate of 100.
@@ -974,7 +974,7 @@ func tabletStats(uid, lag uint32) discovery.TabletStats {
 		Up:      true,
 		Serving: true,
 		Stats: &querypb.RealtimeStats{
-			SecondsBehindMaster: lag,
+			SecondsBehindMain: lag,
 		},
 		TabletExternallyReparentedTimestamp: 22,
 		LastError:                           nil,

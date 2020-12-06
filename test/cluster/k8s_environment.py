@@ -88,7 +88,7 @@ class K8sEnvironment(base_environment.BaseEnvironment):
           tablet for tablet in all_tablets_in_a_cell if tablet[1] == keyspace]
       replica_tablets_in_cell = [
           tablet for tablet in keyspace_tablets_in_cell
-          if tablet[3] == 'master' or tablet[3] == 'replica']
+          if tablet[3] == 'main' or tablet[3] == 'replica']
       replica_instances = len(replica_tablets_in_cell) / self.num_shards[index]
       self.replica_instances.append(replica_instances)
       self.rdonly_instances.append(
@@ -238,13 +238,13 @@ class K8sEnvironment(base_environment.BaseEnvironment):
     output = p2.communicate()[0]
     return bool(output)
 
-  def internal_reparent(self, keyspace, shard_name, new_master_uid,
+  def internal_reparent(self, keyspace, shard_name, new_main_uid,
                         emergency=False):
     reparent_command = (
         'EmergencyReparentShard' if emergency else 'PlannedReparentShard')
     self.vtctl_helper.execute_vtctl_command(
         [reparent_command, '-keyspace_shard', '%s/%s' % (keyspace, shard_name),
-         '-new_master', new_master_uid])
+         '-new_main', new_main_uid])
     self.vtctl_helper.execute_vtctl_command(['RebuildKeyspaceGraph', keyspace])
     return 0, 'No output'
 
@@ -253,17 +253,17 @@ class K8sEnvironment(base_environment.BaseEnvironment):
     self.vtctl_helper.execute_vtctl_command(['Backup', tablet_name])
 
   def drain_tablet(self, tablet_name, duration_s=600):
-    self.vtctl_helper.execute_vtctl_command(['StopSlave', tablet_name])
+    self.vtctl_helper.execute_vtctl_command(['StopSubordinate', tablet_name])
     self.vtctl_helper.execute_vtctl_command(
-        ['ChangeSlaveType', tablet_name, 'drained'])
+        ['ChangeSubordinateType', tablet_name, 'drained'])
 
   def is_tablet_drained(self, tablet_name):
     return self.get_tablet_type(tablet_name) == topodata_pb2.DRAINED
 
   def undrain_tablet(self, tablet_name):
     self.vtctl_helper.execute_vtctl_command(
-        ['ChangeSlaveType', tablet_name, 'replica'])
-    self.vtctl_helper.execute_vtctl_command(['StartSlave', tablet_name])
+        ['ChangeSubordinateType', tablet_name, 'replica'])
+    self.vtctl_helper.execute_vtctl_command(['StartSubordinate', tablet_name])
 
   def is_tablet_undrained(self, tablet_name):
     return not self.is_tablet_drained(tablet_name)

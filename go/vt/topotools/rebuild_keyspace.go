@@ -110,9 +110,9 @@ func RebuildKeyspaceLocked(ctx context.Context, log logutil.Logger, ts *topo.Ser
 	for cell, srvKeyspace := range srvKeyspaceMap {
 		for _, si := range shards {
 			// We rebuild keyspace iff:
-			// 1) shard master is in a serving state.
-			// 2) shard has served type for master (this is for backwards compatibility).
-			if !(si.IsMasterServing || si.GetServedType(topodatapb.TabletType_MASTER) != nil) {
+			// 1) shard main is in a serving state.
+			// 2) shard has served type for main (this is for backwards compatibility).
+			if !(si.IsMainServing || si.GetServedType(topodatapb.TabletType_MASTER) != nil) {
 				continue
 			}
 			// for each type this shard is supposed to serve,

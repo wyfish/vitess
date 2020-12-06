@@ -152,8 +152,8 @@ class TestVtctldWeb(unittest.TestCase):
         (By.ID, 'keyspace-shard')))
     return self.driver.find_element_by_id('keyspace-shard').text
 
-  def _get_shard_record_master_tablet(self):
-    return self.driver.find_element_by_id('master-tablet').text
+  def _get_shard_record_main_tablet(self):
+    return self.driver.find_element_by_id('main-tablet').text
 
   def _check_tablet_types(self, tablet_types, expected_counts):
     for expected_type, count in expected_counts.iteritems():
@@ -166,10 +166,10 @@ class TestVtctldWeb(unittest.TestCase):
     self._get_shard_element(keyspace_name, shard_name).click()
     self.assertEquals(self._get_shard_record_keyspace_shard(),
                       '%s/%s' % (keyspace_name, shard_name))
-    master = self._get_shard_record_master_tablet()
-    logging.info('master tablet is %s', master)
+    main = self._get_shard_record_main_tablet()
+    logging.info('main tablet is %s', main)
     shard_tablets = self._get_tablet_names()
-    self.assertEquals(shard_tablets[master], 'master')
+    self.assertEquals(shard_tablets[main], 'main')
     self._check_tablet_types(shard_tablets.values(), expected_tablet_types)
     self.driver.back()
 
@@ -406,11 +406,11 @@ class TestVtctldWeb(unittest.TestCase):
     self.driver.get(self.vtctld_addr + '/app')
 
     self._check_shard_overview(
-        'test_keyspace', '-80', {'master': 1, 'replica': 1, 'rdonly': 2})
+        'test_keyspace', '-80', {'main': 1, 'replica': 1, 'rdonly': 2})
     self._check_shard_overview(
-        'test_keyspace', '80-', {'master': 1, 'replica': 1, 'rdonly': 2})
+        'test_keyspace', '80-', {'main': 1, 'replica': 1, 'rdonly': 2})
     self._check_shard_overview(
-        'test_keyspace2', '0', {'master': 1, 'replica': 1, 'rdonly': 1})
+        'test_keyspace2', '0', {'main': 1, 'replica': 1, 'rdonly': 1})
 
   def test_dashboard(self):
     logging.info('Testing dashboard view')
@@ -546,7 +546,7 @@ class TestVtctldWeb(unittest.TestCase):
     logging.info('Tablets uids in first shard in first keyspace: %s',
                  ', '.join(tablet_uids))
     self.assertSetEqual(
-        set(['master', 'replica', 'rdonly', 'rdonly', 'replica', 'replica',
+        set(['main', 'replica', 'rdonly', 'rdonly', 'replica', 'replica',
              'rdonly', 'rdonly']), set(tablet_types))
     self.assertSetEqual(
         set(['1', '2', '3', '4', '5', '6', '7', '8']), set(tablet_uids))

@@ -833,9 +833,9 @@ func TestPlayerDDL(t *testing.T) {
 
 	cancel, id := startVReplication(t, filter, binlogdatapb.OnDDLAction_STOP, "")
 	execStatements(t, []string{"alter table t1 add column val varchar(128)"})
-	pos1 := masterPosition(t)
+	pos1 := mainPosition(t)
 	execStatements(t, []string{"alter table t1 drop column val"})
-	pos2 := masterPosition(t)
+	pos2 := mainPosition(t)
 	// The stop position must be the GTID of the first DDL
 	expectDBClientQueries(t, []string{
 		"begin",
@@ -920,7 +920,7 @@ func TestPlayerStopPos(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	startPos := masterPosition(t)
+	startPos := mainPosition(t)
 	query := binlogplayer.CreateVReplicationState("test", bls, startPos, binlogplayer.BlpStopped, vrepldb)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
@@ -937,7 +937,7 @@ func TestPlayerStopPos(t *testing.T) {
 	execStatements(t, []string{
 		"insert into yes values(1, 'aaa')",
 	})
-	stopPos := masterPosition(t)
+	stopPos := mainPosition(t)
 	query = binlogplayer.StartVReplicationUntil(id, stopPos)
 	if _, err := playerEngine.Exec(query); err != nil {
 		t.Fatal(err)
@@ -958,7 +958,7 @@ func TestPlayerStopPos(t *testing.T) {
 		"insert into no values(2, 'aaa')",
 		"insert into no values(3, 'aaa')",
 	})
-	stopPos = masterPosition(t)
+	stopPos = mainPosition(t)
 	execStatements(t, []string{
 		"insert into no values(4, 'aaa')",
 	})
@@ -1522,7 +1522,7 @@ func startVReplication(t *testing.T, filter *binlogdatapb.Filter, onddl binlogda
 		OnDdl:    onddl,
 	}
 	if pos == "" {
-		pos = masterPosition(t)
+		pos = mainPosition(t)
 	}
 	query := binlogplayer.CreateVReplication("test", bls, pos, 9223372036854775807, 9223372036854775807, 0, vrepldb)
 	qr, err := playerEngine.Exec(query)
@@ -1547,9 +1547,9 @@ func startVReplication(t *testing.T, filter *binlogdatapb.Filter, onddl binlogda
 	}, int(qr.InsertID)
 }
 
-func masterPosition(t *testing.T) string {
+func mainPosition(t *testing.T) string {
 	t.Helper()
-	pos, err := env.Mysqld.MasterPosition()
+	pos, err := env.Mysqld.MainPosition()
 	if err != nil {
 		t.Fatal(err)
 	}

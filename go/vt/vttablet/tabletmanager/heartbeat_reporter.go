@@ -48,9 +48,9 @@ func (r *Reporter) HTMLName() template.HTML {
 }
 
 // Report is part of the health.Reporter interface. It returns the last reported value
-// written by the watchHeartbeat goroutine. If we're the master, it just returns 0.
-func (r *Reporter) Report(isSlaveType, shouldQueryServiceBeRunning bool) (time.Duration, error) {
-	if !isSlaveType {
+// written by the watchHeartbeat goroutine. If we're the main, it just returns 0.
+func (r *Reporter) Report(isSubordinateType, shouldQueryServiceBeRunning bool) (time.Duration, error) {
+	if !isSubordinateType {
 		return 0, nil
 	}
 	return r.controller.HeartbeatLag()

@@ -123,7 +123,7 @@ func FindWorkerTablet(ctx context.Context, wr *wrangler.Wrangler, cleaner *wrang
 
 	wr.Logger().Infof("Changing tablet %v to '%v'", topoproto.TabletAliasString(tabletAlias), topodatapb.TabletType_DRAINED)
 	shortCtx, cancel := context.WithTimeout(ctx, *remoteActionsTimeout)
-	err = wr.ChangeSlaveType(shortCtx, tabletAlias, topodatapb.TabletType_DRAINED)
+	err = wr.ChangeSubordinateType(shortCtx, tabletAlias, topodatapb.TabletType_DRAINED)
 	cancel()
 	if err != nil {
 		return nil, err
@@ -145,13 +145,13 @@ func FindWorkerTablet(ctx context.Context, wr *wrangler.Wrangler, cleaner *wrang
 		return nil, err
 	}
 	// Using "defer" here because we remove the tag *before* calling
-	// ChangeSlaveType back, so we need to record this tag change after the change
-	// slave type change in the cleaner.
+	// ChangeSubordinateType back, so we need to record this tag change after the change
+	// subordinate type change in the cleaner.
 	defer wrangler.RecordTabletTagAction(cleaner, tabletAlias, "worker", "")
 	defer wrangler.RecordTabletTagAction(cleaner, tabletAlias, "drain_reason", "")
 
 	// Record a clean-up action to take the tablet back to tabletAlias.
-	wrangler.RecordChangeSlaveTypeAction(cleaner, tabletAlias, topodatapb.TabletType_DRAINED, tabletType)
+	wrangler.RecordChangeSubordinateTypeAction(cleaner, tabletAlias, topodatapb.TabletType_DRAINED, tabletType)
 
 	// We refresh the destination vttablet reloads the worker URL when it reloads the tablet.
 	shortCtx, cancel = context.WithTimeout(ctx, *remoteActionsTimeout)

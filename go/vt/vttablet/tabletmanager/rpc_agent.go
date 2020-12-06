@@ -78,21 +78,21 @@ type RPCAgent interface {
 
 	// Replication related methods
 
-	SlaveStatus(ctx context.Context) (*replicationdatapb.Status, error)
+	SubordinateStatus(ctx context.Context) (*replicationdatapb.Status, error)
 
-	MasterPosition(ctx context.Context) (string, error)
+	MainPosition(ctx context.Context) (string, error)
 
-	StopSlave(ctx context.Context) error
+	StopSubordinate(ctx context.Context) error
 
-	StopSlaveMinimum(ctx context.Context, position string, waitTime time.Duration) (string, error)
+	StopSubordinateMinimum(ctx context.Context, position string, waitTime time.Duration) (string, error)
 
-	StartSlave(ctx context.Context) error
+	StartSubordinate(ctx context.Context) error
 
-	StartSlaveUntilAfter(ctx context.Context, position string, waitTime time.Duration) error
+	StartSubordinateUntilAfter(ctx context.Context, position string, waitTime time.Duration) error
 
 	TabletExternallyReparented(ctx context.Context, externalID string) error
 
-	GetSlaves(ctx context.Context) ([]string, error)
+	GetSubordinates(ctx context.Context) ([]string, error)
 
 	// VReplication API
 	VReplicationExec(ctx context.Context, query string) (*querypb.QueryResult, error)
@@ -102,31 +102,31 @@ type RPCAgent interface {
 
 	ResetReplication(ctx context.Context) error
 
-	InitMaster(ctx context.Context) (string, error)
+	InitMain(ctx context.Context) (string, error)
 
-	PopulateReparentJournal(ctx context.Context, timeCreatedNS int64, actionName string, masterAlias *topodatapb.TabletAlias, pos string) error
+	PopulateReparentJournal(ctx context.Context, timeCreatedNS int64, actionName string, mainAlias *topodatapb.TabletAlias, pos string) error
 
-	InitSlave(ctx context.Context, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error
+	InitSubordinate(ctx context.Context, parent *topodatapb.TabletAlias, replicationPosition string, timeCreatedNS int64) error
 
-	DemoteMaster(ctx context.Context) (string, error)
+	DemoteMain(ctx context.Context) (string, error)
 
-	UndoDemoteMaster(ctx context.Context) error
+	UndoDemoteMain(ctx context.Context) error
 
-	PromoteSlaveWhenCaughtUp(ctx context.Context, replicationPosition string) (string, error)
+	PromoteSubordinateWhenCaughtUp(ctx context.Context, replicationPosition string) (string, error)
 
-	SlaveWasPromoted(ctx context.Context) error
+	SubordinateWasPromoted(ctx context.Context) error
 
-	SetMaster(ctx context.Context, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSlave bool) error
+	SetMain(ctx context.Context, parent *topodatapb.TabletAlias, timeCreatedNS int64, forceStartSubordinate bool) error
 
-	SlaveWasRestarted(ctx context.Context, parent *topodatapb.TabletAlias) error
+	SubordinateWasRestarted(ctx context.Context, parent *topodatapb.TabletAlias) error
 
 	StopReplicationAndGetStatus(ctx context.Context) (*replicationdatapb.Status, error)
 
-	PromoteSlave(ctx context.Context) (string, error)
+	PromoteSubordinate(ctx context.Context) (string, error)
 
 	// Backup / restore related methods
 
-	Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMaster bool) error
+	Backup(ctx context.Context, concurrency int, logger logutil.Logger, allowMain bool) error
 
 	RestoreFromBackup(ctx context.Context, logger logutil.Logger) error
 

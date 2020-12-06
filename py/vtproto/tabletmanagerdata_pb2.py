@@ -23,7 +23,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='tabletmanagerdata',
   syntax='proto3',
   serialized_options=_b('Z.vitess.io/vitess/go/vt/proto/tabletmanagerdata'),
-  serialized_pb=_b('\n\x17tabletmanagerdata.proto\x12\x11tabletmanagerdata\x1a\x0bquery.proto\x1a\x0etopodata.proto\x1a\x15replicationdata.proto\x1a\rlogutil.proto\"\x93\x01\n\x0fTableDefinition\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06schema\x18\x02 \x01(\t\x12\x0f\n\x07\x63olumns\x18\x03 \x03(\t\x12\x1b\n\x13primary_key_columns\x18\x04 \x03(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x13\n\x0b\x64\x61ta_length\x18\x06 \x01(\x04\x12\x11\n\trow_count\x18\x07 \x01(\x04\"{\n\x10SchemaDefinition\x12\x17\n\x0f\x64\x61tabase_schema\x18\x01 \x01(\t\x12=\n\x11table_definitions\x18\x02 \x03(\x0b\x32\".tabletmanagerdata.TableDefinition\x12\x0f\n\x07version\x18\x03 \x01(\t\"\x8b\x01\n\x12SchemaChangeResult\x12:\n\rbefore_schema\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x02 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\xc1\x01\n\x0eUserPermission\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x19\n\x11password_checksum\x18\x03 \x01(\x04\x12\x45\n\nprivileges\x18\x04 \x03(\x0b\x32\x31.tabletmanagerdata.UserPermission.PrivilegesEntry\x1a\x31\n\x0fPrivilegesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xae\x01\n\x0c\x44\x62Permission\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\n\n\x02\x64\x62\x18\x02 \x01(\t\x12\x0c\n\x04user\x18\x03 \x01(\t\x12\x43\n\nprivileges\x18\x04 \x03(\x0b\x32/.tabletmanagerdata.DbPermission.PrivilegesEntry\x1a\x31\n\x0fPrivilegesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x83\x01\n\x0bPermissions\x12;\n\x10user_permissions\x18\x01 \x03(\x0b\x32!.tabletmanagerdata.UserPermission\x12\x37\n\x0e\x64\x62_permissions\x18\x02 \x03(\x0b\x32\x1f.tabletmanagerdata.DbPermission\"\x1e\n\x0bPingRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\"\x1f\n\x0cPingResponse\x12\x0f\n\x07payload\x18\x01 \x01(\t\" \n\x0cSleepRequest\x12\x10\n\x08\x64uration\x18\x01 \x01(\x03\"\x0f\n\rSleepResponse\"\xaf\x01\n\x12\x45xecuteHookRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\nparameters\x18\x02 \x03(\t\x12\x46\n\textra_env\x18\x03 \x03(\x0b\x32\x33.tabletmanagerdata.ExecuteHookRequest.ExtraEnvEntry\x1a/\n\rExtraEnvEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"J\n\x13\x45xecuteHookResponse\x12\x13\n\x0b\x65xit_status\x18\x01 \x01(\x03\x12\x0e\n\x06stdout\x18\x02 \x01(\t\x12\x0e\n\x06stderr\x18\x03 \x01(\t\"Q\n\x10GetSchemaRequest\x12\x0e\n\x06tables\x18\x01 \x03(\t\x12\x15\n\rinclude_views\x18\x02 \x01(\x08\x12\x16\n\x0e\x65xclude_tables\x18\x03 \x03(\t\"S\n\x11GetSchemaResponse\x12>\n\x11schema_definition\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x17\n\x15GetPermissionsRequest\"M\n\x16GetPermissionsResponse\x12\x33\n\x0bpermissions\x18\x01 \x01(\x0b\x32\x1e.tabletmanagerdata.Permissions\"\x14\n\x12SetReadOnlyRequest\"\x15\n\x13SetReadOnlyResponse\"\x15\n\x13SetReadWriteRequest\"\x16\n\x14SetReadWriteResponse\">\n\x11\x43hangeTypeRequest\x12)\n\x0btablet_type\x18\x01 \x01(\x0e\x32\x14.topodata.TabletType\"\x14\n\x12\x43hangeTypeResponse\"\x15\n\x13RefreshStateRequest\"\x16\n\x14RefreshStateResponse\"\x17\n\x15RunHealthCheckRequest\"\x18\n\x16RunHealthCheckResponse\"+\n\x18IgnoreHealthErrorRequest\x12\x0f\n\x07pattern\x18\x01 \x01(\t\"\x1b\n\x19IgnoreHealthErrorResponse\",\n\x13ReloadSchemaRequest\x12\x15\n\rwait_position\x18\x01 \x01(\t\"\x16\n\x14ReloadSchemaResponse\")\n\x16PreflightSchemaRequest\x12\x0f\n\x07\x63hanges\x18\x01 \x03(\t\"X\n\x17PreflightSchemaResponse\x12=\n\x0e\x63hange_results\x18\x01 \x03(\x0b\x32%.tabletmanagerdata.SchemaChangeResult\"\xc2\x01\n\x12\x41pplySchemaRequest\x12\x0b\n\x03sql\x18\x01 \x01(\t\x12\r\n\x05\x66orce\x18\x02 \x01(\x08\x12\x19\n\x11\x61llow_replication\x18\x03 \x01(\x08\x12:\n\rbefore_schema\x18\x04 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x05 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x8c\x01\n\x13\x41pplySchemaResponse\x12:\n\rbefore_schema\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x02 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x13\n\x11LockTablesRequest\"\x14\n\x12LockTablesResponse\"\x15\n\x13UnlockTablesRequest\"\x16\n\x14UnlockTablesResponse\"|\n\x18\x45xecuteFetchAsDbaRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x0f\n\x07\x64\x62_name\x18\x02 \x01(\t\x12\x10\n\x08max_rows\x18\x03 \x01(\x04\x12\x17\n\x0f\x64isable_binlogs\x18\x04 \x01(\x08\x12\x15\n\rreload_schema\x18\x05 \x01(\x08\"?\n\x19\x45xecuteFetchAsDbaResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"h\n\x1d\x45xecuteFetchAsAllPrivsRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x0f\n\x07\x64\x62_name\x18\x02 \x01(\t\x12\x10\n\x08max_rows\x18\x03 \x01(\x04\x12\x15\n\rreload_schema\x18\x04 \x01(\x08\"D\n\x1e\x45xecuteFetchAsAllPrivsResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\";\n\x18\x45xecuteFetchAsAppRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x10\n\x08max_rows\x18\x02 \x01(\x04\"?\n\x19\x45xecuteFetchAsAppResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"\x14\n\x12SlaveStatusRequest\">\n\x13SlaveStatusResponse\x12\'\n\x06status\x18\x01 \x01(\x0b\x32\x17.replicationdata.Status\"\x17\n\x15MasterPositionRequest\"*\n\x16MasterPositionResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x12\n\x10StopSlaveRequest\"\x13\n\x11StopSlaveResponse\"A\n\x17StopSlaveMinimumRequest\x12\x10\n\x08position\x18\x01 \x01(\t\x12\x14\n\x0cwait_timeout\x18\x02 \x01(\x03\",\n\x18StopSlaveMinimumResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x13\n\x11StartSlaveRequest\"\x14\n\x12StartSlaveResponse\"E\n\x1bStartSlaveUntilAfterRequest\x12\x10\n\x08position\x18\x01 \x01(\t\x12\x14\n\x0cwait_timeout\x18\x02 \x01(\x03\"\x1e\n\x1cStartSlaveUntilAfterResponse\"8\n!TabletExternallyReparentedRequest\x12\x13\n\x0b\x65xternal_id\x18\x01 \x01(\t\"$\n\"TabletExternallyReparentedResponse\" \n\x1eTabletExternallyElectedRequest\"!\n\x1fTabletExternallyElectedResponse\"\x12\n\x10GetSlavesRequest\"\"\n\x11GetSlavesResponse\x12\r\n\x05\x61\x64\x64rs\x18\x01 \x03(\t\"\x19\n\x17ResetReplicationRequest\"\x1a\n\x18ResetReplicationResponse\"(\n\x17VReplicationExecRequest\x12\r\n\x05query\x18\x01 \x01(\t\">\n\x18VReplicationExecResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"=\n\x1dVReplicationWaitForPosRequest\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x10\n\x08position\x18\x02 \x01(\t\" \n\x1eVReplicationWaitForPosResponse\"\x13\n\x11InitMasterRequest\"&\n\x12InitMasterResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x99\x01\n\x1ePopulateReparentJournalRequest\x12\x17\n\x0ftime_created_ns\x18\x01 \x01(\x03\x12\x13\n\x0b\x61\x63tion_name\x18\x02 \x01(\t\x12+\n\x0cmaster_alias\x18\x03 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x1c\n\x14replication_position\x18\x04 \x01(\t\"!\n\x1fPopulateReparentJournalResponse\"p\n\x10InitSlaveRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x1c\n\x14replication_position\x18\x02 \x01(\t\x12\x17\n\x0ftime_created_ns\x18\x03 \x01(\x03\"\x13\n\x11InitSlaveResponse\"\x15\n\x13\x44\x65moteMasterRequest\"(\n\x14\x44\x65moteMasterResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x19\n\x17UndoDemoteMasterRequest\"\x1a\n\x18UndoDemoteMasterResponse\"3\n\x1fPromoteSlaveWhenCaughtUpRequest\x12\x10\n\x08position\x18\x01 \x01(\t\"4\n PromoteSlaveWhenCaughtUpResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x19\n\x17SlaveWasPromotedRequest\"\x1a\n\x18SlaveWasPromotedResponse\"m\n\x10SetMasterRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x17\n\x0ftime_created_ns\x18\x02 \x01(\x03\x12\x19\n\x11\x66orce_start_slave\x18\x03 \x01(\x08\"\x13\n\x11SetMasterResponse\"A\n\x18SlaveWasRestartedRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\"\x1b\n\x19SlaveWasRestartedResponse\"$\n\"StopReplicationAndGetStatusRequest\"N\n#StopReplicationAndGetStatusResponse\x12\'\n\x06status\x18\x01 \x01(\x0b\x32\x17.replicationdata.Status\"\x15\n\x13PromoteSlaveRequest\"(\n\x14PromoteSlaveResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"9\n\rBackupRequest\x12\x13\n\x0b\x63oncurrency\x18\x01 \x01(\x03\x12\x13\n\x0b\x61llowMaster\x18\x02 \x01(\x08\"/\n\x0e\x42\x61\x63kupResponse\x12\x1d\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x0e.logutil.Event\"\x1a\n\x18RestoreFromBackupRequest\":\n\x19RestoreFromBackupResponse\x12\x1d\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x0e.logutil.EventB0Z.vitess.io/vitess/go/vt/proto/tabletmanagerdatab\x06proto3')
+  serialized_pb=_b('\n\x17tabletmanagerdata.proto\x12\x11tabletmanagerdata\x1a\x0bquery.proto\x1a\x0etopodata.proto\x1a\x15replicationdata.proto\x1a\rlogutil.proto\"\x93\x01\n\x0fTableDefinition\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06schema\x18\x02 \x01(\t\x12\x0f\n\x07\x63olumns\x18\x03 \x03(\t\x12\x1b\n\x13primary_key_columns\x18\x04 \x03(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x13\n\x0b\x64\x61ta_length\x18\x06 \x01(\x04\x12\x11\n\trow_count\x18\x07 \x01(\x04\"{\n\x10SchemaDefinition\x12\x17\n\x0f\x64\x61tabase_schema\x18\x01 \x01(\t\x12=\n\x11table_definitions\x18\x02 \x03(\x0b\x32\".tabletmanagerdata.TableDefinition\x12\x0f\n\x07version\x18\x03 \x01(\t\"\x8b\x01\n\x12SchemaChangeResult\x12:\n\rbefore_schema\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x02 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\xc1\x01\n\x0eUserPermission\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04user\x18\x02 \x01(\t\x12\x19\n\x11password_checksum\x18\x03 \x01(\x04\x12\x45\n\nprivileges\x18\x04 \x03(\x0b\x32\x31.tabletmanagerdata.UserPermission.PrivilegesEntry\x1a\x31\n\x0fPrivilegesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xae\x01\n\x0c\x44\x62Permission\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\n\n\x02\x64\x62\x18\x02 \x01(\t\x12\x0c\n\x04user\x18\x03 \x01(\t\x12\x43\n\nprivileges\x18\x04 \x03(\x0b\x32/.tabletmanagerdata.DbPermission.PrivilegesEntry\x1a\x31\n\x0fPrivilegesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x83\x01\n\x0bPermissions\x12;\n\x10user_permissions\x18\x01 \x03(\x0b\x32!.tabletmanagerdata.UserPermission\x12\x37\n\x0e\x64\x62_permissions\x18\x02 \x03(\x0b\x32\x1f.tabletmanagerdata.DbPermission\"\x1e\n\x0bPingRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\"\x1f\n\x0cPingResponse\x12\x0f\n\x07payload\x18\x01 \x01(\t\" \n\x0cSleepRequest\x12\x10\n\x08\x64uration\x18\x01 \x01(\x03\"\x0f\n\rSleepResponse\"\xaf\x01\n\x12\x45xecuteHookRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x12\n\nparameters\x18\x02 \x03(\t\x12\x46\n\textra_env\x18\x03 \x03(\x0b\x32\x33.tabletmanagerdata.ExecuteHookRequest.ExtraEnvEntry\x1a/\n\rExtraEnvEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"J\n\x13\x45xecuteHookResponse\x12\x13\n\x0b\x65xit_status\x18\x01 \x01(\x03\x12\x0e\n\x06stdout\x18\x02 \x01(\t\x12\x0e\n\x06stderr\x18\x03 \x01(\t\"Q\n\x10GetSchemaRequest\x12\x0e\n\x06tables\x18\x01 \x03(\t\x12\x15\n\rinclude_views\x18\x02 \x01(\x08\x12\x16\n\x0e\x65xclude_tables\x18\x03 \x03(\t\"S\n\x11GetSchemaResponse\x12>\n\x11schema_definition\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x17\n\x15GetPermissionsRequest\"M\n\x16GetPermissionsResponse\x12\x33\n\x0bpermissions\x18\x01 \x01(\x0b\x32\x1e.tabletmanagerdata.Permissions\"\x14\n\x12SetReadOnlyRequest\"\x15\n\x13SetReadOnlyResponse\"\x15\n\x13SetReadWriteRequest\"\x16\n\x14SetReadWriteResponse\">\n\x11\x43hangeTypeRequest\x12)\n\x0btablet_type\x18\x01 \x01(\x0e\x32\x14.topodata.TabletType\"\x14\n\x12\x43hangeTypeResponse\"\x15\n\x13RefreshStateRequest\"\x16\n\x14RefreshStateResponse\"\x17\n\x15RunHealthCheckRequest\"\x18\n\x16RunHealthCheckResponse\"+\n\x18IgnoreHealthErrorRequest\x12\x0f\n\x07pattern\x18\x01 \x01(\t\"\x1b\n\x19IgnoreHealthErrorResponse\",\n\x13ReloadSchemaRequest\x12\x15\n\rwait_position\x18\x01 \x01(\t\"\x16\n\x14ReloadSchemaResponse\")\n\x16PreflightSchemaRequest\x12\x0f\n\x07\x63hanges\x18\x01 \x03(\t\"X\n\x17PreflightSchemaResponse\x12=\n\x0e\x63hange_results\x18\x01 \x03(\x0b\x32%.tabletmanagerdata.SchemaChangeResult\"\xc2\x01\n\x12\x41pplySchemaRequest\x12\x0b\n\x03sql\x18\x01 \x01(\t\x12\r\n\x05\x66orce\x18\x02 \x01(\x08\x12\x19\n\x11\x61llow_replication\x18\x03 \x01(\x08\x12:\n\rbefore_schema\x18\x04 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x05 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x8c\x01\n\x13\x41pplySchemaResponse\x12:\n\rbefore_schema\x18\x01 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\x12\x39\n\x0c\x61\x66ter_schema\x18\x02 \x01(\x0b\x32#.tabletmanagerdata.SchemaDefinition\"\x13\n\x11LockTablesRequest\"\x14\n\x12LockTablesResponse\"\x15\n\x13UnlockTablesRequest\"\x16\n\x14UnlockTablesResponse\"|\n\x18\x45xecuteFetchAsDbaRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x0f\n\x07\x64\x62_name\x18\x02 \x01(\t\x12\x10\n\x08max_rows\x18\x03 \x01(\x04\x12\x17\n\x0f\x64isable_binlogs\x18\x04 \x01(\x08\x12\x15\n\rreload_schema\x18\x05 \x01(\x08\"?\n\x19\x45xecuteFetchAsDbaResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"h\n\x1d\x45xecuteFetchAsAllPrivsRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x0f\n\x07\x64\x62_name\x18\x02 \x01(\t\x12\x10\n\x08max_rows\x18\x03 \x01(\x04\x12\x15\n\rreload_schema\x18\x04 \x01(\x08\"D\n\x1e\x45xecuteFetchAsAllPrivsResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\";\n\x18\x45xecuteFetchAsAppRequest\x12\r\n\x05query\x18\x01 \x01(\x0c\x12\x10\n\x08max_rows\x18\x02 \x01(\x04\"?\n\x19\x45xecuteFetchAsAppResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"\x14\n\x12SubordinateStatusRequest\">\n\x13SubordinateStatusResponse\x12\'\n\x06status\x18\x01 \x01(\x0b\x32\x17.replicationdata.Status\"\x17\n\x15MainPositionRequest\"*\n\x16MainPositionResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x12\n\x10StopSubordinateRequest\"\x13\n\x11StopSubordinateResponse\"A\n\x17StopSubordinateMinimumRequest\x12\x10\n\x08position\x18\x01 \x01(\t\x12\x14\n\x0cwait_timeout\x18\x02 \x01(\x03\",\n\x18StopSubordinateMinimumResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x13\n\x11StartSubordinateRequest\"\x14\n\x12StartSubordinateResponse\"E\n\x1bStartSubordinateUntilAfterRequest\x12\x10\n\x08position\x18\x01 \x01(\t\x12\x14\n\x0cwait_timeout\x18\x02 \x01(\x03\"\x1e\n\x1cStartSubordinateUntilAfterResponse\"8\n!TabletExternallyReparentedRequest\x12\x13\n\x0b\x65xternal_id\x18\x01 \x01(\t\"$\n\"TabletExternallyReparentedResponse\" \n\x1eTabletExternallyElectedRequest\"!\n\x1fTabletExternallyElectedResponse\"\x12\n\x10GetSubordinatesRequest\"\"\n\x11GetSubordinatesResponse\x12\r\n\x05\x61\x64\x64rs\x18\x01 \x03(\t\"\x19\n\x17ResetReplicationRequest\"\x1a\n\x18ResetReplicationResponse\"(\n\x17VReplicationExecRequest\x12\r\n\x05query\x18\x01 \x01(\t\">\n\x18VReplicationExecResponse\x12\"\n\x06result\x18\x01 \x01(\x0b\x32\x12.query.QueryResult\"=\n\x1dVReplicationWaitForPosRequest\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x10\n\x08position\x18\x02 \x01(\t\" \n\x1eVReplicationWaitForPosResponse\"\x13\n\x11InitMainRequest\"&\n\x12InitMainResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x99\x01\n\x1ePopulateReparentJournalRequest\x12\x17\n\x0ftime_created_ns\x18\x01 \x01(\x03\x12\x13\n\x0b\x61\x63tion_name\x18\x02 \x01(\t\x12+\n\x0cmain_alias\x18\x03 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x1c\n\x14replication_position\x18\x04 \x01(\t\"!\n\x1fPopulateReparentJournalResponse\"p\n\x10InitSubordinateRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x1c\n\x14replication_position\x18\x02 \x01(\t\x12\x17\n\x0ftime_created_ns\x18\x03 \x01(\x03\"\x13\n\x11InitSubordinateResponse\"\x15\n\x13\x44\x65moteMainRequest\"(\n\x14\x44\x65moteMainResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x19\n\x17UndoDemoteMainRequest\"\x1a\n\x18UndoDemoteMainResponse\"3\n\x1fPromoteSubordinateWhenCaughtUpRequest\x12\x10\n\x08position\x18\x01 \x01(\t\"4\n PromoteSubordinateWhenCaughtUpResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"\x19\n\x17SubordinateWasPromotedRequest\"\x1a\n\x18SubordinateWasPromotedResponse\"m\n\x10SetMainRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\x12\x17\n\x0ftime_created_ns\x18\x02 \x01(\x03\x12\x19\n\x11\x66orce_start_subordinate\x18\x03 \x01(\x08\"\x13\n\x11SetMainResponse\"A\n\x18SubordinateWasRestartedRequest\x12%\n\x06parent\x18\x01 \x01(\x0b\x32\x15.topodata.TabletAlias\"\x1b\n\x19SubordinateWasRestartedResponse\"$\n\"StopReplicationAndGetStatusRequest\"N\n#StopReplicationAndGetStatusResponse\x12\'\n\x06status\x18\x01 \x01(\x0b\x32\x17.replicationdata.Status\"\x15\n\x13PromoteSubordinateRequest\"(\n\x14PromoteSubordinateResponse\x12\x10\n\x08position\x18\x01 \x01(\t\"9\n\rBackupRequest\x12\x13\n\x0b\x63oncurrency\x18\x01 \x01(\x03\x12\x13\n\x0b\x61llowMain\x18\x02 \x01(\x08\"/\n\x0e\x42\x61\x63kupResponse\x12\x1d\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x0e.logutil.Event\"\x1a\n\x18RestoreFromBackupRequest\":\n\x19RestoreFromBackupResponse\x12\x1d\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x0e.logutil.EventB0Z.vitess.io/vitess/go/vt/proto/tabletmanagerdatab\x06proto3')
   ,
   dependencies=[query__pb2.DESCRIPTOR,topodata__pb2.DESCRIPTOR,replicationdata__pb2.DESCRIPTOR,logutil__pb2.DESCRIPTOR,])
 
@@ -1632,8 +1632,8 @@ _EXECUTEFETCHASAPPRESPONSE = _descriptor.Descriptor(
 
 
 _SLAVESTATUSREQUEST = _descriptor.Descriptor(
-  name='SlaveStatusRequest',
-  full_name='tabletmanagerdata.SlaveStatusRequest',
+  name='SubordinateStatusRequest',
+  full_name='tabletmanagerdata.SubordinateStatusRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1656,14 +1656,14 @@ _SLAVESTATUSREQUEST = _descriptor.Descriptor(
 
 
 _SLAVESTATUSRESPONSE = _descriptor.Descriptor(
-  name='SlaveStatusResponse',
-  full_name='tabletmanagerdata.SlaveStatusResponse',
+  name='SubordinateStatusResponse',
+  full_name='tabletmanagerdata.SubordinateStatusResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='status', full_name='tabletmanagerdata.SlaveStatusResponse.status', index=0,
+      name='status', full_name='tabletmanagerdata.SubordinateStatusResponse.status', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -1687,8 +1687,8 @@ _SLAVESTATUSRESPONSE = _descriptor.Descriptor(
 
 
 _MASTERPOSITIONREQUEST = _descriptor.Descriptor(
-  name='MasterPositionRequest',
-  full_name='tabletmanagerdata.MasterPositionRequest',
+  name='MainPositionRequest',
+  full_name='tabletmanagerdata.MainPositionRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1711,14 +1711,14 @@ _MASTERPOSITIONREQUEST = _descriptor.Descriptor(
 
 
 _MASTERPOSITIONRESPONSE = _descriptor.Descriptor(
-  name='MasterPositionResponse',
-  full_name='tabletmanagerdata.MasterPositionResponse',
+  name='MainPositionResponse',
+  full_name='tabletmanagerdata.MainPositionResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.MasterPositionResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.MainPositionResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -1742,8 +1742,8 @@ _MASTERPOSITIONRESPONSE = _descriptor.Descriptor(
 
 
 _STOPSLAVEREQUEST = _descriptor.Descriptor(
-  name='StopSlaveRequest',
-  full_name='tabletmanagerdata.StopSlaveRequest',
+  name='StopSubordinateRequest',
+  full_name='tabletmanagerdata.StopSubordinateRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1766,8 +1766,8 @@ _STOPSLAVEREQUEST = _descriptor.Descriptor(
 
 
 _STOPSLAVERESPONSE = _descriptor.Descriptor(
-  name='StopSlaveResponse',
-  full_name='tabletmanagerdata.StopSlaveResponse',
+  name='StopSubordinateResponse',
+  full_name='tabletmanagerdata.StopSubordinateResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1790,21 +1790,21 @@ _STOPSLAVERESPONSE = _descriptor.Descriptor(
 
 
 _STOPSLAVEMINIMUMREQUEST = _descriptor.Descriptor(
-  name='StopSlaveMinimumRequest',
-  full_name='tabletmanagerdata.StopSlaveMinimumRequest',
+  name='StopSubordinateMinimumRequest',
+  full_name='tabletmanagerdata.StopSubordinateMinimumRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.StopSlaveMinimumRequest.position', index=0,
+      name='position', full_name='tabletmanagerdata.StopSubordinateMinimumRequest.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='wait_timeout', full_name='tabletmanagerdata.StopSlaveMinimumRequest.wait_timeout', index=1,
+      name='wait_timeout', full_name='tabletmanagerdata.StopSubordinateMinimumRequest.wait_timeout', index=1,
       number=2, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -1828,14 +1828,14 @@ _STOPSLAVEMINIMUMREQUEST = _descriptor.Descriptor(
 
 
 _STOPSLAVEMINIMUMRESPONSE = _descriptor.Descriptor(
-  name='StopSlaveMinimumResponse',
-  full_name='tabletmanagerdata.StopSlaveMinimumResponse',
+  name='StopSubordinateMinimumResponse',
+  full_name='tabletmanagerdata.StopSubordinateMinimumResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.StopSlaveMinimumResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.StopSubordinateMinimumResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -1859,8 +1859,8 @@ _STOPSLAVEMINIMUMRESPONSE = _descriptor.Descriptor(
 
 
 _STARTSLAVEREQUEST = _descriptor.Descriptor(
-  name='StartSlaveRequest',
-  full_name='tabletmanagerdata.StartSlaveRequest',
+  name='StartSubordinateRequest',
+  full_name='tabletmanagerdata.StartSubordinateRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1883,8 +1883,8 @@ _STARTSLAVEREQUEST = _descriptor.Descriptor(
 
 
 _STARTSLAVERESPONSE = _descriptor.Descriptor(
-  name='StartSlaveResponse',
-  full_name='tabletmanagerdata.StartSlaveResponse',
+  name='StartSubordinateResponse',
+  full_name='tabletmanagerdata.StartSubordinateResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -1907,21 +1907,21 @@ _STARTSLAVERESPONSE = _descriptor.Descriptor(
 
 
 _STARTSLAVEUNTILAFTERREQUEST = _descriptor.Descriptor(
-  name='StartSlaveUntilAfterRequest',
-  full_name='tabletmanagerdata.StartSlaveUntilAfterRequest',
+  name='StartSubordinateUntilAfterRequest',
+  full_name='tabletmanagerdata.StartSubordinateUntilAfterRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.StartSlaveUntilAfterRequest.position', index=0,
+      name='position', full_name='tabletmanagerdata.StartSubordinateUntilAfterRequest.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='wait_timeout', full_name='tabletmanagerdata.StartSlaveUntilAfterRequest.wait_timeout', index=1,
+      name='wait_timeout', full_name='tabletmanagerdata.StartSubordinateUntilAfterRequest.wait_timeout', index=1,
       number=2, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -1945,8 +1945,8 @@ _STARTSLAVEUNTILAFTERREQUEST = _descriptor.Descriptor(
 
 
 _STARTSLAVEUNTILAFTERRESPONSE = _descriptor.Descriptor(
-  name='StartSlaveUntilAfterResponse',
-  full_name='tabletmanagerdata.StartSlaveUntilAfterResponse',
+  name='StartSubordinateUntilAfterResponse',
+  full_name='tabletmanagerdata.StartSubordinateUntilAfterResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2072,8 +2072,8 @@ _TABLETEXTERNALLYELECTEDRESPONSE = _descriptor.Descriptor(
 
 
 _GETSLAVESREQUEST = _descriptor.Descriptor(
-  name='GetSlavesRequest',
-  full_name='tabletmanagerdata.GetSlavesRequest',
+  name='GetSubordinatesRequest',
+  full_name='tabletmanagerdata.GetSubordinatesRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2096,14 +2096,14 @@ _GETSLAVESREQUEST = _descriptor.Descriptor(
 
 
 _GETSLAVESRESPONSE = _descriptor.Descriptor(
-  name='GetSlavesResponse',
-  full_name='tabletmanagerdata.GetSlavesResponse',
+  name='GetSubordinatesResponse',
+  full_name='tabletmanagerdata.GetSubordinatesResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='addrs', full_name='tabletmanagerdata.GetSlavesResponse.addrs', index=0,
+      name='addrs', full_name='tabletmanagerdata.GetSubordinatesResponse.addrs', index=0,
       number=1, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -2299,8 +2299,8 @@ _VREPLICATIONWAITFORPOSRESPONSE = _descriptor.Descriptor(
 
 
 _INITMASTERREQUEST = _descriptor.Descriptor(
-  name='InitMasterRequest',
-  full_name='tabletmanagerdata.InitMasterRequest',
+  name='InitMainRequest',
+  full_name='tabletmanagerdata.InitMainRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2323,14 +2323,14 @@ _INITMASTERREQUEST = _descriptor.Descriptor(
 
 
 _INITMASTERRESPONSE = _descriptor.Descriptor(
-  name='InitMasterResponse',
-  full_name='tabletmanagerdata.InitMasterResponse',
+  name='InitMainResponse',
+  full_name='tabletmanagerdata.InitMainResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.InitMasterResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.InitMainResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -2375,7 +2375,7 @@ _POPULATEREPARENTJOURNALREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='master_alias', full_name='tabletmanagerdata.PopulateReparentJournalRequest.master_alias', index=2,
+      name='main_alias', full_name='tabletmanagerdata.PopulateReparentJournalRequest.main_alias', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -2430,28 +2430,28 @@ _POPULATEREPARENTJOURNALRESPONSE = _descriptor.Descriptor(
 
 
 _INITSLAVEREQUEST = _descriptor.Descriptor(
-  name='InitSlaveRequest',
-  full_name='tabletmanagerdata.InitSlaveRequest',
+  name='InitSubordinateRequest',
+  full_name='tabletmanagerdata.InitSubordinateRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='parent', full_name='tabletmanagerdata.InitSlaveRequest.parent', index=0,
+      name='parent', full_name='tabletmanagerdata.InitSubordinateRequest.parent', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='replication_position', full_name='tabletmanagerdata.InitSlaveRequest.replication_position', index=1,
+      name='replication_position', full_name='tabletmanagerdata.InitSubordinateRequest.replication_position', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='time_created_ns', full_name='tabletmanagerdata.InitSlaveRequest.time_created_ns', index=2,
+      name='time_created_ns', full_name='tabletmanagerdata.InitSubordinateRequest.time_created_ns', index=2,
       number=3, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -2475,8 +2475,8 @@ _INITSLAVEREQUEST = _descriptor.Descriptor(
 
 
 _INITSLAVERESPONSE = _descriptor.Descriptor(
-  name='InitSlaveResponse',
-  full_name='tabletmanagerdata.InitSlaveResponse',
+  name='InitSubordinateResponse',
+  full_name='tabletmanagerdata.InitSubordinateResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2499,8 +2499,8 @@ _INITSLAVERESPONSE = _descriptor.Descriptor(
 
 
 _DEMOTEMASTERREQUEST = _descriptor.Descriptor(
-  name='DemoteMasterRequest',
-  full_name='tabletmanagerdata.DemoteMasterRequest',
+  name='DemoteMainRequest',
+  full_name='tabletmanagerdata.DemoteMainRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2523,14 +2523,14 @@ _DEMOTEMASTERREQUEST = _descriptor.Descriptor(
 
 
 _DEMOTEMASTERRESPONSE = _descriptor.Descriptor(
-  name='DemoteMasterResponse',
-  full_name='tabletmanagerdata.DemoteMasterResponse',
+  name='DemoteMainResponse',
+  full_name='tabletmanagerdata.DemoteMainResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.DemoteMasterResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.DemoteMainResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -2554,8 +2554,8 @@ _DEMOTEMASTERRESPONSE = _descriptor.Descriptor(
 
 
 _UNDODEMOTEMASTERREQUEST = _descriptor.Descriptor(
-  name='UndoDemoteMasterRequest',
-  full_name='tabletmanagerdata.UndoDemoteMasterRequest',
+  name='UndoDemoteMainRequest',
+  full_name='tabletmanagerdata.UndoDemoteMainRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2578,8 +2578,8 @@ _UNDODEMOTEMASTERREQUEST = _descriptor.Descriptor(
 
 
 _UNDODEMOTEMASTERRESPONSE = _descriptor.Descriptor(
-  name='UndoDemoteMasterResponse',
-  full_name='tabletmanagerdata.UndoDemoteMasterResponse',
+  name='UndoDemoteMainResponse',
+  full_name='tabletmanagerdata.UndoDemoteMainResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2602,14 +2602,14 @@ _UNDODEMOTEMASTERRESPONSE = _descriptor.Descriptor(
 
 
 _PROMOTESLAVEWHENCAUGHTUPREQUEST = _descriptor.Descriptor(
-  name='PromoteSlaveWhenCaughtUpRequest',
-  full_name='tabletmanagerdata.PromoteSlaveWhenCaughtUpRequest',
+  name='PromoteSubordinateWhenCaughtUpRequest',
+  full_name='tabletmanagerdata.PromoteSubordinateWhenCaughtUpRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.PromoteSlaveWhenCaughtUpRequest.position', index=0,
+      name='position', full_name='tabletmanagerdata.PromoteSubordinateWhenCaughtUpRequest.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -2633,14 +2633,14 @@ _PROMOTESLAVEWHENCAUGHTUPREQUEST = _descriptor.Descriptor(
 
 
 _PROMOTESLAVEWHENCAUGHTUPRESPONSE = _descriptor.Descriptor(
-  name='PromoteSlaveWhenCaughtUpResponse',
-  full_name='tabletmanagerdata.PromoteSlaveWhenCaughtUpResponse',
+  name='PromoteSubordinateWhenCaughtUpResponse',
+  full_name='tabletmanagerdata.PromoteSubordinateWhenCaughtUpResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.PromoteSlaveWhenCaughtUpResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.PromoteSubordinateWhenCaughtUpResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -2664,8 +2664,8 @@ _PROMOTESLAVEWHENCAUGHTUPRESPONSE = _descriptor.Descriptor(
 
 
 _SLAVEWASPROMOTEDREQUEST = _descriptor.Descriptor(
-  name='SlaveWasPromotedRequest',
-  full_name='tabletmanagerdata.SlaveWasPromotedRequest',
+  name='SubordinateWasPromotedRequest',
+  full_name='tabletmanagerdata.SubordinateWasPromotedRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2688,8 +2688,8 @@ _SLAVEWASPROMOTEDREQUEST = _descriptor.Descriptor(
 
 
 _SLAVEWASPROMOTEDRESPONSE = _descriptor.Descriptor(
-  name='SlaveWasPromotedResponse',
-  full_name='tabletmanagerdata.SlaveWasPromotedResponse',
+  name='SubordinateWasPromotedResponse',
+  full_name='tabletmanagerdata.SubordinateWasPromotedResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2712,28 +2712,28 @@ _SLAVEWASPROMOTEDRESPONSE = _descriptor.Descriptor(
 
 
 _SETMASTERREQUEST = _descriptor.Descriptor(
-  name='SetMasterRequest',
-  full_name='tabletmanagerdata.SetMasterRequest',
+  name='SetMainRequest',
+  full_name='tabletmanagerdata.SetMainRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='parent', full_name='tabletmanagerdata.SetMasterRequest.parent', index=0,
+      name='parent', full_name='tabletmanagerdata.SetMainRequest.parent', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='time_created_ns', full_name='tabletmanagerdata.SetMasterRequest.time_created_ns', index=1,
+      name='time_created_ns', full_name='tabletmanagerdata.SetMainRequest.time_created_ns', index=1,
       number=2, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='force_start_slave', full_name='tabletmanagerdata.SetMasterRequest.force_start_slave', index=2,
+      name='force_start_subordinate', full_name='tabletmanagerdata.SetMainRequest.force_start_subordinate', index=2,
       number=3, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -2757,8 +2757,8 @@ _SETMASTERREQUEST = _descriptor.Descriptor(
 
 
 _SETMASTERRESPONSE = _descriptor.Descriptor(
-  name='SetMasterResponse',
-  full_name='tabletmanagerdata.SetMasterResponse',
+  name='SetMainResponse',
+  full_name='tabletmanagerdata.SetMainResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2781,14 +2781,14 @@ _SETMASTERRESPONSE = _descriptor.Descriptor(
 
 
 _SLAVEWASRESTARTEDREQUEST = _descriptor.Descriptor(
-  name='SlaveWasRestartedRequest',
-  full_name='tabletmanagerdata.SlaveWasRestartedRequest',
+  name='SubordinateWasRestartedRequest',
+  full_name='tabletmanagerdata.SubordinateWasRestartedRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='parent', full_name='tabletmanagerdata.SlaveWasRestartedRequest.parent', index=0,
+      name='parent', full_name='tabletmanagerdata.SubordinateWasRestartedRequest.parent', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -2812,8 +2812,8 @@ _SLAVEWASRESTARTEDREQUEST = _descriptor.Descriptor(
 
 
 _SLAVEWASRESTARTEDRESPONSE = _descriptor.Descriptor(
-  name='SlaveWasRestartedResponse',
-  full_name='tabletmanagerdata.SlaveWasRestartedResponse',
+  name='SubordinateWasRestartedResponse',
+  full_name='tabletmanagerdata.SubordinateWasRestartedResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2891,8 +2891,8 @@ _STOPREPLICATIONANDGETSTATUSRESPONSE = _descriptor.Descriptor(
 
 
 _PROMOTESLAVEREQUEST = _descriptor.Descriptor(
-  name='PromoteSlaveRequest',
-  full_name='tabletmanagerdata.PromoteSlaveRequest',
+  name='PromoteSubordinateRequest',
+  full_name='tabletmanagerdata.PromoteSubordinateRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -2915,14 +2915,14 @@ _PROMOTESLAVEREQUEST = _descriptor.Descriptor(
 
 
 _PROMOTESLAVERESPONSE = _descriptor.Descriptor(
-  name='PromoteSlaveResponse',
-  full_name='tabletmanagerdata.PromoteSlaveResponse',
+  name='PromoteSubordinateResponse',
+  full_name='tabletmanagerdata.PromoteSubordinateResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='position', full_name='tabletmanagerdata.PromoteSlaveResponse.position', index=0,
+      name='position', full_name='tabletmanagerdata.PromoteSubordinateResponse.position', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -2960,7 +2960,7 @@ _BACKUPREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='allowMaster', full_name='tabletmanagerdata.BackupRequest.allowMaster', index=1,
+      name='allowMain', full_name='tabletmanagerdata.BackupRequest.allowMain', index=1,
       number=2, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -3092,7 +3092,7 @@ _EXECUTEFETCHASALLPRIVSRESPONSE.fields_by_name['result'].message_type = query__p
 _EXECUTEFETCHASAPPRESPONSE.fields_by_name['result'].message_type = query__pb2._QUERYRESULT
 _SLAVESTATUSRESPONSE.fields_by_name['status'].message_type = replicationdata__pb2._STATUS
 _VREPLICATIONEXECRESPONSE.fields_by_name['result'].message_type = query__pb2._QUERYRESULT
-_POPULATEREPARENTJOURNALREQUEST.fields_by_name['master_alias'].message_type = topodata__pb2._TABLETALIAS
+_POPULATEREPARENTJOURNALREQUEST.fields_by_name['main_alias'].message_type = topodata__pb2._TABLETALIAS
 _INITSLAVEREQUEST.fields_by_name['parent'].message_type = topodata__pb2._TABLETALIAS
 _SETMASTERREQUEST.fields_by_name['parent'].message_type = topodata__pb2._TABLETALIAS
 _SLAVEWASRESTARTEDREQUEST.fields_by_name['parent'].message_type = topodata__pb2._TABLETALIAS
@@ -3143,52 +3143,52 @@ DESCRIPTOR.message_types_by_name['ExecuteFetchAsAllPrivsRequest'] = _EXECUTEFETC
 DESCRIPTOR.message_types_by_name['ExecuteFetchAsAllPrivsResponse'] = _EXECUTEFETCHASALLPRIVSRESPONSE
 DESCRIPTOR.message_types_by_name['ExecuteFetchAsAppRequest'] = _EXECUTEFETCHASAPPREQUEST
 DESCRIPTOR.message_types_by_name['ExecuteFetchAsAppResponse'] = _EXECUTEFETCHASAPPRESPONSE
-DESCRIPTOR.message_types_by_name['SlaveStatusRequest'] = _SLAVESTATUSREQUEST
-DESCRIPTOR.message_types_by_name['SlaveStatusResponse'] = _SLAVESTATUSRESPONSE
-DESCRIPTOR.message_types_by_name['MasterPositionRequest'] = _MASTERPOSITIONREQUEST
-DESCRIPTOR.message_types_by_name['MasterPositionResponse'] = _MASTERPOSITIONRESPONSE
-DESCRIPTOR.message_types_by_name['StopSlaveRequest'] = _STOPSLAVEREQUEST
-DESCRIPTOR.message_types_by_name['StopSlaveResponse'] = _STOPSLAVERESPONSE
-DESCRIPTOR.message_types_by_name['StopSlaveMinimumRequest'] = _STOPSLAVEMINIMUMREQUEST
-DESCRIPTOR.message_types_by_name['StopSlaveMinimumResponse'] = _STOPSLAVEMINIMUMRESPONSE
-DESCRIPTOR.message_types_by_name['StartSlaveRequest'] = _STARTSLAVEREQUEST
-DESCRIPTOR.message_types_by_name['StartSlaveResponse'] = _STARTSLAVERESPONSE
-DESCRIPTOR.message_types_by_name['StartSlaveUntilAfterRequest'] = _STARTSLAVEUNTILAFTERREQUEST
-DESCRIPTOR.message_types_by_name['StartSlaveUntilAfterResponse'] = _STARTSLAVEUNTILAFTERRESPONSE
+DESCRIPTOR.message_types_by_name['SubordinateStatusRequest'] = _SLAVESTATUSREQUEST
+DESCRIPTOR.message_types_by_name['SubordinateStatusResponse'] = _SLAVESTATUSRESPONSE
+DESCRIPTOR.message_types_by_name['MainPositionRequest'] = _MASTERPOSITIONREQUEST
+DESCRIPTOR.message_types_by_name['MainPositionResponse'] = _MASTERPOSITIONRESPONSE
+DESCRIPTOR.message_types_by_name['StopSubordinateRequest'] = _STOPSLAVEREQUEST
+DESCRIPTOR.message_types_by_name['StopSubordinateResponse'] = _STOPSLAVERESPONSE
+DESCRIPTOR.message_types_by_name['StopSubordinateMinimumRequest'] = _STOPSLAVEMINIMUMREQUEST
+DESCRIPTOR.message_types_by_name['StopSubordinateMinimumResponse'] = _STOPSLAVEMINIMUMRESPONSE
+DESCRIPTOR.message_types_by_name['StartSubordinateRequest'] = _STARTSLAVEREQUEST
+DESCRIPTOR.message_types_by_name['StartSubordinateResponse'] = _STARTSLAVERESPONSE
+DESCRIPTOR.message_types_by_name['StartSubordinateUntilAfterRequest'] = _STARTSLAVEUNTILAFTERREQUEST
+DESCRIPTOR.message_types_by_name['StartSubordinateUntilAfterResponse'] = _STARTSLAVEUNTILAFTERRESPONSE
 DESCRIPTOR.message_types_by_name['TabletExternallyReparentedRequest'] = _TABLETEXTERNALLYREPARENTEDREQUEST
 DESCRIPTOR.message_types_by_name['TabletExternallyReparentedResponse'] = _TABLETEXTERNALLYREPARENTEDRESPONSE
 DESCRIPTOR.message_types_by_name['TabletExternallyElectedRequest'] = _TABLETEXTERNALLYELECTEDREQUEST
 DESCRIPTOR.message_types_by_name['TabletExternallyElectedResponse'] = _TABLETEXTERNALLYELECTEDRESPONSE
-DESCRIPTOR.message_types_by_name['GetSlavesRequest'] = _GETSLAVESREQUEST
-DESCRIPTOR.message_types_by_name['GetSlavesResponse'] = _GETSLAVESRESPONSE
+DESCRIPTOR.message_types_by_name['GetSubordinatesRequest'] = _GETSLAVESREQUEST
+DESCRIPTOR.message_types_by_name['GetSubordinatesResponse'] = _GETSLAVESRESPONSE
 DESCRIPTOR.message_types_by_name['ResetReplicationRequest'] = _RESETREPLICATIONREQUEST
 DESCRIPTOR.message_types_by_name['ResetReplicationResponse'] = _RESETREPLICATIONRESPONSE
 DESCRIPTOR.message_types_by_name['VReplicationExecRequest'] = _VREPLICATIONEXECREQUEST
 DESCRIPTOR.message_types_by_name['VReplicationExecResponse'] = _VREPLICATIONEXECRESPONSE
 DESCRIPTOR.message_types_by_name['VReplicationWaitForPosRequest'] = _VREPLICATIONWAITFORPOSREQUEST
 DESCRIPTOR.message_types_by_name['VReplicationWaitForPosResponse'] = _VREPLICATIONWAITFORPOSRESPONSE
-DESCRIPTOR.message_types_by_name['InitMasterRequest'] = _INITMASTERREQUEST
-DESCRIPTOR.message_types_by_name['InitMasterResponse'] = _INITMASTERRESPONSE
+DESCRIPTOR.message_types_by_name['InitMainRequest'] = _INITMASTERREQUEST
+DESCRIPTOR.message_types_by_name['InitMainResponse'] = _INITMASTERRESPONSE
 DESCRIPTOR.message_types_by_name['PopulateReparentJournalRequest'] = _POPULATEREPARENTJOURNALREQUEST
 DESCRIPTOR.message_types_by_name['PopulateReparentJournalResponse'] = _POPULATEREPARENTJOURNALRESPONSE
-DESCRIPTOR.message_types_by_name['InitSlaveRequest'] = _INITSLAVEREQUEST
-DESCRIPTOR.message_types_by_name['InitSlaveResponse'] = _INITSLAVERESPONSE
-DESCRIPTOR.message_types_by_name['DemoteMasterRequest'] = _DEMOTEMASTERREQUEST
-DESCRIPTOR.message_types_by_name['DemoteMasterResponse'] = _DEMOTEMASTERRESPONSE
-DESCRIPTOR.message_types_by_name['UndoDemoteMasterRequest'] = _UNDODEMOTEMASTERREQUEST
-DESCRIPTOR.message_types_by_name['UndoDemoteMasterResponse'] = _UNDODEMOTEMASTERRESPONSE
-DESCRIPTOR.message_types_by_name['PromoteSlaveWhenCaughtUpRequest'] = _PROMOTESLAVEWHENCAUGHTUPREQUEST
-DESCRIPTOR.message_types_by_name['PromoteSlaveWhenCaughtUpResponse'] = _PROMOTESLAVEWHENCAUGHTUPRESPONSE
-DESCRIPTOR.message_types_by_name['SlaveWasPromotedRequest'] = _SLAVEWASPROMOTEDREQUEST
-DESCRIPTOR.message_types_by_name['SlaveWasPromotedResponse'] = _SLAVEWASPROMOTEDRESPONSE
-DESCRIPTOR.message_types_by_name['SetMasterRequest'] = _SETMASTERREQUEST
-DESCRIPTOR.message_types_by_name['SetMasterResponse'] = _SETMASTERRESPONSE
-DESCRIPTOR.message_types_by_name['SlaveWasRestartedRequest'] = _SLAVEWASRESTARTEDREQUEST
-DESCRIPTOR.message_types_by_name['SlaveWasRestartedResponse'] = _SLAVEWASRESTARTEDRESPONSE
+DESCRIPTOR.message_types_by_name['InitSubordinateRequest'] = _INITSLAVEREQUEST
+DESCRIPTOR.message_types_by_name['InitSubordinateResponse'] = _INITSLAVERESPONSE
+DESCRIPTOR.message_types_by_name['DemoteMainRequest'] = _DEMOTEMASTERREQUEST
+DESCRIPTOR.message_types_by_name['DemoteMainResponse'] = _DEMOTEMASTERRESPONSE
+DESCRIPTOR.message_types_by_name['UndoDemoteMainRequest'] = _UNDODEMOTEMASTERREQUEST
+DESCRIPTOR.message_types_by_name['UndoDemoteMainResponse'] = _UNDODEMOTEMASTERRESPONSE
+DESCRIPTOR.message_types_by_name['PromoteSubordinateWhenCaughtUpRequest'] = _PROMOTESLAVEWHENCAUGHTUPREQUEST
+DESCRIPTOR.message_types_by_name['PromoteSubordinateWhenCaughtUpResponse'] = _PROMOTESLAVEWHENCAUGHTUPRESPONSE
+DESCRIPTOR.message_types_by_name['SubordinateWasPromotedRequest'] = _SLAVEWASPROMOTEDREQUEST
+DESCRIPTOR.message_types_by_name['SubordinateWasPromotedResponse'] = _SLAVEWASPROMOTEDRESPONSE
+DESCRIPTOR.message_types_by_name['SetMainRequest'] = _SETMASTERREQUEST
+DESCRIPTOR.message_types_by_name['SetMainResponse'] = _SETMASTERRESPONSE
+DESCRIPTOR.message_types_by_name['SubordinateWasRestartedRequest'] = _SLAVEWASRESTARTEDREQUEST
+DESCRIPTOR.message_types_by_name['SubordinateWasRestartedResponse'] = _SLAVEWASRESTARTEDRESPONSE
 DESCRIPTOR.message_types_by_name['StopReplicationAndGetStatusRequest'] = _STOPREPLICATIONANDGETSTATUSREQUEST
 DESCRIPTOR.message_types_by_name['StopReplicationAndGetStatusResponse'] = _STOPREPLICATIONANDGETSTATUSRESPONSE
-DESCRIPTOR.message_types_by_name['PromoteSlaveRequest'] = _PROMOTESLAVEREQUEST
-DESCRIPTOR.message_types_by_name['PromoteSlaveResponse'] = _PROMOTESLAVERESPONSE
+DESCRIPTOR.message_types_by_name['PromoteSubordinateRequest'] = _PROMOTESLAVEREQUEST
+DESCRIPTOR.message_types_by_name['PromoteSubordinateResponse'] = _PROMOTESLAVERESPONSE
 DESCRIPTOR.message_types_by_name['BackupRequest'] = _BACKUPREQUEST
 DESCRIPTOR.message_types_by_name['BackupResponse'] = _BACKUPRESPONSE
 DESCRIPTOR.message_types_by_name['RestoreFromBackupRequest'] = _RESTOREFROMBACKUPREQUEST
@@ -3527,89 +3527,89 @@ ExecuteFetchAsAppResponse = _reflection.GeneratedProtocolMessageType('ExecuteFet
   ))
 _sym_db.RegisterMessage(ExecuteFetchAsAppResponse)
 
-SlaveStatusRequest = _reflection.GeneratedProtocolMessageType('SlaveStatusRequest', (_message.Message,), dict(
+SubordinateStatusRequest = _reflection.GeneratedProtocolMessageType('SubordinateStatusRequest', (_message.Message,), dict(
   DESCRIPTOR = _SLAVESTATUSREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveStatusRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateStatusRequest)
   ))
-_sym_db.RegisterMessage(SlaveStatusRequest)
+_sym_db.RegisterMessage(SubordinateStatusRequest)
 
-SlaveStatusResponse = _reflection.GeneratedProtocolMessageType('SlaveStatusResponse', (_message.Message,), dict(
+SubordinateStatusResponse = _reflection.GeneratedProtocolMessageType('SubordinateStatusResponse', (_message.Message,), dict(
   DESCRIPTOR = _SLAVESTATUSRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveStatusResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateStatusResponse)
   ))
-_sym_db.RegisterMessage(SlaveStatusResponse)
+_sym_db.RegisterMessage(SubordinateStatusResponse)
 
-MasterPositionRequest = _reflection.GeneratedProtocolMessageType('MasterPositionRequest', (_message.Message,), dict(
+MainPositionRequest = _reflection.GeneratedProtocolMessageType('MainPositionRequest', (_message.Message,), dict(
   DESCRIPTOR = _MASTERPOSITIONREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.MasterPositionRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.MainPositionRequest)
   ))
-_sym_db.RegisterMessage(MasterPositionRequest)
+_sym_db.RegisterMessage(MainPositionRequest)
 
-MasterPositionResponse = _reflection.GeneratedProtocolMessageType('MasterPositionResponse', (_message.Message,), dict(
+MainPositionResponse = _reflection.GeneratedProtocolMessageType('MainPositionResponse', (_message.Message,), dict(
   DESCRIPTOR = _MASTERPOSITIONRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.MasterPositionResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.MainPositionResponse)
   ))
-_sym_db.RegisterMessage(MasterPositionResponse)
+_sym_db.RegisterMessage(MainPositionResponse)
 
-StopSlaveRequest = _reflection.GeneratedProtocolMessageType('StopSlaveRequest', (_message.Message,), dict(
+StopSubordinateRequest = _reflection.GeneratedProtocolMessageType('StopSubordinateRequest', (_message.Message,), dict(
   DESCRIPTOR = _STOPSLAVEREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSlaveRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSubordinateRequest)
   ))
-_sym_db.RegisterMessage(StopSlaveRequest)
+_sym_db.RegisterMessage(StopSubordinateRequest)
 
-StopSlaveResponse = _reflection.GeneratedProtocolMessageType('StopSlaveResponse', (_message.Message,), dict(
+StopSubordinateResponse = _reflection.GeneratedProtocolMessageType('StopSubordinateResponse', (_message.Message,), dict(
   DESCRIPTOR = _STOPSLAVERESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSlaveResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSubordinateResponse)
   ))
-_sym_db.RegisterMessage(StopSlaveResponse)
+_sym_db.RegisterMessage(StopSubordinateResponse)
 
-StopSlaveMinimumRequest = _reflection.GeneratedProtocolMessageType('StopSlaveMinimumRequest', (_message.Message,), dict(
+StopSubordinateMinimumRequest = _reflection.GeneratedProtocolMessageType('StopSubordinateMinimumRequest', (_message.Message,), dict(
   DESCRIPTOR = _STOPSLAVEMINIMUMREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSlaveMinimumRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSubordinateMinimumRequest)
   ))
-_sym_db.RegisterMessage(StopSlaveMinimumRequest)
+_sym_db.RegisterMessage(StopSubordinateMinimumRequest)
 
-StopSlaveMinimumResponse = _reflection.GeneratedProtocolMessageType('StopSlaveMinimumResponse', (_message.Message,), dict(
+StopSubordinateMinimumResponse = _reflection.GeneratedProtocolMessageType('StopSubordinateMinimumResponse', (_message.Message,), dict(
   DESCRIPTOR = _STOPSLAVEMINIMUMRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSlaveMinimumResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StopSubordinateMinimumResponse)
   ))
-_sym_db.RegisterMessage(StopSlaveMinimumResponse)
+_sym_db.RegisterMessage(StopSubordinateMinimumResponse)
 
-StartSlaveRequest = _reflection.GeneratedProtocolMessageType('StartSlaveRequest', (_message.Message,), dict(
+StartSubordinateRequest = _reflection.GeneratedProtocolMessageType('StartSubordinateRequest', (_message.Message,), dict(
   DESCRIPTOR = _STARTSLAVEREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSlaveRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSubordinateRequest)
   ))
-_sym_db.RegisterMessage(StartSlaveRequest)
+_sym_db.RegisterMessage(StartSubordinateRequest)
 
-StartSlaveResponse = _reflection.GeneratedProtocolMessageType('StartSlaveResponse', (_message.Message,), dict(
+StartSubordinateResponse = _reflection.GeneratedProtocolMessageType('StartSubordinateResponse', (_message.Message,), dict(
   DESCRIPTOR = _STARTSLAVERESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSlaveResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSubordinateResponse)
   ))
-_sym_db.RegisterMessage(StartSlaveResponse)
+_sym_db.RegisterMessage(StartSubordinateResponse)
 
-StartSlaveUntilAfterRequest = _reflection.GeneratedProtocolMessageType('StartSlaveUntilAfterRequest', (_message.Message,), dict(
+StartSubordinateUntilAfterRequest = _reflection.GeneratedProtocolMessageType('StartSubordinateUntilAfterRequest', (_message.Message,), dict(
   DESCRIPTOR = _STARTSLAVEUNTILAFTERREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSlaveUntilAfterRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSubordinateUntilAfterRequest)
   ))
-_sym_db.RegisterMessage(StartSlaveUntilAfterRequest)
+_sym_db.RegisterMessage(StartSubordinateUntilAfterRequest)
 
-StartSlaveUntilAfterResponse = _reflection.GeneratedProtocolMessageType('StartSlaveUntilAfterResponse', (_message.Message,), dict(
+StartSubordinateUntilAfterResponse = _reflection.GeneratedProtocolMessageType('StartSubordinateUntilAfterResponse', (_message.Message,), dict(
   DESCRIPTOR = _STARTSLAVEUNTILAFTERRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSlaveUntilAfterResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.StartSubordinateUntilAfterResponse)
   ))
-_sym_db.RegisterMessage(StartSlaveUntilAfterResponse)
+_sym_db.RegisterMessage(StartSubordinateUntilAfterResponse)
 
 TabletExternallyReparentedRequest = _reflection.GeneratedProtocolMessageType('TabletExternallyReparentedRequest', (_message.Message,), dict(
   DESCRIPTOR = _TABLETEXTERNALLYREPARENTEDREQUEST,
@@ -3639,19 +3639,19 @@ TabletExternallyElectedResponse = _reflection.GeneratedProtocolMessageType('Tabl
   ))
 _sym_db.RegisterMessage(TabletExternallyElectedResponse)
 
-GetSlavesRequest = _reflection.GeneratedProtocolMessageType('GetSlavesRequest', (_message.Message,), dict(
+GetSubordinatesRequest = _reflection.GeneratedProtocolMessageType('GetSubordinatesRequest', (_message.Message,), dict(
   DESCRIPTOR = _GETSLAVESREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.GetSlavesRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.GetSubordinatesRequest)
   ))
-_sym_db.RegisterMessage(GetSlavesRequest)
+_sym_db.RegisterMessage(GetSubordinatesRequest)
 
-GetSlavesResponse = _reflection.GeneratedProtocolMessageType('GetSlavesResponse', (_message.Message,), dict(
+GetSubordinatesResponse = _reflection.GeneratedProtocolMessageType('GetSubordinatesResponse', (_message.Message,), dict(
   DESCRIPTOR = _GETSLAVESRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.GetSlavesResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.GetSubordinatesResponse)
   ))
-_sym_db.RegisterMessage(GetSlavesResponse)
+_sym_db.RegisterMessage(GetSubordinatesResponse)
 
 ResetReplicationRequest = _reflection.GeneratedProtocolMessageType('ResetReplicationRequest', (_message.Message,), dict(
   DESCRIPTOR = _RESETREPLICATIONREQUEST,
@@ -3695,19 +3695,19 @@ VReplicationWaitForPosResponse = _reflection.GeneratedProtocolMessageType('VRepl
   ))
 _sym_db.RegisterMessage(VReplicationWaitForPosResponse)
 
-InitMasterRequest = _reflection.GeneratedProtocolMessageType('InitMasterRequest', (_message.Message,), dict(
+InitMainRequest = _reflection.GeneratedProtocolMessageType('InitMainRequest', (_message.Message,), dict(
   DESCRIPTOR = _INITMASTERREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitMasterRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitMainRequest)
   ))
-_sym_db.RegisterMessage(InitMasterRequest)
+_sym_db.RegisterMessage(InitMainRequest)
 
-InitMasterResponse = _reflection.GeneratedProtocolMessageType('InitMasterResponse', (_message.Message,), dict(
+InitMainResponse = _reflection.GeneratedProtocolMessageType('InitMainResponse', (_message.Message,), dict(
   DESCRIPTOR = _INITMASTERRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitMasterResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitMainResponse)
   ))
-_sym_db.RegisterMessage(InitMasterResponse)
+_sym_db.RegisterMessage(InitMainResponse)
 
 PopulateReparentJournalRequest = _reflection.GeneratedProtocolMessageType('PopulateReparentJournalRequest', (_message.Message,), dict(
   DESCRIPTOR = _POPULATEREPARENTJOURNALREQUEST,
@@ -3723,103 +3723,103 @@ PopulateReparentJournalResponse = _reflection.GeneratedProtocolMessageType('Popu
   ))
 _sym_db.RegisterMessage(PopulateReparentJournalResponse)
 
-InitSlaveRequest = _reflection.GeneratedProtocolMessageType('InitSlaveRequest', (_message.Message,), dict(
+InitSubordinateRequest = _reflection.GeneratedProtocolMessageType('InitSubordinateRequest', (_message.Message,), dict(
   DESCRIPTOR = _INITSLAVEREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitSlaveRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitSubordinateRequest)
   ))
-_sym_db.RegisterMessage(InitSlaveRequest)
+_sym_db.RegisterMessage(InitSubordinateRequest)
 
-InitSlaveResponse = _reflection.GeneratedProtocolMessageType('InitSlaveResponse', (_message.Message,), dict(
+InitSubordinateResponse = _reflection.GeneratedProtocolMessageType('InitSubordinateResponse', (_message.Message,), dict(
   DESCRIPTOR = _INITSLAVERESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitSlaveResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.InitSubordinateResponse)
   ))
-_sym_db.RegisterMessage(InitSlaveResponse)
+_sym_db.RegisterMessage(InitSubordinateResponse)
 
-DemoteMasterRequest = _reflection.GeneratedProtocolMessageType('DemoteMasterRequest', (_message.Message,), dict(
+DemoteMainRequest = _reflection.GeneratedProtocolMessageType('DemoteMainRequest', (_message.Message,), dict(
   DESCRIPTOR = _DEMOTEMASTERREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.DemoteMasterRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.DemoteMainRequest)
   ))
-_sym_db.RegisterMessage(DemoteMasterRequest)
+_sym_db.RegisterMessage(DemoteMainRequest)
 
-DemoteMasterResponse = _reflection.GeneratedProtocolMessageType('DemoteMasterResponse', (_message.Message,), dict(
+DemoteMainResponse = _reflection.GeneratedProtocolMessageType('DemoteMainResponse', (_message.Message,), dict(
   DESCRIPTOR = _DEMOTEMASTERRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.DemoteMasterResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.DemoteMainResponse)
   ))
-_sym_db.RegisterMessage(DemoteMasterResponse)
+_sym_db.RegisterMessage(DemoteMainResponse)
 
-UndoDemoteMasterRequest = _reflection.GeneratedProtocolMessageType('UndoDemoteMasterRequest', (_message.Message,), dict(
+UndoDemoteMainRequest = _reflection.GeneratedProtocolMessageType('UndoDemoteMainRequest', (_message.Message,), dict(
   DESCRIPTOR = _UNDODEMOTEMASTERREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.UndoDemoteMasterRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.UndoDemoteMainRequest)
   ))
-_sym_db.RegisterMessage(UndoDemoteMasterRequest)
+_sym_db.RegisterMessage(UndoDemoteMainRequest)
 
-UndoDemoteMasterResponse = _reflection.GeneratedProtocolMessageType('UndoDemoteMasterResponse', (_message.Message,), dict(
+UndoDemoteMainResponse = _reflection.GeneratedProtocolMessageType('UndoDemoteMainResponse', (_message.Message,), dict(
   DESCRIPTOR = _UNDODEMOTEMASTERRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.UndoDemoteMasterResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.UndoDemoteMainResponse)
   ))
-_sym_db.RegisterMessage(UndoDemoteMasterResponse)
+_sym_db.RegisterMessage(UndoDemoteMainResponse)
 
-PromoteSlaveWhenCaughtUpRequest = _reflection.GeneratedProtocolMessageType('PromoteSlaveWhenCaughtUpRequest', (_message.Message,), dict(
+PromoteSubordinateWhenCaughtUpRequest = _reflection.GeneratedProtocolMessageType('PromoteSubordinateWhenCaughtUpRequest', (_message.Message,), dict(
   DESCRIPTOR = _PROMOTESLAVEWHENCAUGHTUPREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSlaveWhenCaughtUpRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSubordinateWhenCaughtUpRequest)
   ))
-_sym_db.RegisterMessage(PromoteSlaveWhenCaughtUpRequest)
+_sym_db.RegisterMessage(PromoteSubordinateWhenCaughtUpRequest)
 
-PromoteSlaveWhenCaughtUpResponse = _reflection.GeneratedProtocolMessageType('PromoteSlaveWhenCaughtUpResponse', (_message.Message,), dict(
+PromoteSubordinateWhenCaughtUpResponse = _reflection.GeneratedProtocolMessageType('PromoteSubordinateWhenCaughtUpResponse', (_message.Message,), dict(
   DESCRIPTOR = _PROMOTESLAVEWHENCAUGHTUPRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSlaveWhenCaughtUpResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSubordinateWhenCaughtUpResponse)
   ))
-_sym_db.RegisterMessage(PromoteSlaveWhenCaughtUpResponse)
+_sym_db.RegisterMessage(PromoteSubordinateWhenCaughtUpResponse)
 
-SlaveWasPromotedRequest = _reflection.GeneratedProtocolMessageType('SlaveWasPromotedRequest', (_message.Message,), dict(
+SubordinateWasPromotedRequest = _reflection.GeneratedProtocolMessageType('SubordinateWasPromotedRequest', (_message.Message,), dict(
   DESCRIPTOR = _SLAVEWASPROMOTEDREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveWasPromotedRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateWasPromotedRequest)
   ))
-_sym_db.RegisterMessage(SlaveWasPromotedRequest)
+_sym_db.RegisterMessage(SubordinateWasPromotedRequest)
 
-SlaveWasPromotedResponse = _reflection.GeneratedProtocolMessageType('SlaveWasPromotedResponse', (_message.Message,), dict(
+SubordinateWasPromotedResponse = _reflection.GeneratedProtocolMessageType('SubordinateWasPromotedResponse', (_message.Message,), dict(
   DESCRIPTOR = _SLAVEWASPROMOTEDRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveWasPromotedResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateWasPromotedResponse)
   ))
-_sym_db.RegisterMessage(SlaveWasPromotedResponse)
+_sym_db.RegisterMessage(SubordinateWasPromotedResponse)
 
-SetMasterRequest = _reflection.GeneratedProtocolMessageType('SetMasterRequest', (_message.Message,), dict(
+SetMainRequest = _reflection.GeneratedProtocolMessageType('SetMainRequest', (_message.Message,), dict(
   DESCRIPTOR = _SETMASTERREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SetMasterRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SetMainRequest)
   ))
-_sym_db.RegisterMessage(SetMasterRequest)
+_sym_db.RegisterMessage(SetMainRequest)
 
-SetMasterResponse = _reflection.GeneratedProtocolMessageType('SetMasterResponse', (_message.Message,), dict(
+SetMainResponse = _reflection.GeneratedProtocolMessageType('SetMainResponse', (_message.Message,), dict(
   DESCRIPTOR = _SETMASTERRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SetMasterResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SetMainResponse)
   ))
-_sym_db.RegisterMessage(SetMasterResponse)
+_sym_db.RegisterMessage(SetMainResponse)
 
-SlaveWasRestartedRequest = _reflection.GeneratedProtocolMessageType('SlaveWasRestartedRequest', (_message.Message,), dict(
+SubordinateWasRestartedRequest = _reflection.GeneratedProtocolMessageType('SubordinateWasRestartedRequest', (_message.Message,), dict(
   DESCRIPTOR = _SLAVEWASRESTARTEDREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveWasRestartedRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateWasRestartedRequest)
   ))
-_sym_db.RegisterMessage(SlaveWasRestartedRequest)
+_sym_db.RegisterMessage(SubordinateWasRestartedRequest)
 
-SlaveWasRestartedResponse = _reflection.GeneratedProtocolMessageType('SlaveWasRestartedResponse', (_message.Message,), dict(
+SubordinateWasRestartedResponse = _reflection.GeneratedProtocolMessageType('SubordinateWasRestartedResponse', (_message.Message,), dict(
   DESCRIPTOR = _SLAVEWASRESTARTEDRESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SlaveWasRestartedResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.SubordinateWasRestartedResponse)
   ))
-_sym_db.RegisterMessage(SlaveWasRestartedResponse)
+_sym_db.RegisterMessage(SubordinateWasRestartedResponse)
 
 StopReplicationAndGetStatusRequest = _reflection.GeneratedProtocolMessageType('StopReplicationAndGetStatusRequest', (_message.Message,), dict(
   DESCRIPTOR = _STOPREPLICATIONANDGETSTATUSREQUEST,
@@ -3835,19 +3835,19 @@ StopReplicationAndGetStatusResponse = _reflection.GeneratedProtocolMessageType('
   ))
 _sym_db.RegisterMessage(StopReplicationAndGetStatusResponse)
 
-PromoteSlaveRequest = _reflection.GeneratedProtocolMessageType('PromoteSlaveRequest', (_message.Message,), dict(
+PromoteSubordinateRequest = _reflection.GeneratedProtocolMessageType('PromoteSubordinateRequest', (_message.Message,), dict(
   DESCRIPTOR = _PROMOTESLAVEREQUEST,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSlaveRequest)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSubordinateRequest)
   ))
-_sym_db.RegisterMessage(PromoteSlaveRequest)
+_sym_db.RegisterMessage(PromoteSubordinateRequest)
 
-PromoteSlaveResponse = _reflection.GeneratedProtocolMessageType('PromoteSlaveResponse', (_message.Message,), dict(
+PromoteSubordinateResponse = _reflection.GeneratedProtocolMessageType('PromoteSubordinateResponse', (_message.Message,), dict(
   DESCRIPTOR = _PROMOTESLAVERESPONSE,
   __module__ = 'tabletmanagerdata_pb2'
-  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSlaveResponse)
+  # @@protoc_insertion_point(class_scope:tabletmanagerdata.PromoteSubordinateResponse)
   ))
-_sym_db.RegisterMessage(PromoteSlaveResponse)
+_sym_db.RegisterMessage(PromoteSubordinateResponse)
 
 BackupRequest = _reflection.GeneratedProtocolMessageType('BackupRequest', (_message.Message,), dict(
   DESCRIPTOR = _BACKUPREQUEST,

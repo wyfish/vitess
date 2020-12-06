@@ -67,21 +67,21 @@ class TestHorizontalReshardingWorkflow(worker.TestBaseSplitClone):
     utils.kill_sub_process(worker_proc, soft=True)
 
   def verify(self):
-    self.assert_shard_data_equal(0, worker.shard_master,
+    self.assert_shard_data_equal(0, worker.shard_main,
                                  worker.shard_0_tablets.replica)
-    self.assert_shard_data_equal(1, worker.shard_master,
+    self.assert_shard_data_equal(1, worker.shard_main,
                                  worker.shard_1_tablets.replica)
 
     # Verify effect of MigrateServedTypes. Dest shards are serving now.
     utils.check_srv_keyspace('test_nj', self.KEYSPACE,
-                             'Partitions(master): -80 80-\n'
+                             'Partitions(main): -80 80-\n'
                              'Partitions(rdonly): -80 80-\n'
                              'Partitions(replica): -80 80-\n')
 
     # source shard: query service must be disabled after MigrateServedTypes.
     source_shards = [worker.shard_rdonly1,
                      worker.shard_replica,
-                     worker.shard_master]
+                     worker.shard_main]
     for shard in source_shards:
       utils.check_tablet_query_service(
           self, shard, serving=False, tablet_control_disabled=True)
@@ -90,10 +90,10 @@ class TestHorizontalReshardingWorkflow(worker.TestBaseSplitClone):
     # after MigrateServedTypes.
     dest_shards = [worker.shard_0_rdonly1,
                    worker.shard_0_replica,
-                   worker.shard_0_master,
+                   worker.shard_0_main,
                    worker.shard_1_rdonly1,
                    worker.shard_1_replica,
-                   worker.shard_1_master]
+                   worker.shard_1_main]
     for shard in dest_shards:
       utils.check_tablet_query_service(
           self,

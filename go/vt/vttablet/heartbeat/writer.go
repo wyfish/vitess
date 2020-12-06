@@ -54,7 +54,7 @@ const (
 	sqlUpdateHeartbeat  = "UPDATE %s.heartbeat SET ts=%a, tabletUid=%a WHERE keyspaceShard=%a"
 )
 
-// Writer runs on master tablets and writes heartbeats to the _vt.heartbeat
+// Writer runs on main tablets and writes heartbeats to the _vt.heartbeat
 // table at a regular interval, defined by heartbeat_interval.
 type Writer struct {
 	dbconfigs *dbconfigs.DBConfigs
@@ -151,8 +151,8 @@ func (w *Writer) Close() {
 }
 
 // initializeTables attempts to create the heartbeat tables and record an
-// initial row. This happens on every tablet individually, regardless of slave
-// or master. For that reason, we use values that are common between them, such as keyspace:shard,
+// initial row. This happens on every tablet individually, regardless of subordinate
+// or main. For that reason, we use values that are common between them, such as keyspace:shard,
 // and we also execute them with an isolated connection that turns off the binlog and
 // is closed at the end.
 func (w *Writer) initializeTables(cp *mysql.ConnParams) error {

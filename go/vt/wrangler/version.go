@@ -84,17 +84,17 @@ func (wr *Wrangler) GetVersion(ctx context.Context, tabletAlias *topodatapb.Tabl
 }
 
 // helper method to asynchronously get and diff a version
-func (wr *Wrangler) diffVersion(ctx context.Context, masterVersion string, masterAlias *topodatapb.TabletAlias, alias *topodatapb.TabletAlias, wg *sync.WaitGroup, er concurrency.ErrorRecorder) {
+func (wr *Wrangler) diffVersion(ctx context.Context, mainVersion string, mainAlias *topodatapb.TabletAlias, alias *topodatapb.TabletAlias, wg *sync.WaitGroup, er concurrency.ErrorRecorder) {
 	defer wg.Done()
 	log.Infof("Gathering version for %v", topoproto.TabletAliasString(alias))
-	slaveVersion, err := wr.GetVersion(ctx, alias)
+	subordinateVersion, err := wr.GetVersion(ctx, alias)
 	if err != nil {
 		er.RecordError(err)
 		return
 	}
 
-	if masterVersion != slaveVersion {
-		er.RecordError(fmt.Errorf("master %v version %v is different than slave %v version %v", topoproto.TabletAliasString(masterAlias), masterVersion, topoproto.TabletAliasString(alias), slaveVersion))
+	if mainVersion != subordinateVersion {
+		er.RecordError(fmt.Errorf("main %v version %v is different than subordinate %v version %v", topoproto.TabletAliasString(mainAlias), mainVersion, topoproto.TabletAliasString(alias), subordinateVersion))
 	}
 }
 
@@ -106,33 +106,33 @@ func (wr *Wrangler) ValidateVersionShard(ctx context.Context, keyspace, shard st
 		return err
 	}
 
-	// get version from the master, or error
-	if !si.HasMaster() {
-		return fmt.Errorf("no master in shard %v/%v", keyspace, shard)
+	// get version from the main, or error
+	if !si.HasMain() {
+		return fmt.Errorf("no main in shard %v/%v", keyspace, shard)
 	}
-	log.Infof("Gathering version for master %v", topoproto.TabletAliasString(si.MasterAlias))
-	masterVersion, err := wr.GetVersion(ctx, si.MasterAlias)
+	log.Infof("Gathering version for main %v", topoproto.TabletAliasString(si.MainAlias))
+	mainVersion, err := wr.GetVersion(ctx, si.MainAlias)
 	if err != nil {
 		return err
 	}
 
 	// read all the aliases in the shard, that is all tablets that are
-	// replicating from the master
+	// replicating from the main
 	aliases, err := wr.ts.FindAllTabletAliasesInShard(ctx, keyspace, shard)
 	if err != nil {
 		return err
 	}
 
-	// then diff with all slaves
+	// then diff with all subordinates
 	er := concurrency.AllErrorRecorder{}
 	wg := sync.WaitGroup{}
 	for _, alias := range aliases {
-		if topoproto.TabletAliasEqual(alias, si.MasterAlias) {
+		if topoproto.TabletAliasEqual(alias, si.MainAlias) {
 			continue
 		}
 
 		wg.Add(1)
-		go wr.diffVersion(ctx, masterVersion, si.MasterAlias, alias, &wg, &er)
+		go wr.diffVersion(ctx, mainVersion, si.MainAlias, alias, &wg, &er)
 	}
 	wg.Wait()
 	if er.HasErrors() {
@@ -159,22 +159,22 @@ func (wr *Wrangler) ValidateVersionKeyspace(ctx context.Context, keyspace string
 		return wr.ValidateVersionShard(ctx, keyspace, shards[0])
 	}
 
-	// find the reference version using the first shard's master
+	// find the reference version using the first shard's main
 	si, err := wr.ts.GetShard(ctx, keyspace, shards[0])
 	if err != nil {
 		return err
 	}
-	if !si.HasMaster() {
-		return fmt.Errorf("no master in shard %v/%v", keyspace, shards[0])
+	if !si.HasMain() {
+		return fmt.Errorf("no main in shard %v/%v", keyspace, shards[0])
 	}
-	referenceAlias := si.MasterAlias
-	log.Infof("Gathering version for reference master %v", topoproto.TabletAliasString(referenceAlias))
+	referenceAlias := si.MainAlias
+	log.Infof("Gathering version for reference main %v", topoproto.TabletAliasString(referenceAlias))
 	referenceVersion, err := wr.GetVersion(ctx, referenceAlias)
 	if err != nil {
 		return err
 	}
 
-	// then diff with all tablets but master 0
+	// then diff with all tablets but main 0
 	er := concurrency.AllErrorRecorder{}
 	wg := sync.WaitGroup{}
 	for _, shard := range shards {
@@ -185,7 +185,7 @@ func (wr *Wrangler) ValidateVersionKeyspace(ctx context.Context, keyspace string
 		}
 
 		for _, alias := range aliases {
-			if topoproto.TabletAliasEqual(alias, si.MasterAlias) {
+			if topoproto.TabletAliasEqual(alias, si.MainAlias) {
 				continue
 			}
 

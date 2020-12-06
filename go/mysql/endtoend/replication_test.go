@@ -45,9 +45,9 @@ func connectForReplication(t *testing.T, rbr bool) (*mysql.Conn, mysql.BinlogFor
 	// We need to know if this is MariaDB, to set the right flag.
 	if conn.IsMariaDB() {
 		// This flag is required to get GTIDs from MariaDB.
-		t.Log("MariaDB: sensing SET @mariadb_slave_capability=4")
-		if _, err := conn.ExecuteFetch("SET @mariadb_slave_capability=4", 0, false); err != nil {
-			t.Fatalf("failed to set @mariadb_slave_capability=4: %v", err)
+		t.Log("MariaDB: sensing SET @mariadb_subordinate_capability=4")
+		if _, err := conn.ExecuteFetch("SET @mariadb_subordinate_capability=4", 0, false); err != nil {
+			t.Fatalf("failed to set @mariadb_subordinate_capability=4: %v", err)
 		}
 	}
 
@@ -75,8 +75,8 @@ func connectForReplication(t *testing.T, rbr bool) (*mysql.Conn, mysql.BinlogFor
 
 	// Tell the server that we understand the format of events
 	// that will be used if binlog_checksum is enabled on the server.
-	if _, err := conn.ExecuteFetch("SET @master_binlog_checksum=@@global.binlog_checksum", 0, false); err != nil {
-		t.Fatalf("failed to set @master_binlog_checksum=@@global.binlog_checksum: %v", err)
+	if _, err := conn.ExecuteFetch("SET @main_binlog_checksum=@@global.binlog_checksum", 0, false); err != nil {
+		t.Fatalf("failed to set @main_binlog_checksum=@@global.binlog_checksum: %v", err)
 	}
 
 	// Write ComBinlogDump packet with to start streaming events from here.

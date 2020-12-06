@@ -135,9 +135,9 @@ func (be *XtrabackupEngine) ExecuteBackup(ctx context.Context, params BackupPara
 	if err != nil {
 		return false, vterrors.Wrap(err, "unable to obtain a connection to the database")
 	}
-	pos, err := conn.MasterPosition()
+	pos, err := conn.MainPosition()
 	if err != nil {
-		return false, vterrors.Wrap(err, "unable to obtain master position")
+		return false, vterrors.Wrap(err, "unable to obtain main position")
 	}
 	flavor := pos.GTIDSet.Flavor()
 	params.Logger.Infof("Detected MySQL flavor: %v", flavor)
@@ -201,7 +201,7 @@ func (be *XtrabackupEngine) backupFiles(ctx context.Context, params BackupParams
 	flagsToExec := []string{"--defaults-file=" + params.Cnf.path,
 		"--backup",
 		"--socket=" + params.Cnf.SocketFile,
-		"--slave-info",
+		"--subordinate-info",
 		"--user=" + *xtrabackupUser,
 		"--target-dir=" + params.Cnf.TmpDir,
 	}
@@ -388,7 +388,7 @@ func (be *XtrabackupEngine) ExecuteRestore(ctx context.Context, params RestorePa
 		// don't delete the file here because that is how we detect an interrupted restore
 		return nil, err
 	}
-	// now find the slave position and return that
+	// now find the subordinate position and return that
 	params.Logger.Infof("Restore: returning replication position %v", bm.Position)
 	return &bm.BackupManifest, nil
 }

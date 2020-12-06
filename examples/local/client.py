@@ -48,8 +48,8 @@ conn = vtgate_client.connect('grpc', args.server, args.timeout)
 
 try:
   # Insert some messages on random pages.
-  print 'Inserting into master...'
-  cursor = conn.cursor(tablet_type='master', writable=True)
+  print 'Inserting into main...'
+  cursor = conn.cursor(tablet_type='main', writable=True)
   for i in range(3):
     page = random.randint(1, 100)
 
@@ -64,8 +64,8 @@ try:
         })
     cursor.commit()
 
-  # Read it back from the master.
-  print 'Reading from master...'
+  # Read it back from the main.
+  print 'Reading from main...'
   cursor.execute('SELECT page, time_created_ns, message FROM messages', {})
   for row in cursor.fetchall():
     print row
@@ -73,7 +73,7 @@ try:
   cursor.close()
 
   # Read from a replica.
-  # Note that this may be behind master due to replication lag.
+  # Note that this may be behind main due to replication lag.
   print 'Reading from replica...'
   cursor = conn.cursor(tablet_type='replica')
   cursor.execute('SELECT page, time_created_ns, message FROM messages', {})

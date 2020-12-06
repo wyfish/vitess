@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test the vtgate master buffer.
+"""Test the vtgate main buffer.
 
-During a master failover, vtgate should automatically buffer (stall) requests
+During a main failover, vtgate should automatically buffer (stall) requests
 for a configured time and retry them after the failover is over.
 
 The test reproduces such a scenario as follows:
 - two threads constantly execute a critical read respectively a write (UPDATE)
-- vtctl PlannedReparentShard runs a master failover
+- vtctl PlannedReparentShard runs a main failover
 - both threads should not see any error during despite the failover
 """
 
@@ -82,7 +82,7 @@ class AbstractVtgateThread(threading.Thread):
 
   def run(self):
     with self.vtgate.create_connection() as conn:
-      c = conn.cursor(keyspace=KEYSPACE, shards=[SHARD], tablet_type='master',
+      c = conn.cursor(keyspace=KEYSPACE, shards=[SHARD], tablet_type='main',
                       writable=self.writable)
       while not self.quit:
         try:
@@ -184,9 +184,9 @@ class UpdateThread(AbstractVtgateThread):
   def commit_errors(self):
     return self._commit_errors
 
-master = tablet.Tablet()
+main = tablet.Tablet()
 replica = tablet.Tablet()
-all_tablets = [master, replica]
+all_tablets = [main, replica]
 
 
 def setUpModule():
@@ -203,7 +203,7 @@ def setUpModule():
     db_name = 'vt_' + KEYSPACE
     for t in all_tablets:
       t.create_db(db_name)
-    master.start_vttablet(wait_for_state=None,
+    main.start_vttablet(wait_for_state=None,
                           init_tablet_type='replica',
                           init_keyspace=KEYSPACE, init_shard=SHARD,
                           tablet_index=0)
@@ -214,9 +214,9 @@ def setUpModule():
     for t in all_tablets:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    # Reparent to choose an initial master and enable replication.
-    utils.run_vtctl(['InitShardMaster', '-force', '%s/%s' % (KEYSPACE, SHARD),
-                     master.tablet_alias])
+    # Reparent to choose an initial main and enable replication.
+    utils.run_vtctl(['InitShardMain', '-force', '%s/%s' % (KEYSPACE, SHARD),
+                     main.tablet_alias])
 
     # Create the schema.
     utils.run_vtctl(['ApplySchema', '-sql=' + SCHEMA, KEYSPACE])
@@ -225,7 +225,7 @@ def setUpModule():
 
     # Insert two rows for the later threads (critical read, update).
     with utils.vtgate.write_transaction(keyspace=KEYSPACE, shards=[SHARD],
-                                        tablet_type='master') as tx:
+                                        tablet_type='main') as tx:
       tx.execute('INSERT INTO buffer (id, msg) VALUES (:id, :msg)',
                  {'id': CRITICAL_READ_ROW_ID, 'msg': 'critical read'})
       tx.execute('INSERT INTO buffer (id, msg) VALUES (:id, :msg)',
@@ -240,7 +240,7 @@ def tearDownModule():
   if utils.options.skip_teardown:
     return
 
-  teardown_procs = [t.teardown_mysql() for t in [master, replica]]
+  teardown_procs = [t.teardown_mysql() for t in [main, replica]]
   utils.wait_procs(teardown_procs, raise_on_error=False)
 
   environment.topo_server().teardown()
@@ -287,9 +287,9 @@ class TestBufferBase(unittest.TestCase):
 
       reparent_func()
 
-      # Failover is done. Swap master and replica for the next test.
-      global master, replica
-      master, replica = replica, master
+      # Failover is done. Swap main and replica for the next test.
+      global main, replica
+      main, replica = replica, main
 
       if enable_read_thread:
         read_thread.wait_for_notification.get()
@@ -327,26 +327,26 @@ class TestBufferBase(unittest.TestCase):
       self.assertGreater(in_flight_max, 0)
 
     # There was a failover and the HealthCheck module must have seen it.
-    master_promoted_count = v['HealthcheckMasterPromoted'].get(labels, 0)
-    self.assertGreater(master_promoted_count, 0)
+    main_promoted_count = v['HealthcheckMainPromoted'].get(labels, 0)
+    self.assertGreater(main_promoted_count, 0)
 
     duration_ms = v['BufferFailoverDurationSumMs'].get(labels, 0)
     if duration_ms > 0:
       # Buffering was actually started.
       logging.debug('Failover was buffered for %d milliseconds.', duration_ms)
       # Number of buffering stops must be equal to the number of seen failovers.
-      buffering_stops = v['BufferStops'].get('%s.NewMasterSeen' % labels, 0)
-      self.assertEqual(master_promoted_count, buffering_stops)
+      buffering_stops = v['BufferStops'].get('%s.NewMainSeen' % labels, 0)
+      self.assertEqual(main_promoted_count, buffering_stops)
 
   def external_reparent(self):
-    # Demote master.
+    # Demote main.
     start = time.time()
-    master.mquery('', mysql_flavor().demote_master_commands(), log_query=True)
-    if master.semi_sync_enabled():
-      master.set_semi_sync_enabled(master=False)
+    main.mquery('', mysql_flavor().demote_main_commands(), log_query=True)
+    if main.semi_sync_enabled():
+      main.set_semi_sync_enabled(main=False)
 
-    # Wait for replica to catch up to master.
-    utils.wait_for_replication_pos(master, replica)
+    # Wait for replica to catch up to main.
+    utils.wait_for_replication_pos(main, replica)
 
     # Wait for at least one second to artificially prolong the failover and give
     # the buffer a chance to observe it.
@@ -358,26 +358,26 @@ class TestBufferBase(unittest.TestCase):
                     ' (took only %.3f seconds)', w, d)
       time.sleep(w)
 
-    # Promote replica to new master.
-    replica.mquery('', mysql_flavor().promote_slave_commands(),
+    # Promote replica to new main.
+    replica.mquery('', mysql_flavor().promote_subordinate_commands(),
                    log_query=True)
     if replica.semi_sync_enabled():
-      replica.set_semi_sync_enabled(master=True)
-    old_master = master
-    new_master = replica
+      replica.set_semi_sync_enabled(main=True)
+    old_main = main
+    new_main = replica
 
-    # Configure old master to use new master.
-    new_pos = mysql_flavor().master_position(new_master)
-    logging.debug('New master position: %s', str(new_pos))
+    # Configure old main to use new main.
+    new_pos = mysql_flavor().main_position(new_main)
+    logging.debug('New main position: %s', str(new_pos))
     # Use 'localhost' as hostname because Travis CI worker hostnames
     # are too long for MySQL replication.
-    change_master_cmds = mysql_flavor().change_master_commands(
-        'localhost', new_master.mysql_port, new_pos)
-    old_master.mquery('', ['RESET SLAVE'] + change_master_cmds +
+    change_main_cmds = mysql_flavor().change_main_commands(
+        'localhost', new_main.mysql_port, new_pos)
+    old_main.mquery('', ['RESET SLAVE'] + change_main_cmds +
                       ['START SLAVE'], log_query=True)
 
-    # Notify the new vttablet master about the reparent.
-    utils.run_vtctl(['TabletExternallyReparented', new_master.tablet_alias],
+    # Notify the new vttablet main about the reparent.
+    utils.run_vtctl(['TabletExternallyReparented', new_main.tablet_alias],
                     auto_log=True)
 
 
@@ -394,7 +394,7 @@ class TestBuffer(TestBufferBase):
     def planned_reparent():
       utils.run_vtctl(['PlannedReparentShard', '-keyspace_shard',
                        '%s/%s' % (KEYSPACE, SHARD),
-                       '-new_master', replica.tablet_alias])
+                       '-new_main', replica.tablet_alias])
     self._test_buffer(planned_reparent)
 
   def test_buffer_external_reparent(self):

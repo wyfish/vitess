@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	enabled       = flag.Bool("enable_buffer", false, "Enable buffering (stalling) of master traffic during failovers.")
+	enabled       = flag.Bool("enable_buffer", false, "Enable buffering (stalling) of main traffic during failovers.")
 	enabledDryRun = flag.Bool("enable_buffer_dry_run", false, "Detect and log failover events, but do not actually buffer requests.")
 
 	window                  = flag.Duration("buffer_window", 10*time.Second, "Duration for how long a request should be buffered at most.")

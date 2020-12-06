@@ -68,7 +68,7 @@ func startConsul(t *testing.T, authToken string) (*exec.Cmd, string, string) {
 	if authToken != "" {
 		config["datacenter"] = "vitess"
 		config["acl_datacenter"] = "vitess"
-		config["acl_master_token"] = authToken
+		config["acl_main_token"] = authToken
 		config["acl_default_policy"] = "deny"
 		config["acl_down_policy"] = "extend-cache"
 	}

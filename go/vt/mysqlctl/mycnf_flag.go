@@ -41,10 +41,10 @@ var (
 	flagRelayLogIndexPath     *string
 	flagRelayLogInfoPath      *string
 	flagBinLogPath            *string
-	flagMasterInfoFile        *string
+	flagMainInfoFile        *string
 	flagPidFile               *string
 	flagTmpDir                *string
-	flagSlaveLoadTmpDir       *string
+	flagSubordinateLoadTmpDir       *string
 
 	// the file to use to specify them all
 	flagMycnfFile *string
@@ -67,10 +67,10 @@ func RegisterFlags() {
 	flagRelayLogIndexPath = flag.String("mycnf_relay_log_index_path", "", "mysql relay log index path")
 	flagRelayLogInfoPath = flag.String("mycnf_relay_log_info_path", "", "mysql relay log info path")
 	flagBinLogPath = flag.String("mycnf_bin_log_path", "", "mysql binlog path")
-	flagMasterInfoFile = flag.String("mycnf_master_info_file", "", "mysql master.info file")
+	flagMainInfoFile = flag.String("mycnf_main_info_file", "", "mysql main.info file")
 	flagPidFile = flag.String("mycnf_pid_file", "", "mysql pid file")
 	flagTmpDir = flag.String("mycnf_tmp_dir", "", "mysql tmp directory")
-	flagSlaveLoadTmpDir = flag.String("mycnf_slave_load_tmp_dir", "", "slave load tmp directory")
+	flagSubordinateLoadTmpDir = flag.String("mycnf_subordinate_load_tmp_dir", "", "subordinate load tmp directory")
 
 	flagMycnfFile = flag.String("mycnf-file", "", "path to my.cnf, if reading all config params from there")
 }
@@ -106,10 +106,10 @@ func NewMycnfFromFlags(uid uint32) (mycnf *Mycnf, err error) {
 			RelayLogIndexPath:     *flagRelayLogIndexPath,
 			RelayLogInfoPath:      *flagRelayLogInfoPath,
 			BinLogPath:            *flagBinLogPath,
-			MasterInfoFile:        *flagMasterInfoFile,
+			MainInfoFile:        *flagMainInfoFile,
 			PidFile:               *flagPidFile,
 			TmpDir:                *flagTmpDir,
-			SlaveLoadTmpDir:       *flagSlaveLoadTmpDir,
+			SubordinateLoadTmpDir:       *flagSubordinateLoadTmpDir,
 
 			// This is probably not going to be used by anybody,
 			// but fill in a default value. (Note it's used by

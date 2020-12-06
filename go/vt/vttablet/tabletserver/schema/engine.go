@@ -210,9 +210,9 @@ func (se *Engine) Close() {
 	se.isOpen = false
 }
 
-// MakeNonMaster clears the sequence caches to make sure that
-// they don't get accidentally reused after losing mastership.
-func (se *Engine) MakeNonMaster() {
+// MakeNonMain clears the sequence caches to make sure that
+// they don't get accidentally reused after losing mainship.
+func (se *Engine) MakeNonMain() {
 	// This function is tested through endtoend test.
 	se.mu.Lock()
 	defer se.mu.Unlock()

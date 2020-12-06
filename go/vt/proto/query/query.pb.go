@@ -3710,24 +3710,24 @@ type RealtimeStats struct {
 	// or empty is the server is healthy. This is used for subset selection,
 	// we do not send queries to servers that are not healthy.
 	HealthError string `protobuf:"bytes,1,opt,name=health_error,json=healthError,proto3" json:"health_error,omitempty"`
-	// seconds_behind_master is populated for slaves only. It indicates
-	// how far behind on (MySQL) replication a slave currently is.  It is used
+	// seconds_behind_main is populated for subordinates only. It indicates
+	// how far behind on (MySQL) replication a subordinate currently is.  It is used
 	// by clients for subset selection (so we don't try to send traffic
 	// to tablets that are too far behind).
 	// NOTE: This field must not be evaluated if "health_error" is not empty.
 	// TODO(mberlin): Let's switch it to int64 instead?
-	SecondsBehindMaster uint32 `protobuf:"varint,2,opt,name=seconds_behind_master,json=secondsBehindMaster,proto3" json:"seconds_behind_master,omitempty"`
+	SecondsBehindMain uint32 `protobuf:"varint,2,opt,name=seconds_behind_main,json=secondsBehindMain,proto3" json:"seconds_behind_main,omitempty"`
 	// bin_log_players_count is the number of currently running binlog players.
 	// if the value is 0, it means that filtered replication is currently not
 	// running on the tablet. If >0, filtered replication is running.
 	// NOTE: This field must not be evaluated if "health_error" is not empty.
 	BinlogPlayersCount int32 `protobuf:"varint,3,opt,name=binlog_players_count,json=binlogPlayersCount,proto3" json:"binlog_players_count,omitempty"`
-	// seconds_behind_master_filtered_replication is populated for the receiving
-	// master of an ongoing filtered replication only.
-	// It specifies how far the receiving master lags behind the sending master.
+	// seconds_behind_main_filtered_replication is populated for the receiving
+	// main of an ongoing filtered replication only.
+	// It specifies how far the receiving main lags behind the sending main.
 	// NOTE: This field must not be evaluated if "health_error" is not empty.
 	// NOTE: This field must not be evaluated if "bin_log_players_count" is 0.
-	SecondsBehindMasterFilteredReplication int64 `protobuf:"varint,4,opt,name=seconds_behind_master_filtered_replication,json=secondsBehindMasterFilteredReplication,proto3" json:"seconds_behind_master_filtered_replication,omitempty"`
+	SecondsBehindMainFilteredReplication int64 `protobuf:"varint,4,opt,name=seconds_behind_main_filtered_replication,json=secondsBehindMainFilteredReplication,proto3" json:"seconds_behind_main_filtered_replication,omitempty"`
 	// cpu_usage is used for load-based balancing
 	CpuUsage float64 `protobuf:"fixed64,5,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
 	// qps is the average QPS (queries per second) rate in the last XX seconds
@@ -3770,9 +3770,9 @@ func (m *RealtimeStats) GetHealthError() string {
 	return ""
 }
 
-func (m *RealtimeStats) GetSecondsBehindMaster() uint32 {
+func (m *RealtimeStats) GetSecondsBehindMain() uint32 {
 	if m != nil {
-		return m.SecondsBehindMaster
+		return m.SecondsBehindMain
 	}
 	return 0
 }
@@ -3784,9 +3784,9 @@ func (m *RealtimeStats) GetBinlogPlayersCount() int32 {
 	return 0
 }
 
-func (m *RealtimeStats) GetSecondsBehindMasterFilteredReplication() int64 {
+func (m *RealtimeStats) GetSecondsBehindMainFilteredReplication() int64 {
 	if m != nil {
-		return m.SecondsBehindMasterFilteredReplication
+		return m.SecondsBehindMainFilteredReplication
 	}
 	return 0
 }
@@ -3814,14 +3814,14 @@ type AggregateStats struct {
 	HealthyTabletCount int32 `protobuf:"varint,1,opt,name=healthy_tablet_count,json=healthyTabletCount,proto3" json:"healthy_tablet_count,omitempty"`
 	// unhealthy_tablet_count is the number of unhealthy tablets in the group.
 	UnhealthyTabletCount int32 `protobuf:"varint,2,opt,name=unhealthy_tablet_count,json=unhealthyTabletCount,proto3" json:"unhealthy_tablet_count,omitempty"`
-	// seconds_behind_master_min is the minimum of the
-	// seconds_behind_master values of the healthy tablets. It is unset
-	// if the tablet type is master.
-	SecondsBehindMasterMin uint32 `protobuf:"varint,3,opt,name=seconds_behind_master_min,json=secondsBehindMasterMin,proto3" json:"seconds_behind_master_min,omitempty"`
-	// seconds_behind_master_max is the maximum of the
-	// seconds_behind_master values of the healthy tablets. It is unset
-	// if the tablet type is master.
-	SecondsBehindMasterMax uint32   `protobuf:"varint,4,opt,name=seconds_behind_master_max,json=secondsBehindMasterMax,proto3" json:"seconds_behind_master_max,omitempty"`
+	// seconds_behind_main_min is the minimum of the
+	// seconds_behind_main values of the healthy tablets. It is unset
+	// if the tablet type is main.
+	SecondsBehindMainMin uint32 `protobuf:"varint,3,opt,name=seconds_behind_main_min,json=secondsBehindMainMin,proto3" json:"seconds_behind_main_min,omitempty"`
+	// seconds_behind_main_max is the maximum of the
+	// seconds_behind_main values of the healthy tablets. It is unset
+	// if the tablet type is main.
+	SecondsBehindMainMax uint32   `protobuf:"varint,4,opt,name=seconds_behind_main_max,json=secondsBehindMainMax,proto3" json:"seconds_behind_main_max,omitempty"`
 	XXX_NoUnkeyedLiteral   struct{} `json:"-"`
 	XXX_unrecognized       []byte   `json:"-"`
 	XXX_sizecache          int32    `json:"-"`
@@ -3866,16 +3866,16 @@ func (m *AggregateStats) GetUnhealthyTabletCount() int32 {
 	return 0
 }
 
-func (m *AggregateStats) GetSecondsBehindMasterMin() uint32 {
+func (m *AggregateStats) GetSecondsBehindMainMin() uint32 {
 	if m != nil {
-		return m.SecondsBehindMasterMin
+		return m.SecondsBehindMainMin
 	}
 	return 0
 }
 
-func (m *AggregateStats) GetSecondsBehindMasterMax() uint32 {
+func (m *AggregateStats) GetSecondsBehindMainMax() uint32 {
 	if m != nil {
-		return m.SecondsBehindMasterMax
+		return m.SecondsBehindMainMax
 	}
 	return 0
 }
@@ -3894,14 +3894,14 @@ type StreamHealthResponse struct {
 	// record will be accepted (the cell may not match, however).
 	Target *Target `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
 	// serving is true iff the tablet is serving. A tablet may not be serving
-	// if filtered replication is enabled on a master for instance,
+	// if filtered replication is enabled on a main for instance,
 	// or if a replica should not be used because the keyspace is being resharded.
 	Serving bool `protobuf:"varint,2,opt,name=serving,proto3" json:"serving,omitempty"`
 	// tablet_externally_reparented_timestamp can be interpreted as the
 	// last time we knew that this tablet was the MASTER of this shard
 	// (if StreamHealthResponse describes a group of tablets, between
-	// two vtgates, only one master will be present in the group, and
-	// this is this master's value).
+	// two vtgates, only one main will be present in the group, and
+	// this is this main's value).
 	//
 	// It is used by vtgate when determining the current MASTER of a shard.
 	// If vtgate sees more than one MASTER tablet, this timestamp is used
@@ -3913,13 +3913,13 @@ type StreamHealthResponse struct {
 	// a) the last time the RPC tabletmanager.TabletExternallyReparented was
 	//    called on this tablet (usually done by an external failover tool e.g.
 	//    Orchestrator). The failover tool can call this as long as we are the
-	//    master i.e. even ages after the last reparent occurred.
+	//    main i.e. even ages after the last reparent occurred.
 	// OR
 	// b) the last time an active reparent was executed through a vtctl command
-	//    (InitShardMaster, PlannedReparentShard, EmergencyReparentShard)
+	//    (InitShardMain, PlannedReparentShard, EmergencyReparentShard)
 	// OR
 	// c) the last time vttablet was started and it initialized its tablet type
-	//    as MASTER because it was recorded as the shard's current master in the
+	//    as MASTER because it was recorded as the shard's current main in the
 	//    topology (see go/vt/vttablet/tabletmanager/init_tablet.go)
 	// OR
 	// d) 0 if the vttablet was never a MASTER.

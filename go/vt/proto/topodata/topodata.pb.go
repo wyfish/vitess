@@ -91,9 +91,9 @@ type TabletType int32
 const (
 	// UNKNOWN is not a valid value.
 	TabletType_UNKNOWN TabletType = 0
-	// MASTER is the master server for the shard. Only MASTER allows DMLs.
+	// MASTER is the main server for the shard. Only MASTER allows DMLs.
 	TabletType_MASTER TabletType = 1
-	// REPLICA is a slave type. It is used to serve live traffic.
+	// REPLICA is a subordinate type. It is used to serve live traffic.
 	// A REPLICA can be promoted to MASTER. A demoted MASTER will go to REPLICA.
 	TabletType_REPLICA TabletType = 2
 	// RDONLY (old name) / BATCH (new name) is used to serve traffic for
@@ -400,10 +400,10 @@ func (m *Tablet) GetMysqlPort() int32 {
 type Shard struct {
 	// No lock is necessary to update this field, when for instance
 	// TabletExternallyReparented updates this. However, we lock the
-	// shard for reparenting operations (InitShardMaster,
+	// shard for reparenting operations (InitShardMain,
 	// PlannedReparentShard,EmergencyReparentShard), to guarantee
 	// exclusive operation.
-	MasterAlias *TabletAlias `protobuf:"bytes,1,opt,name=master_alias,json=masterAlias,proto3" json:"master_alias,omitempty"`
+	MainAlias *TabletAlias `protobuf:"bytes,1,opt,name=main_alias,json=mainAlias,proto3" json:"main_alias,omitempty"`
 	// key_range is the KeyRange for this shard. It can be unset if:
 	// - we are not using range-based sharding in this shard.
 	// - the shard covers the entire keyrange.
@@ -413,7 +413,7 @@ type Shard struct {
 	KeyRange *KeyRange `protobuf:"bytes,2,opt,name=key_range,json=keyRange,proto3" json:"key_range,omitempty"`
 	// served_types has at most one entry per TabletType
 	// This field is in the process of being deprecated in favor of
-	// is_master_serving. Keeping for backwards compatibility purposes.
+	// is_main_serving. Keeping for backwards compatibility purposes.
 	ServedTypes []*Shard_ServedType `protobuf:"bytes,3,rep,name=served_types,json=servedTypes,proto3" json:"served_types,omitempty"`
 	// SourceShards is the list of shards we're replicating from,
 	// using filtered replication.
@@ -422,9 +422,9 @@ type Shard struct {
 	// tablet_controls has at most one entry per TabletType.
 	// The keyspace lock is always taken when changing this.
 	TabletControls []*Shard_TabletControl `protobuf:"bytes,6,rep,name=tablet_controls,json=tabletControls,proto3" json:"tablet_controls,omitempty"`
-	// is_master_serving sets whether this shard master is serving traffic or not.
+	// is_main_serving sets whether this shard main is serving traffic or not.
 	// The keyspace lock is always taken when changing this.
-	IsMasterServing      bool     `protobuf:"varint,7,opt,name=is_master_serving,json=isMasterServing,proto3" json:"is_master_serving,omitempty"`
+	IsMainServing      bool     `protobuf:"varint,7,opt,name=is_main_serving,json=isMainServing,proto3" json:"is_main_serving,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -455,9 +455,9 @@ func (m *Shard) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Shard proto.InternalMessageInfo
 
-func (m *Shard) GetMasterAlias() *TabletAlias {
+func (m *Shard) GetMainAlias() *TabletAlias {
 	if m != nil {
-		return m.MasterAlias
+		return m.MainAlias
 	}
 	return nil
 }
@@ -490,9 +490,9 @@ func (m *Shard) GetTabletControls() []*Shard_TabletControl {
 	return nil
 }
 
-func (m *Shard) GetIsMasterServing() bool {
+func (m *Shard) GetIsMainServing() bool {
 	if m != nil {
-		return m.IsMasterServing
+		return m.IsMainServing
 	}
 	return false
 }
@@ -546,7 +546,7 @@ func (m *Shard_ServedType) GetCells() []string {
 }
 
 // SourceShard represents a data source for filtered replication
-// across shards. When this is used in a destination shard, the master
+// across shards. When this is used in a destination shard, the main
 // of that shard will run filtered replication.
 type Shard_SourceShard struct {
 	// Uid is the unique ID for this SourceShard object.
@@ -631,7 +631,7 @@ type Shard_TabletControl struct {
 	Cells             []string   `protobuf:"bytes,2,rep,name=cells,proto3" json:"cells,omitempty"`
 	BlacklistedTables []string   `protobuf:"bytes,4,rep,name=blacklisted_tables,json=blacklistedTables,proto3" json:"blacklisted_tables,omitempty"`
 	// frozen is set if we've started failing over traffic for
-	// the master. If set, this record should not be removed.
+	// the main. If set, this record should not be removed.
 	Frozen               bool     `protobuf:"varint,5,opt,name=frozen,proto3" json:"frozen,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`

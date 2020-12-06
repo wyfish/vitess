@@ -86,7 +86,7 @@ func TestResetSequence(t *testing.T) {
 		t.Errorf("Execute: \n%#v, want \n%#v", *qr, want)
 	}
 
-	// Reset mastership
+	// Reset mainship
 	err = client.SetServingType(topodatapb.TabletType_REPLICA)
 	if err != nil {
 		t.Fatal(err)

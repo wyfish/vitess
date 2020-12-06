@@ -30,14 +30,14 @@ import tablet
 import utils
 from mysql_flavor import mysql_flavor
 
-src_master = tablet.Tablet()
+src_main = tablet.Tablet()
 src_replica = tablet.Tablet()
 src_rdonly = tablet.Tablet()
-dst_master = tablet.Tablet()
+dst_main = tablet.Tablet()
 dst_replica = tablet.Tablet()
 dst_rdonly = tablet.Tablet()
 
-all_tablets = [src_master, src_replica, src_rdonly, dst_master, dst_replica,
+all_tablets = [src_main, src_replica, src_rdonly, dst_main, dst_replica,
                dst_rdonly]
 
 
@@ -55,18 +55,18 @@ def setUpModule():
     utils.run_vtctl(['SetKeyspaceShardingInfo', '-force', 'test_keyspace',
                      'keyspace_id', keyrange_constants.KIT_UINT64])
 
-    src_master.init_tablet('replica', 'test_keyspace', '0')
+    src_main.init_tablet('replica', 'test_keyspace', '0')
     src_replica.init_tablet('replica', 'test_keyspace', '0')
     src_rdonly.init_tablet('rdonly', 'test_keyspace', '0')
 
-    for t in [src_master, src_replica, src_rdonly]:
+    for t in [src_main, src_replica, src_rdonly]:
       t.start_vttablet(wait_for_state=None)
 
-    for t in [src_master, src_replica, src_rdonly]:
+    for t in [src_main, src_replica, src_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     src_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     src_main.tablet_alias], auto_log=True)
 
     # Create schema
     logging.debug('Creating schema...')
@@ -88,15 +88,15 @@ def setUpModule():
     utils.run_vtctl(['RunHealthCheck', src_rdonly.tablet_alias])
 
     # Create destination shard (won't be serving as there is no DB)
-    dst_master.init_tablet('replica', 'test_keyspace', '-')
+    dst_main.init_tablet('replica', 'test_keyspace', '-')
     dst_replica.init_tablet('replica', 'test_keyspace', '-')
     dst_rdonly.init_tablet('rdonly', 'test_keyspace', '-')
-    dst_master.start_vttablet(wait_for_state='NOT_SERVING')
+    dst_main.start_vttablet(wait_for_state='NOT_SERVING')
     dst_replica.start_vttablet(wait_for_state='NOT_SERVING')
     dst_rdonly.start_vttablet(wait_for_state='NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-',
-                     dst_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-',
+                     dst_main.tablet_alias], auto_log=True)
 
     # copy the schema
     utils.run_vtctl(['CopySchemaShard', src_replica.tablet_alias,
@@ -113,7 +113,7 @@ def setUpModule():
                         '--min_healthy_rdonly_tablets', '1',
                         'test_keyspace/0'],
                        auto_log=True)
-    dst_master.wait_for_binlog_player_count(1)
+    dst_main.wait_for_binlog_player_count(1)
 
     # Wait for dst_replica to be ready.
     dst_replica.wait_for_binlog_server_state('Enabled')
@@ -163,7 +163,7 @@ class TestBinlog(unittest.TestCase):
       position = event['event_token']['position']
 
   def test_charset(self):
-    start_position = mysql_flavor().master_position(dst_replica)
+    start_position = mysql_flavor().main_position(dst_replica)
     logging.debug('test_charset: starting @ %s', start_position)
 
     # Insert something that will replicate incorrectly if the charset is not
@@ -174,14 +174,14 @@ class TestBinlog(unittest.TestCase):
     # latin1, it will be inserted as utf8, which will change its value.
     sql = ("INSERT INTO test_table (id, keyspace_id, msg) "
            "VALUES (41523, 1, 'Šṛ́rỏé') /* vtgate:: keyspace_id:00000001 */")
-    src_master.mquery(
+    src_main.mquery(
         'vt_test_keyspace',
         sql,
         conn_params={'charset': 'latin1'}, write=True)
     self._wait_for_replica_event(start_position, sql)
 
     # Check the value.
-    data = dst_master.mquery(
+    data = dst_main.mquery(
         'vt_test_keyspace',
         'SELECT id, keyspace_id, msg FROM test_table WHERE id=41523 LIMIT 1')
     self.assertEqual(len(data), 1, 'No data replicated.')
@@ -190,7 +190,7 @@ class TestBinlog(unittest.TestCase):
                      'Data corrupted due to wrong charset.')
 
   def test_checksum_enabled(self):
-    start_position = mysql_flavor().master_position(dst_replica)
+    start_position = mysql_flavor().main_position(dst_replica)
     logging.debug('test_checksum_enabled: starting @ %s', start_position)
 
     # Enable binlog_checksum, which will also force a log rotation that should
@@ -205,7 +205,7 @@ class TestBinlog(unittest.TestCase):
         "INSERT INTO test_table (id, keyspace_id, msg) "
         "VALUES (19283, 1, 'testing checksum enabled') "
         "/* vtgate:: keyspace_id:00000001 */")
-    src_master.mquery('vt_test_keyspace', sql, write=True)
+    src_main.mquery('vt_test_keyspace', sql, write=True)
 
     # Look for it using update stream to see if binlog streamer can talk to
     # dst_replica, which now has binlog_checksum enabled.
@@ -214,7 +214,7 @@ class TestBinlog(unittest.TestCase):
   def test_checksum_disabled(self):
     # Disable binlog_checksum to make sure we can also talk to a server without
     # checksums enabled, in case they are enabled by default.
-    start_position = mysql_flavor().master_position(dst_replica)
+    start_position = mysql_flavor().main_position(dst_replica)
     logging.debug('test_checksum_disabled: starting @ %s', start_position)
 
     # For flavors that don't support checksums, this is a no-op.
@@ -225,7 +225,7 @@ class TestBinlog(unittest.TestCase):
         "INSERT INTO test_table (id, keyspace_id, msg) "
         "VALUES (58812, 1, 'testing checksum disabled') "
         "/* vtgate:: keyspace_id:00000001 */")
-    src_master.mquery(
+    src_main.mquery(
         'vt_test_keyspace', sql, write=True)
 
     # Look for it using update stream to see if binlog streamer can talk to

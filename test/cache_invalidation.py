@@ -45,7 +45,7 @@ from vtproto import topodata_pb2
 from vtproto import query_pb2
 
 
-master_tablet = tablet.Tablet()
+main_tablet = tablet.Tablet()
 replica_tablet = tablet.Tablet()
 
 _create_vt_a = '''create table if not exists vt_a (
@@ -64,41 +64,41 @@ primary key(id)
 def setUpModule():
   try:
     environment.topo_server().setup()
-    setup_procs = [master_tablet.init_mysql(),
+    setup_procs = [main_tablet.init_mysql(),
                    replica_tablet.init_mysql()]
     utils.wait_procs(setup_procs)
 
     # start a vtctld so the vtctl insert commands are just RPCs, not forks.
     utils.Vtctld().start()
 
-    # Start up a master mysql and vttablet
+    # Start up a main mysql and vttablet
     logging.debug('Setting up tablets')
     utils.run_vtctl(['CreateKeyspace', 'test_keyspace'])
-    master_tablet.init_tablet('replica', 'test_keyspace', '0', tablet_index=0)
+    main_tablet.init_tablet('replica', 'test_keyspace', '0', tablet_index=0)
     replica_tablet.init_tablet('replica', 'test_keyspace', '0', tablet_index=1)
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'], auto_log=True)
-    master_tablet.create_db('vt_test_keyspace')
+    main_tablet.create_db('vt_test_keyspace')
     replica_tablet.create_db('vt_test_keyspace')
 
-    master_tablet.start_vttablet(wait_for_state=None)
+    main_tablet.start_vttablet(wait_for_state=None)
     replica_tablet.start_vttablet(wait_for_state=None)
-    master_tablet.wait_for_vttablet_state('NOT_SERVING')
+    main_tablet.wait_for_vttablet_state('NOT_SERVING')
     replica_tablet.wait_for_vttablet_state('NOT_SERVING')
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     master_tablet.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     main_tablet.tablet_alias], auto_log=True)
 
     utils.wait_for_tablet_type(replica_tablet.tablet_alias, 'replica')
-    master_tablet.wait_for_vttablet_state('SERVING')
+    main_tablet.wait_for_vttablet_state('SERVING')
     replica_tablet.wait_for_vttablet_state('SERVING')
 
-    master_tablet.mquery('vt_test_keyspace', _create_vt_a)
-    master_tablet.mquery('vt_test_keyspace', _create_vt_b)
+    main_tablet.mquery('vt_test_keyspace', _create_vt_a)
+    main_tablet.mquery('vt_test_keyspace', _create_vt_b)
 
     utils.run_vtctl(['ReloadSchemaShard', 'test_keyspace/0'])
     utils.run_vtctl(['RebuildVSchemaGraph'])
 
-    utils.VtGate().start(tablets=[master_tablet, replica_tablet])
-    utils.vtgate.wait_for_endpoints('test_keyspace.0.master', 1)
+    utils.VtGate().start(tablets=[main_tablet, replica_tablet])
+    utils.vtgate.wait_for_endpoints('test_keyspace.0.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.0.replica', 1)
 
   except:
@@ -111,15 +111,15 @@ def tearDownModule():
   if utils.options.skip_teardown:
     return
   logging.debug('Tearing down the servers and setup')
-  tablet.kill_tablets([master_tablet, replica_tablet])
-  teardown_procs = [master_tablet.teardown_mysql(),
+  tablet.kill_tablets([main_tablet, replica_tablet])
+  teardown_procs = [main_tablet.teardown_mysql(),
                     replica_tablet.teardown_mysql()]
   utils.wait_procs(teardown_procs, raise_on_error=False)
 
   environment.topo_server().teardown()
   utils.kill_sub_processes()
   utils.remove_tmp_files()
-  master_tablet.remove_tree()
+  main_tablet.remove_tree()
   replica_tablet.remove_tree()
 
 
@@ -322,7 +322,7 @@ class TestCacheInvalidation(unittest.TestCase):
   def _insert_value_a(self, row_id, name):
     logging.debug('Inserting value %d into vt_a', row_id)
     conn = self._vtgate_connection()
-    cursor = conn.cursor(tablet_type='master', keyspace='test_keyspace',
+    cursor = conn.cursor(tablet_type='main', keyspace='test_keyspace',
                          writable=True)
     cursor.begin()
     insert = 'insert into vt_a (id, name) values (:id, :name)'

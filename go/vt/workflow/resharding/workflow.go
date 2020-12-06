@@ -50,7 +50,7 @@ const (
 	phaseDiff                       workflow.PhaseType = "diff"
 	phaseMigrateRdonly              workflow.PhaseType = "migrate_rdonly"
 	phaseMigrateReplica             workflow.PhaseType = "migrate_replica"
-	phaseMigrateMaster              workflow.PhaseType = "migrate_master"
+	phaseMigrateMain              workflow.PhaseType = "migrate_main"
 )
 
 // Register registers the HorizontalReshardingWorkflowFactory as a factory
@@ -173,9 +173,9 @@ func (*Factory) Instantiate(m *workflow.Manager, w *workflowpb.Workflow, rootNod
 		Name:     "MigrateServedTypeREPLICA",
 		PathName: string(phaseMigrateReplica),
 	}
-	migrateMasterUINode := &workflow.Node{
+	migrateMainUINode := &workflow.Node{
 		Name:     "MigrateServedTypeMASTER",
-		PathName: string(phaseMigrateMaster),
+		PathName: string(phaseMigrateMain),
 	}
 
 	hw.rootUINode.Children = []*workflow.Node{
@@ -185,7 +185,7 @@ func (*Factory) Instantiate(m *workflow.Manager, w *workflowpb.Workflow, rootNod
 		diffUINode,
 		migrateRdonlyUINode,
 		migrateReplicaUINode,
-		migrateMasterUINode,
+		migrateMainUINode,
 	}
 
 	sourceShards := strings.Split(hw.checkpoint.Settings["source_shards"], ",")
@@ -209,7 +209,7 @@ func (*Factory) Instantiate(m *workflow.Manager, w *workflowpb.Workflow, rootNod
 	if err := createUINodes(hw.rootUINode, phaseMigrateReplica, sourceShards); err != nil {
 		return hw, err
 	}
-	if err := createUINodes(hw.rootUINode, phaseMigrateMaster, sourceShards); err != nil {
+	if err := createUINodes(hw.rootUINode, phaseMigrateMain, sourceShards); err != nil {
 		return hw, err
 	}
 
@@ -322,7 +322,7 @@ func initCheckpoint(keyspace string, vtworkers, excludeTables, sourceShards, des
 			"served_type":  topodatapb.TabletType_REPLICA.String(),
 		}
 	})
-	initTasks(tasks, phaseMigrateMaster, sourceShards, func(i int, shard string) map[string]string {
+	initTasks(tasks, phaseMigrateMain, sourceShards, func(i int, shard string) map[string]string {
 		return map[string]string{
 			"keyspace":     keyspace,
 			"source_shard": shard,
@@ -424,9 +424,9 @@ func (hw *horizontalReshardingWorkflow) runWorkflow() error {
 		return err
 	}
 
-	migrateMasterTasks := hw.GetTasks(phaseMigrateMaster)
-	migrateMasterRunner := workflow.NewParallelRunner(hw.ctx, hw.rootUINode, hw.checkpointWriter, migrateMasterTasks, hw.runMigrate, workflow.Sequential, hw.phaseEnableApprovals[string(phaseMigrateReplica)])
-	return migrateMasterRunner.Run()
+	migrateMainTasks := hw.GetTasks(phaseMigrateMain)
+	migrateMainRunner := workflow.NewParallelRunner(hw.ctx, hw.rootUINode, hw.checkpointWriter, migrateMainTasks, hw.runMigrate, workflow.Sequential, hw.phaseEnableApprovals[string(phaseMigrateReplica)])
+	return migrateMainRunner.Run()
 }
 
 func (hw *horizontalReshardingWorkflow) setUIMessage(message string) {
@@ -446,7 +446,7 @@ func WorkflowPhases() []string {
 		string(phaseDiff),
 		string(phaseMigrateReplica),
 		string(phaseMigrateRdonly),
-		string(phaseMigrateMaster),
+		string(phaseMigrateMain),
 	}
 }
 

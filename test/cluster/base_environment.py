@@ -53,18 +53,18 @@ class BaseEnvironment(object):
     Args:
       instance_name: Name of the existing environment instance (string).
     """
-    self.master_capable_tablets = {}
+    self.main_capable_tablets = {}
     for keyspace, num_shards in zip(self.keyspaces, self.num_shards):
-      self.master_capable_tablets[keyspace] = {}
+      self.main_capable_tablets[keyspace] = {}
       for shard_name in sharding_utils.get_shard_names(num_shards):
         raw_shard_tablets = self.vtctl_helper.execute_vtctl_command(
             ['ListShardTablets', '%s/%s' % (keyspace, shard_name)])
         split_shard_tablets = [
             t.split(' ') for t in raw_shard_tablets.split('\n') if t]
-        self.master_capable_tablets[keyspace][shard_name] = [
+        self.main_capable_tablets[keyspace][shard_name] = [
             t[0] for t in split_shard_tablets
             if (self.get_tablet_cell(t[0]) in self.primary_cells
-                and (t[3] == 'master' or t[3] == 'replica'))]
+                and (t[3] == 'main' or t[3] == 'replica'))]
 
   def destroy(self):
     """Teardown the environment.
@@ -145,7 +145,7 @@ class BaseEnvironment(object):
       self, keyspace, shard_name, failover_completion_timeout_s=60):
     """Wait until failover status shows complete.
 
-    Repeatedly queries the master tablet for failover status until it is 'OFF'.
+    Repeatedly queries the main tablet for failover status until it is 'OFF'.
     Most of the time the failover status check will immediately pass.  When a
     failover is in progress, it tends to take a good 5 to 10 attempts before
     status is 'OFF'.
@@ -178,11 +178,11 @@ class BaseEnvironment(object):
         ['VtTabletStreamHealth', tablet_name]))
     return 'health_error' not in vttablet_stream_health['realtime_stats']
 
-  def get_next_master(self, keyspace, shard_name, cross_cell=False):
-    """Determine what instance to select as the next master.
+  def get_next_main(self, keyspace, shard_name, cross_cell=False):
+    """Determine what instance to select as the next main.
 
-    If the next master is cross-cell, rotate the master cell and use instance 0
-    as the master.  Otherwise, rotate the instance number.
+    If the next main is cross-cell, rotate the main cell and use instance 0
+    as the main.  Otherwise, rotate the instance number.
 
     Args:
       keyspace: the name of the keyspace to reparent (string).
@@ -193,22 +193,22 @@ class BaseEnvironment(object):
       Tuple of cell, task num, tablet uid (string, int, string).
     """
     num_tasks = self.keyspace_alias_to_num_instances_dict[keyspace]['replica']
-    current_master = self.get_current_master_name(keyspace, shard_name)
-    current_master_cell = self.get_tablet_cell(current_master)
-    next_master_cell = current_master_cell
-    next_master_task = 0
+    current_main = self.get_current_main_name(keyspace, shard_name)
+    current_main_cell = self.get_tablet_cell(current_main)
+    next_main_cell = current_main_cell
+    next_main_task = 0
     if cross_cell:
-      next_master_cell = self.primary_cells[(
-          self.primary_cells.index(current_master_cell) + 1) % len(
+      next_main_cell = self.primary_cells[(
+          self.primary_cells.index(current_main_cell) + 1) % len(
               self.primary_cells)]
     else:
-      next_master_task = (
-          (self.get_tablet_task_number(current_master) + 1) % num_tasks)
+      next_main_task = (
+          (self.get_tablet_task_number(current_main) + 1) % num_tasks)
     tablets_in_cell = [tablet for tablet in
-                       self.master_capable_tablets[keyspace][shard_name]
-                       if self.get_tablet_cell(tablet) == next_master_cell]
-    return (next_master_cell, next_master_task,
-            tablets_in_cell[next_master_task])
+                       self.main_capable_tablets[keyspace][shard_name]
+                       if self.get_tablet_cell(tablet) == next_main_cell]
+    return (next_main_cell, next_main_task,
+            tablets_in_cell[next_main_task])
 
   def get_tablet_task_number(self, tablet_name):
     """Gets a tablet's 0 based task number.
@@ -225,13 +225,13 @@ class BaseEnvironment(object):
     raise VitessEnvironmentError(
         'get_tablet_task_number unsupported in this environment')
 
-  def external_reparent(self, keyspace, shard_name, new_master_name):
+  def external_reparent(self, keyspace, shard_name, new_main_name):
     """Perform a reparent through external means (Orchestrator, etc.).
 
     Args:
       keyspace: name of the keyspace to reparent (string).
       shard_name: shard name (string).
-      new_master_name: tablet name of the tablet to become master (string).
+      new_main_name: tablet name of the tablet to become main (string).
 
     Raises:
       VitessEnvironmentError: Raised if unsupported.
@@ -252,61 +252,61 @@ class BaseEnvironment(object):
     """Checks if the environment can explicitly reparent via external tools."""
     return False
 
-  def internal_reparent(self, keyspace, shard_name, new_master_name,
+  def internal_reparent(self, keyspace, shard_name, new_main_name,
                         emergency=False):
     """Performs an internal reparent through vtctl.
 
     Args:
       keyspace: name of the keyspace to reparent (string).
       shard_name: string representation of the shard to reparent (e.g. '-80').
-      new_master_name: Name of the new master tablet (string).
+      new_main_name: Name of the new main tablet (string).
       emergency: True to perform an emergency reparent (bool).
     """
     reparent_type = (
         'EmergencyReparentShard' if emergency else 'PlannedReparentShard')
     self.vtctl_helper.execute_vtctl_command(
-        [reparent_type, '%s/%s' % (keyspace, shard_name), new_master_name])
+        [reparent_type, '%s/%s' % (keyspace, shard_name), new_main_name])
     self.vtctl_helper.execute_vtctl_command(['RebuildKeyspaceGraph', keyspace])
 
-  def get_current_master_cell(self, keyspace):
-    """Obtains current master cell.
+  def get_current_main_cell(self, keyspace):
+    """Obtains current main cell.
 
-    This gets the master cell for the first shard in the keyspace, and assumes
-    that all shards share the same master.
+    This gets the main cell for the first shard in the keyspace, and assumes
+    that all shards share the same main.
 
     Args:
-      keyspace: name of the keyspace to get the master cell for (string).
+      keyspace: name of the keyspace to get the main cell for (string).
 
     Returns:
-      master cell name (string).
+      main cell name (string).
     """
     num_shards = self.num_shards[self.keyspaces.index(keyspace)]
     first_shard_name = sharding_utils.get_shard_name(0, num_shards)
-    first_shard_master_tablet = (
-        self.get_current_master_name(keyspace, first_shard_name))
-    return self.get_tablet_cell(first_shard_master_tablet)
+    first_shard_main_tablet = (
+        self.get_current_main_name(keyspace, first_shard_name))
+    return self.get_tablet_cell(first_shard_main_tablet)
 
-  def get_current_master_name(self, keyspace, shard_name):
-    """Obtains current master's tablet name (cell-uid).
+  def get_current_main_name(self, keyspace, shard_name):
+    """Obtains current main's tablet name (cell-uid).
 
     Args:
-      keyspace: name of the keyspace to get information on the master.
+      keyspace: name of the keyspace to get information on the main.
       shard_name: string representation of the shard in question (e.g. '-80').
 
     Returns:
-      master tablet name (cell-uid) (string).
+      main tablet name (cell-uid) (string).
     """
     shard_info = json.loads(self.vtctl_helper.execute_vtctl_command(
         ['GetShard', '{0}/{1}'.format(keyspace, shard_name)]))
-    master_alias = shard_info['master_alias']
-    return '%s-%s' % (master_alias['cell'], master_alias['uid'])
+    main_alias = shard_info['main_alias']
+    return '%s-%s' % (main_alias['cell'], main_alias['uid'])
 
   def get_random_tablet(self, keyspace=None, shard_name=None, cell=None,
                         tablet_type=None, task_number=None):
     """Get a random tablet name.
 
     Args:
-      keyspace: name of the keyspace to get information on the master.
+      keyspace: name of the keyspace to get information on the main.
       shard_name: shard to select tablet from (None for random) (string).
       cell: cell to select tablet from (None for random) (string).
       tablet_type: type of tablet to select (None for random) (string).
@@ -528,9 +528,9 @@ class BaseEnvironment(object):
 
   def truncate_usertable(self, keyspace, shard, table=None):
     tablename = table or self.tablename
-    master_tablet = self.get_current_master_name(keyspace, shard)
+    main_tablet = self.get_current_main_name(keyspace, shard)
     self.vtctl_helper.execute_vtctl_command(
-        ['ExecuteFetchAsDba', master_tablet, 'truncate %s' % tablename])
+        ['ExecuteFetchAsDba', main_tablet, 'truncate %s' % tablename])
 
   def get_tablet_query_total_count(self, tablet_name):
     """Gets the total query count of a specified tablet.

@@ -29,7 +29,7 @@ import utils
 from vtdb import vtgate_client
 
 # initial shard, covers everything
-tablet_master = tablet.Tablet()
+tablet_main = tablet.Tablet()
 tablet_replica1 = tablet.Tablet()
 tablet_rdonly = tablet.Tablet()
 # to use for recovery keyspace
@@ -38,16 +38,16 @@ tablet_replica3 = tablet.Tablet()
 
 # split shards
 # range '' - 80
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica = tablet.Tablet()
 shard_0_rdonly = tablet.Tablet()
 # range 80 - ''
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 shard_1_replica = tablet.Tablet()
 shard_1_rdonly = tablet.Tablet()
 
-all_tablets = [tablet_master, tablet_replica1, tablet_replica2, tablet_replica3, tablet_rdonly,
-               shard_0_master, shard_0_replica, shard_0_rdonly, shard_1_master, shard_1_replica, shard_1_rdonly]
+all_tablets = [tablet_main, tablet_replica1, tablet_replica2, tablet_replica3, tablet_rdonly,
+               shard_0_main, shard_0_replica, shard_0_rdonly, shard_1_main, shard_1_replica, shard_1_rdonly]
 
 def setUpModule():
   try:
@@ -82,7 +82,7 @@ class TestShardedRecovery(unittest.TestCase):
 
   def setUp(self):
     xtra_args = ['-enable_replication_reporter']
-    tablet_master.init_tablet('replica', 'test_keyspace', '0', start=True,
+    tablet_main.init_tablet('replica', 'test_keyspace', '0', start=True,
                               supports_backups=True,
                               extra_args=xtra_args)
     tablet_replica1.init_tablet('replica', 'test_keyspace', '0', start=True,
@@ -91,8 +91,8 @@ class TestShardedRecovery(unittest.TestCase):
     tablet_rdonly.init_tablet('rdonly', 'test_keyspace', '0', start=True,
                                 supports_backups=True,
                                 extra_args=xtra_args)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     tablet_master.tablet_alias])
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     tablet_main.tablet_alias])
 
   def tearDown(self):
     for t in all_tablets:
@@ -102,7 +102,7 @@ class TestShardedRecovery(unittest.TestCase):
     environment.topo_server().wipe()
     for t in all_tablets:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False, slave=False)
+      t.set_semi_sync_enabled(main=False, subordinate=False)
       t.clean_dbs()
 
     for shard in ['0', '-80', '80-']:
@@ -208,11 +208,11 @@ class TestShardedRecovery(unittest.TestCase):
     """Test recovery from backup flow.
 
     test_recovery will:
-    - create a shard with master and replica1 only
-    - run InitShardMaster
+    - create a shard with main and replica1 only
+    - run InitShardMain
     - insert some data
     - take a backup
-    - insert more data on the master
+    - insert more data on the main
     - perform a resharding
     - create a recovery keyspace
     - bring up tablet_replica2 in the new keyspace
@@ -221,15 +221,15 @@ class TestShardedRecovery(unittest.TestCase):
 
     """
 
-    # insert data on master, wait for replica to get it
+    # insert data on main, wait for replica to get it
     utils.run_vtctl(['ApplySchema',
                      '-sql', self._create_vt_insert_test,
                      'test_keyspace'],
                     auto_log=True)
-    self._insert_data(tablet_master, 1)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
-    # insert more data on the master
-    self._insert_data(tablet_master, 2)
+    # insert more data on the main
+    self._insert_data(tablet_main, 2)
 
     # backup the replica
     utils.run_vtctl(['Backup', tablet_replica1.tablet_alias], auto_log=True)
@@ -240,8 +240,8 @@ class TestShardedRecovery(unittest.TestCase):
     self.assertEqual(len(backups), 1)
     self.assertTrue(backups[0].endswith(tablet_replica1.tablet_alias))
 
-    # insert more data on the master
-    self._insert_data(tablet_master, 3)
+    # insert more data on the main
+    self._insert_data(tablet_main, 3)
 
     utils.run_vtctl(['ApplyVSchema',
                      '-vschema', self._vschema_json,
@@ -249,7 +249,7 @@ class TestShardedRecovery(unittest.TestCase):
                     auto_log=True)
 
     # create the split shards
-    shard_0_master.init_tablet(
+    shard_0_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='-80',
@@ -264,7 +264,7 @@ class TestShardedRecovery(unittest.TestCase):
         keyspace='test_keyspace',
         shard='-80',
         tablet_index=2)
-    shard_1_master.init_tablet(
+    shard_1_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='80-',
@@ -280,25 +280,25 @@ class TestShardedRecovery(unittest.TestCase):
         shard='80-',
         tablet_index=2)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.start_vttablet(wait_for_state=None,
                        binlog_use_v3_resharding_mode=True)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_1_main.tablet_alias], auto_log=True)
 
     for t in [shard_0_replica, shard_1_replica]:
       utils.wait_for_tablet_type(t.tablet_alias, 'replica')
 
-    sharded_tablets = [shard_0_master, shard_0_replica, shard_0_rdonly,
-                       shard_1_master, shard_1_replica, shard_1_rdonly]
+    sharded_tablets = [shard_0_main, shard_0_replica, shard_0_rdonly,
+                       shard_1_main, shard_1_replica, shard_1_rdonly]
     for t in sharded_tablets:
       t.wait_for_vttablet_state('SERVING')
 
@@ -316,16 +316,16 @@ class TestShardedRecovery(unittest.TestCase):
         ['MigrateServedTypes', 'test_keyspace/0', 'rdonly'], auto_log=True)
     utils.run_vtctl(
         ['MigrateServedTypes', 'test_keyspace/0', 'replica'], auto_log=True)
-    # then serve master from the split shards
-    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/0', 'master'],
+    # then serve main from the split shards
+    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/0', 'main'],
                     auto_log=True)
 
     # remove the original tablets in the original shard
-    tablet.kill_tablets([tablet_master, tablet_replica1, tablet_rdonly])
+    tablet.kill_tablets([tablet_main, tablet_replica1, tablet_rdonly])
     for t in [tablet_replica1, tablet_rdonly]:
       utils.run_vtctl(['DeleteTablet', t.tablet_alias], auto_log=True)
-    utils.run_vtctl(['DeleteTablet', '-allow_master',
-                     tablet_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['DeleteTablet', '-allow_main',
+                     tablet_main.tablet_alias], auto_log=True)
 
     # rebuild the serving graph, all mentions of the old shards should be gone
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'], auto_log=True)
@@ -342,11 +342,11 @@ class TestShardedRecovery(unittest.TestCase):
     # start vtgate
     vtgate = utils.VtGate()
     vtgate.start(tablets=[
-      shard_0_master, shard_0_replica, shard_1_master, shard_1_replica, tablet_replica2
+      shard_0_main, shard_0_replica, shard_1_main, shard_1_replica, tablet_replica2
       ], tablet_types_to_wait='REPLICA')
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.80-.replica', 1)
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.80-.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_keyspace.0.replica', 1)
 
@@ -397,12 +397,12 @@ class TestShardedRecovery(unittest.TestCase):
     """Test recovery from backup flow.
 
     test_recovery will:
-    - create a shard with master and replica1 only
-    - run InitShardMaster
+    - create a shard with main and replica1 only
+    - run InitShardMain
     - insert some data
     - perform a resharding
     - take a backup of both new shards
-    - insert more data on the masters of both shards
+    - insert more data on the mains of both shards
     - create a recovery keyspace
     - bring up tablet_replica2 and tablet_replica3 in the new keyspace
     - check that new tablets do not have data created after backup
@@ -410,15 +410,15 @@ class TestShardedRecovery(unittest.TestCase):
 
     """
 
-    # insert data on master, wait for replica to get it
+    # insert data on main, wait for replica to get it
     utils.run_vtctl(['ApplySchema',
                      '-sql', self._create_vt_insert_test,
                      'test_keyspace'],
                     auto_log=True)
-    self._insert_data(tablet_master, 1)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
-    # insert more data on the master
-    self._insert_data(tablet_master, 4)
+    # insert more data on the main
+    self._insert_data(tablet_main, 4)
 
     utils.run_vtctl(['ApplyVSchema',
                      '-vschema', self._vschema_json,
@@ -426,7 +426,7 @@ class TestShardedRecovery(unittest.TestCase):
                     auto_log=True)
 
     # create the split shards
-    shard_0_master.init_tablet(
+    shard_0_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='-80',
@@ -441,7 +441,7 @@ class TestShardedRecovery(unittest.TestCase):
         keyspace='test_keyspace',
         shard='-80',
         tablet_index=2)
-    shard_1_master.init_tablet(
+    shard_1_main.init_tablet(
         'replica',
         keyspace='test_keyspace',
         shard='80-',
@@ -457,25 +457,25 @@ class TestShardedRecovery(unittest.TestCase):
         shard='80-',
         tablet_index=2)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.start_vttablet(wait_for_state=None,
                        binlog_use_v3_resharding_mode=True)
 
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_1_main.tablet_alias], auto_log=True)
 
     for t in [shard_0_replica, shard_1_replica]:
       utils.wait_for_tablet_type(t.tablet_alias, 'replica')
 
-    sharded_tablets = [shard_0_master, shard_0_replica, shard_0_rdonly,
-                       shard_1_master, shard_1_replica, shard_1_rdonly]
+    sharded_tablets = [shard_0_main, shard_0_replica, shard_0_rdonly,
+                       shard_1_main, shard_1_replica, shard_1_rdonly]
     for t in sharded_tablets:
       t.wait_for_vttablet_state('SERVING')
 
@@ -493,16 +493,16 @@ class TestShardedRecovery(unittest.TestCase):
         ['MigrateServedTypes', 'test_keyspace/0', 'rdonly'], auto_log=True)
     utils.run_vtctl(
         ['MigrateServedTypes', 'test_keyspace/0', 'replica'], auto_log=True)
-    # then serve master from the split shards
-    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/0', 'master'],
+    # then serve main from the split shards
+    utils.run_vtctl(['MigrateServedTypes', 'test_keyspace/0', 'main'],
                     auto_log=True)
 
     # remove the original tablets in the original shard
-    tablet.kill_tablets([tablet_master, tablet_replica1, tablet_rdonly])
+    tablet.kill_tablets([tablet_main, tablet_replica1, tablet_rdonly])
     for t in [tablet_replica1, tablet_rdonly]:
       utils.run_vtctl(['DeleteTablet', t.tablet_alias], auto_log=True)
-    utils.run_vtctl(['DeleteTablet', '-allow_master',
-                     tablet_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['DeleteTablet', '-allow_main',
+                     tablet_main.tablet_alias], auto_log=True)
 
     # rebuild the serving graph, all mentions of the old shards should be gone
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'], auto_log=True)
@@ -510,20 +510,20 @@ class TestShardedRecovery(unittest.TestCase):
     # delete the original shard
     utils.run_vtctl(['DeleteShard', 'test_keyspace/0'], auto_log=True)
 
-    result = shard_0_master.mquery('vt_test_keyspace', "select count(*) from vt_insert_test")
+    result = shard_0_main.mquery('vt_test_keyspace', "select count(*) from vt_insert_test")
     shard_0_count = result[0][0]
     logging.debug("Shard -80 has %d rows", shard_0_count)
     shard_0_test_id = 0
     if shard_0_count > 0:
-      result = shard_0_master.mquery('vt_test_keyspace', "select id from vt_insert_test")
+      result = shard_0_main.mquery('vt_test_keyspace', "select id from vt_insert_test")
       shard_0_test_id = result[0][0]
 
-    result = shard_1_master.mquery('vt_test_keyspace', "select count(*) from vt_insert_test")
+    result = shard_1_main.mquery('vt_test_keyspace', "select count(*) from vt_insert_test")
     shard_1_count = result[0][0]
     logging.debug("Shard 80- has %d rows", shard_1_count)
     shard_1_test_id = 0
     if shard_1_count > 0:
-      result = shard_1_master.mquery('vt_test_keyspace', "select id from vt_insert_test")
+      result = shard_1_main.mquery('vt_test_keyspace', "select id from vt_insert_test")
       shard_1_test_id = result[0][0]
 
     # backup the new shards
@@ -544,15 +544,15 @@ class TestShardedRecovery(unittest.TestCase):
     # start vtgate
     vtgate = utils.VtGate()
     vtgate.start(tablets=[
-      shard_0_master, shard_1_master
+      shard_0_main, shard_1_main
       ], tablet_types_to_wait='MASTER')
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
-    utils.vtgate.wait_for_endpoints('test_keyspace.80-.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.80-.main', 1)
 
     vtgate_conn = get_connection()
     cursor = vtgate_conn.cursor(
-        tablet_type='master', keyspace=None, writable=True)
-    # insert more data on the masters
+        tablet_type='main', keyspace=None, writable=True)
+    # insert more data on the mains
     for i in [2, 3]:
       cursor.execute('insert into vt_insert_test (id, msg) values (:id, :msg)', {'id': i, 'msg': 'test %s' % i})
 
@@ -570,11 +570,11 @@ class TestShardedRecovery(unittest.TestCase):
     # start vtgate
     vtgate = utils.VtGate()
     vtgate.start(tablets=[
-      shard_0_master, shard_0_replica, shard_1_master, shard_1_replica, tablet_replica2, tablet_replica3
+      shard_0_main, shard_0_replica, shard_1_main, shard_1_replica, tablet_replica2, tablet_replica3
       ], tablet_types_to_wait='REPLICA')
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.80-.replica', 1)
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
     utils.vtgate.wait_for_endpoints('test_keyspace.80-.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_keyspace.-80.replica', 1)
     utils.vtgate.wait_for_endpoints('recovery_keyspace.80-.replica', 1)

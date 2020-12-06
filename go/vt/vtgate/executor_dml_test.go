@@ -308,7 +308,7 @@ func TestUpdateNormalize(t *testing.T) {
 	sbc1.Queries = nil
 
 	// Force the query to go to the "wrong" shard and ensure that normalization still happens
-	masterSession.TargetString = "TestExecutor/40-60"
+	mainSession.TargetString = "TestExecutor/40-60"
 	_, err = executorExec(executor, "/* leading */ update user set a=2 where id = 1 /* trailing */", nil)
 	if err != nil {
 		t.Error(err)
@@ -327,7 +327,7 @@ func TestUpdateNormalize(t *testing.T) {
 		t.Errorf("sbc2.Queries: %+v, want %+v\n", sbc2.Queries, wantQueries)
 	}
 	sbc2.Queries = nil
-	masterSession.TargetString = ""
+	mainSession.TargetString = ""
 }
 
 func TestDeleteEqual(t *testing.T) {
@@ -1556,7 +1556,7 @@ func TestMultiInsertGeneratorSparse(t *testing.T) {
 func TestKeyDestRangeQuery(t *testing.T) {
 	executor, sbc1, sbc2, _ := createExecutorEnv()
 	// it works in a single shard key range
-	masterSession.TargetString = "TestExecutor[40-60]"
+	mainSession.TargetString = "TestExecutor[40-60]"
 
 	_, err := executorExec(executor, "DELETE FROM sharded_user_msgs LIMIT 1000", nil)
 	if err != nil {
@@ -1577,7 +1577,7 @@ func TestKeyDestRangeQuery(t *testing.T) {
 	sbc2.Queries = nil
 
 	// it works with keyrange spanning two shards
-	masterSession.TargetString = "TestExecutor[-60]"
+	mainSession.TargetString = "TestExecutor[-60]"
 
 	_, err = executorExec(executor, sql, nil)
 	if err != nil {
@@ -1590,7 +1590,7 @@ func TestKeyDestRangeQuery(t *testing.T) {
 	sbc2.Queries = nil
 
 	// it works with open ended key range
-	masterSession.TargetString = "TestExecutor[-]"
+	mainSession.TargetString = "TestExecutor[-]"
 
 	_, err = executorExec(executor, sql, nil)
 	if err != nil {
@@ -1650,13 +1650,13 @@ func TestKeyDestRangeQuery(t *testing.T) {
 
 	sbc1.Queries = nil
 	sbc2.Queries = nil
-	masterSession.TargetString = ""
+	mainSession.TargetString = ""
 }
 
 func TestKeyShardDestQuery(t *testing.T) {
 	executor, sbc1, sbc2, _ := createExecutorEnv()
 	// it works in a single shard key range
-	masterSession.TargetString = "TestExecutor:40-60"
+	mainSession.TargetString = "TestExecutor:40-60"
 
 	_, err := executorExec(executor, "DELETE FROM sharded_user_msgs LIMIT 1000", nil)
 	if err != nil {
@@ -1676,7 +1676,7 @@ func TestKeyShardDestQuery(t *testing.T) {
 	sbc1.Queries = nil
 	sbc2.Queries = nil
 
-	masterSession.TargetString = "TestExecutor:40-60"
+	mainSession.TargetString = "TestExecutor:40-60"
 
 	_, err = executorExec(executor, sql, nil)
 	if err != nil {
@@ -1753,7 +1753,7 @@ func TestKeyShardDestQuery(t *testing.T) {
 
 	sbc1.Queries = nil
 	sbc2.Queries = nil
-	masterSession.TargetString = ""
+	mainSession.TargetString = ""
 }
 
 // Prepared statement tests

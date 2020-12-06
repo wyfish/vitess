@@ -34,7 +34,7 @@ Using this SQL driver is as simple as:
 
   func main() {
     // Connect to vtgate.
-    db, err := vitessdriver.Open("localhost:15991", "keyspace", "master", 30*time.Second)
+    db, err := vitessdriver.Open("localhost:15991", "keyspace", "main", 30*time.Second)
 
     // Use "db" via the Golang sql interface.
   }
@@ -83,11 +83,11 @@ Isolation levels
 
 The Vitess isolation model is different from the one exposed by a traditional database.
 Isolation levels are controlled by connection parameters instead of Go's IsolationLevel.
-You can perform master, replica or rdonly reads. Master reads give you read-after-write
+You can perform main, replica or rdonly reads. Main reads give you read-after-write
 consistency. Replica and rdonly reads give you eventual consistency. Replica reads
 are for satisfying OLTP workloads while rdonly is for OLAP.
 
-All transactions must be sent to the master where writes are allowed.
+All transactions must be sent to the main where writes are allowed.
 Replica and rdonly reads can only be performed outside of a transaction. So, there is
 no concept of a read-only transaction in Vitess.
 

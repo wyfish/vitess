@@ -40,22 +40,22 @@ use_alias = True
 
 # initial shards
 # range '' - 80
-shard_0_master = tablet.Tablet()
+shard_0_main = tablet.Tablet()
 shard_0_replica = tablet.Tablet(cell='ny')
 shard_0_rdonly = tablet.Tablet(cell='ny')
 
 #shard_0_replica = tablet.Tablet()
 #shard_0_rdonly = tablet.Tablet()
 # range 80 - ''
-shard_1_master = tablet.Tablet()
+shard_1_main = tablet.Tablet()
 #shard_1_replica = tablet.Tablet()
 #shard_1_rdonly = tablet.Tablet()
 
 shard_1_replica = tablet.Tablet(cell='ny')
 shard_1_rdonly = tablet.Tablet(cell='ny')
 
-all_tablets = ([shard_0_master, shard_0_replica, shard_0_rdonly,
-                shard_1_master, shard_1_replica,shard_1_rdonly])
+all_tablets = ([shard_0_main, shard_0_replica, shard_0_rdonly,
+                shard_1_main, shard_1_replica,shard_1_rdonly])
 
 vschema = {
     'test_keyspace': '''{
@@ -145,11 +145,11 @@ index by_msg (msg)
                     auto_log=True)
 
   def _insert_startup_values(self):
-    self._insert_value(shard_0_master, 'test_table', 1, 'msg1',
+    self._insert_value(shard_0_main, 'test_table', 1, 'msg1',
                        0x1000000000000000)
-    self._insert_value(shard_1_master, 'test_table', 2, 'msg2',
+    self._insert_value(shard_1_main, 'test_table', 2, 'msg2',
                        0x9000000000000000)
-    self._insert_value(shard_1_master, 'test_table', 3, 'msg3',
+    self._insert_value(shard_1_main, 'test_table', 3, 'msg3',
                        0xD000000000000000)
 
   def test_cells_aliases(self):
@@ -158,10 +158,10 @@ index by_msg (msg)
                      '--sharding_column_type', base_sharding.keyspace_id_type,
                      'test_keyspace'])
 
-    shard_0_master.init_tablet('replica', 'test_keyspace', '-80')
+    shard_0_main.init_tablet('replica', 'test_keyspace', '-80')
     shard_0_replica.init_tablet('replica', 'test_keyspace', '-80')
     shard_0_rdonly.init_tablet('rdonly', 'test_keyspace', '-80')
-    shard_1_master.init_tablet('replica', 'test_keyspace', '80-')
+    shard_1_main.init_tablet('replica', 'test_keyspace', '80-')
     shard_1_replica.init_tablet('replica', 'test_keyspace', '80-')
     shard_1_rdonly.init_tablet('rdonly', 'test_keyspace', '80-')
 
@@ -174,22 +174,22 @@ index by_msg (msg)
                        keyrange_constants.KIT_BYTES)
 
     # create databases so vttablet can start behaving somewhat normally
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.create_db('vt_test_keyspace')
       t.start_vttablet(wait_for_state=None, full_mycnf_args=full_mycnf_args,
                        binlog_use_v3_resharding_mode=False)
 
     # wait for the tablets (replication is not setup, they won't be healthy)
-    for t in [shard_0_master, shard_0_replica, shard_0_rdonly,
-              shard_1_master, shard_1_replica, shard_1_rdonly]:
+    for t in [shard_0_main, shard_0_replica, shard_0_rdonly,
+              shard_1_main, shard_1_replica, shard_1_rdonly]:
       t.wait_for_vttablet_state('NOT_SERVING')
 
     # reparent to make the tablets work
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_1_main.tablet_alias], auto_log=True)
 
     # check the shards
     shards = utils.run_vtctl_json(['FindAllShardsInKeyspace', 'test_keyspace'])
@@ -207,7 +207,7 @@ index by_msg (msg)
     # Make sure srv keyspace graph looks as expected
     utils.check_srv_keyspace(
         'test_nj', 'test_keyspace',
-        'Partitions(master): -80 80-\n'
+        'Partitions(main): -80 80-\n'
         'Partitions(rdonly): -80 80-\n'
         'Partitions(replica): -80 80-\n',
         keyspace_id_type=base_sharding.keyspace_id_type,
@@ -215,7 +215,7 @@ index by_msg (msg)
 
     utils.check_srv_keyspace(
         'test_ny', 'test_keyspace',
-        'Partitions(master): -80 80-\n'
+        'Partitions(main): -80 80-\n'
         'Partitions(rdonly): -80 80-\n'
         'Partitions(replica): -80 80-\n',
         keyspace_id_type=base_sharding.keyspace_id_type,
@@ -237,17 +237,17 @@ index by_msg (msg)
       tablet_types_to_wait='MASTER'
 
     utils.VtGate().start(
-      tablets=[shard_0_master, shard_1_master],
+      tablets=[shard_0_main, shard_1_main],
       tablet_types_to_wait=tablet_types_to_wait,
       cells_to_watch='test_nj,test_ny',
     )
-    utils.vtgate.wait_for_endpoints('test_keyspace.-80.master', 1)
-    utils.vtgate.wait_for_endpoints('test_keyspace.80-.master', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.-80.main', 1)
+    utils.vtgate.wait_for_endpoints('test_keyspace.80-.main', 1)
 
     vtgate_conn = self._get_connection()
     result = self._execute_on_tablet_type(
         vtgate_conn,
-        'master',
+        'main',
         'select count(*) from test_table', {})
     self.assertEqual(
         result,
@@ -258,7 +258,7 @@ index by_msg (msg)
       vtgate_conn = self._get_connection()
       result = self._execute_on_tablet_type(
           vtgate_conn,
-          'master',
+          'main',
           'select count(*) from test_table', {})
       self.assertEqual(
           result,

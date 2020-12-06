@@ -101,22 +101,22 @@ func GetAllTabletsAcrossCells(ctx context.Context, ts *topo.Server) ([]*topo.Tab
 }
 
 // SortedTabletMap returns two maps:
-// - The slaveMap contains all the non-master non-scrapped hosts.
-//   This can be used as a list of slaves to fix up for reparenting
-// - The masterMap contains all the tablets without parents
+// - The subordinateMap contains all the non-main non-scrapped hosts.
+//   This can be used as a list of subordinates to fix up for reparenting
+// - The mainMap contains all the tablets without parents
 //   (scrapped or not). This can be used to special case
-//   the old master, and any tablet in a weird state, left over, ...
+//   the old main, and any tablet in a weird state, left over, ...
 func SortedTabletMap(tabletMap map[string]*topo.TabletInfo) (map[string]*topo.TabletInfo, map[string]*topo.TabletInfo) {
-	slaveMap := make(map[string]*topo.TabletInfo)
-	masterMap := make(map[string]*topo.TabletInfo)
+	subordinateMap := make(map[string]*topo.TabletInfo)
+	mainMap := make(map[string]*topo.TabletInfo)
 	for alias, ti := range tabletMap {
 		if ti.Type == topodatapb.TabletType_MASTER {
-			masterMap[alias] = ti
+			mainMap[alias] = ti
 		} else {
-			slaveMap[alias] = ti
+			subordinateMap[alias] = ti
 		}
 	}
-	return slaveMap, masterMap
+	return subordinateMap, mainMap
 }
 
 // CopyMapKeys copies keys from map m into a new slice with the

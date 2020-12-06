@@ -47,7 +47,7 @@ var (
 
 	// gracePeriod is the amount of time we pause after broadcasting to vtgate
 	// that we're going to stop serving a particular target type (e.g. when going
-	// spare, or when being promoted to master). During this period, we expect
+	// spare, or when being promoted to main). During this period, we expect
 	// vtgate to gracefully redirect traffic elsewhere, before we begin actually
 	// rejecting queries for that target type.
 	gracePeriod = flag.Duration("serving_state_grace_period", 0, "how long to pause after broadcasting health to vtgate, before enforcing a new serving state")
@@ -108,9 +108,9 @@ func (agent *ActionAgent) broadcastHealth() {
 	// send it to our observers
 	// FIXME(alainjobart,liguo) add CpuUsage
 	stats := &querypb.RealtimeStats{
-		SecondsBehindMaster: uint32(replicationDelay.Seconds()),
+		SecondsBehindMain: uint32(replicationDelay.Seconds()),
 	}
-	stats.SecondsBehindMasterFilteredReplication, stats.BinlogPlayersCount = vreplication.StatusSummary()
+	stats.SecondsBehindMainFilteredReplication, stats.BinlogPlayersCount = vreplication.StatusSummary()
 	stats.Qps = tabletenv.QPSRates.TotalRate()
 	if healthError != nil {
 		stats.HealthError = healthError.Error()
@@ -180,7 +180,7 @@ func (agent *ActionAgent) updateState(ctx context.Context, newTablet *topodatapb
 // have changed something in the tablet record or in the topology.
 //
 // It owns making changes to the BinlogPlayerMap. The input for this is the
-// tablet type (has to be master), and the shard's SourceShards.
+// tablet type (has to be main), and the shard's SourceShards.
 //
 // It owns updating the blacklisted tables.
 //
@@ -227,7 +227,7 @@ func (agent *ActionAgent) changeCallback(ctx context.Context, oldTablet, newTabl
 				if newTablet.Type == topodatapb.TabletType_MASTER {
 					if len(shardInfo.SourceShards) > 0 {
 						allowQuery = false
-						disallowQueryReason = "master tablet with filtered replication on"
+						disallowQueryReason = "main tablet with filtered replication on"
 						disallowQueryService = disallowQueryReason
 					}
 				} else {
@@ -293,7 +293,7 @@ func (agent *ActionAgent) changeCallback(ctx context.Context, oldTablet, newTabl
 		// Query service should be running.
 		if oldTablet.Type == topodatapb.TabletType_REPLICA &&
 			newTablet.Type == topodatapb.TabletType_MASTER {
-			// When promoting from replica to master, allow both master and replica
+			// When promoting from replica to main, allow both main and replica
 			// queries to be served during gracePeriod.
 			if _, err := agent.QueryServiceControl.SetServingType(newTablet.Type,
 				true, []topodatapb.TabletType{oldTablet.Type}); err == nil {
@@ -307,9 +307,9 @@ func (agent *ActionAgent) changeCallback(ctx context.Context, oldTablet, newTabl
 
 		if stateChanged, err := agent.QueryServiceControl.SetServingType(newTablet.Type, true, nil); err == nil {
 			// If the state changed, broadcast to vtgate.
-			// (e.g. this happens when the tablet was already master, but it just
+			// (e.g. this happens when the tablet was already main, but it just
 			// changed from NOT_SERVING to SERVING due to
-			// "vtctl MigrateServedFrom ... master".)
+			// "vtctl MigrateServedFrom ... main".)
 			if stateChanged {
 				broadcastHealth = true
 			}
@@ -330,7 +330,7 @@ func (agent *ActionAgent) changeCallback(ctx context.Context, oldTablet, newTabl
 		log.Infof("Disabling query service on type change, reason: %v", disallowQueryReason)
 		if stateChanged, err := agent.QueryServiceControl.SetServingType(newTablet.Type, false, nil); err == nil {
 			// If the state changed, broadcast to vtgate.
-			// (e.g. this happens when the tablet was already master, but it just
+			// (e.g. this happens when the tablet was already main, but it just
 			// changed from SERVING to NOT_SERVING because filtered replication was
 			// enabled.)
 			if stateChanged {

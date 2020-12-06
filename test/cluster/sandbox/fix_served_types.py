@@ -38,7 +38,7 @@ import vtctl_sandbox
 TABLET_TYPES = [
     (topodata_pb2.REPLICA, 'replica'),
     (topodata_pb2.RDONLY, 'rdonly'),
-    (topodata_pb2.MASTER, 'master'),
+    (topodata_pb2.MASTER, 'main'),
 ]
 
 

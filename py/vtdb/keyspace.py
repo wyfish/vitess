@@ -64,7 +64,7 @@ class Keyspace(object):
 
     Args:
       keyspace_id: A uint64 keyspace_id.
-      db_type: Str tablet type (master, rdonly, or replica).
+      db_type: Str tablet type (main, rdonly, or replica).
 
     Returns:
       Shard name.

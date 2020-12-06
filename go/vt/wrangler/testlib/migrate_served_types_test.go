@@ -84,7 +84,7 @@ func TestMigrateServedTypes(t *testing.T) {
 	}
 
 	// create the source shard
-	sourceMaster := NewFakeTablet(t, wr, "cell1", 10, topodatapb.TabletType_MASTER, nil,
+	sourceMain := NewFakeTablet(t, wr, "cell1", 10, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "0"))
 	sourceReplica := NewFakeTablet(t, wr, "cell1", 11, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "0"))
@@ -92,7 +92,7 @@ func TestMigrateServedTypes(t *testing.T) {
 		TabletKeyspaceShard(t, "ks", "0"))
 
 	// create the first destination shard
-	dest1Master := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
+	dest1Main := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "-80"))
 	dest1Replica := NewFakeTablet(t, wr, "cell1", 21, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "-80"))
@@ -100,7 +100,7 @@ func TestMigrateServedTypes(t *testing.T) {
 		TabletKeyspaceShard(t, "ks", "-80"))
 
 	// create the second destination shard
-	dest2Master := NewFakeTablet(t, wr, "cell1", 30, topodatapb.TabletType_MASTER, nil,
+	dest2Main := NewFakeTablet(t, wr, "cell1", 30, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "80-"))
 	dest2Replica := NewFakeTablet(t, wr, "cell1", 31, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "80-"))
@@ -125,9 +125,9 @@ func TestMigrateServedTypes(t *testing.T) {
 	sourceReplica.StartActionLoop(t, wr)
 	defer sourceReplica.StopActionLoop(t)
 
-	// sourceMaster will see the refresh, and has to respond to it
+	// sourceMain will see the refresh, and has to respond to it
 	// also will be asked about its replication position.
-	sourceMaster.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	sourceMain.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -136,8 +136,8 @@ func TestMigrateServedTypes(t *testing.T) {
 			},
 		},
 	}
-	sourceMaster.StartActionLoop(t, wr)
-	defer sourceMaster.StopActionLoop(t)
+	sourceMain.StartActionLoop(t, wr)
+	defer sourceMain.StopActionLoop(t)
 
 	// dest1Rdonly will see the refresh
 	dest1Rdonly.StartActionLoop(t, wr)
@@ -147,16 +147,16 @@ func TestMigrateServedTypes(t *testing.T) {
 	dest1Replica.StartActionLoop(t, wr)
 	defer dest1Replica.StopActionLoop(t)
 
-	dest1Master.StartActionLoop(t, wr)
-	defer dest1Master.StopActionLoop(t)
+	dest1Main.StartActionLoop(t, wr)
+	defer dest1Main.StopActionLoop(t)
 
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient1 := binlogplayer.NewMockDBClient(t)
 	dbClientFactory1 := func() binlogplayer.DBClient { return dbClient1 }
-	dest1Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest1Master.FakeMysqlDaemon, dbClientFactory1, dbClient1.DBName())
+	dest1Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest1Main.FakeMysqlDaemon, dbClientFactory1, dbClient1.DBName())
 	// select * from _vt.vreplication during Open
 	dbClient1.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest1Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest1Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	// select pos, state, message from _vt.vreplication
@@ -175,16 +175,16 @@ func TestMigrateServedTypes(t *testing.T) {
 	dest2Replica.StartActionLoop(t, wr)
 	defer dest2Replica.StopActionLoop(t)
 
-	dest2Master.StartActionLoop(t, wr)
-	defer dest2Master.StopActionLoop(t)
+	dest2Main.StartActionLoop(t, wr)
+	defer dest2Main.StopActionLoop(t)
 
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient2 := binlogplayer.NewMockDBClient(t)
 	dbClientFactory2 := func() binlogplayer.DBClient { return dbClient2 }
-	dest2Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest2Master.FakeMysqlDaemon, dbClientFactory2, dbClient2.DBName())
+	dest2Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest2Main.FakeMysqlDaemon, dbClientFactory2, dbClient2.DBName())
 	// select * from _vt.vreplication during Open
 	dbClient2.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest2Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest2Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	// select pos, state, message from _vt.vreplication
@@ -235,9 +235,9 @@ func TestMigrateServedTypes(t *testing.T) {
 	checkShardSourceShards(t, ts, "-80", 1)
 	checkShardSourceShards(t, ts, "80-", 1)
 
-	// migrate master over
-	if err := vp.Run([]string{"MigrateServedTypes", "ks/0", "master"}); err != nil {
-		t.Fatalf("MigrateServedType(master) failed: %v", err)
+	// migrate main over
+	if err := vp.Run([]string{"MigrateServedTypes", "ks/0", "main"}); err != nil {
+		t.Fatalf("MigrateServedType(main) failed: %v", err)
 	}
 
 	checkShardServedTypes(t, ts, "0", 0)
@@ -266,7 +266,7 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	}
 
 	// create the first source shard
-	source1Master := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
+	source1Main := NewFakeTablet(t, wr, "cell1", 20, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "-80"))
 	source1Replica := NewFakeTablet(t, wr, "cell1", 21, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "-80"))
@@ -274,14 +274,14 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 		TabletKeyspaceShard(t, "ks", "-80"))
 
 	// create the second source shard
-	source2Master := NewFakeTablet(t, wr, "cell1", 30, topodatapb.TabletType_MASTER, nil,
+	source2Main := NewFakeTablet(t, wr, "cell1", 30, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "80-"))
 	source2Replica := NewFakeTablet(t, wr, "cell1", 31, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "80-"))
 	source2Rdonly := NewFakeTablet(t, wr, "cell1", 32, topodatapb.TabletType_RDONLY, nil,
 		TabletKeyspaceShard(t, "ks", "80-"))
 
-	dest1Master := NewFakeTablet(t, wr, "cell1", 40, topodatapb.TabletType_MASTER, nil,
+	dest1Main := NewFakeTablet(t, wr, "cell1", 40, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "-40"))
 	dest1Replica := NewFakeTablet(t, wr, "cell1", 41, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "-40"))
@@ -289,14 +289,14 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 		TabletKeyspaceShard(t, "ks", "-40"))
 
 	//	create the second source shard
-	dest2Master := NewFakeTablet(t, wr, "cell1", 50, topodatapb.TabletType_MASTER, nil,
+	dest2Main := NewFakeTablet(t, wr, "cell1", 50, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "40-80"))
 	dest2Replica := NewFakeTablet(t, wr, "cell1", 51, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "40-80"))
 	dest2Rdonly := NewFakeTablet(t, wr, "cell1", 52, topodatapb.TabletType_RDONLY, nil,
 		TabletKeyspaceShard(t, "ks", "40-80"))
 
-	dest3Master := NewFakeTablet(t, wr, "cell1", 60, topodatapb.TabletType_MASTER, nil,
+	dest3Main := NewFakeTablet(t, wr, "cell1", 60, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "80-c0"))
 	dest3Replica := NewFakeTablet(t, wr, "cell1", 61, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "80-c0"))
@@ -304,7 +304,7 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 		TabletKeyspaceShard(t, "ks", "80-c0"))
 
 	// create the second source shard
-	dest4Master := NewFakeTablet(t, wr, "cell1", 70, topodatapb.TabletType_MASTER, nil,
+	dest4Main := NewFakeTablet(t, wr, "cell1", 70, topodatapb.TabletType_MASTER, nil,
 		TabletKeyspaceShard(t, "ks", "c0-"))
 	dest4Replica := NewFakeTablet(t, wr, "cell1", 71, topodatapb.TabletType_REPLICA, nil,
 		TabletKeyspaceShard(t, "ks", "c0-"))
@@ -332,9 +332,9 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	source1Replica.StartActionLoop(t, wr)
 	defer source1Replica.StopActionLoop(t)
 
-	// source1Master will see the refresh, and has to respond to it
+	// source1Main will see the refresh, and has to respond to it
 	// also will be asked about its replication position.
-	source1Master.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	source1Main.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -343,8 +343,8 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 			},
 		},
 	}
-	source1Master.StartActionLoop(t, wr)
-	defer source1Master.StopActionLoop(t)
+	source1Main.StartActionLoop(t, wr)
+	defer source1Main.StopActionLoop(t)
 
 	// // dest1Rdonly will see the refresh
 	dest1Rdonly.StartActionLoop(t, wr)
@@ -354,8 +354,8 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	dest1Replica.StartActionLoop(t, wr)
 	defer dest1Replica.StopActionLoop(t)
 
-	dest1Master.StartActionLoop(t, wr)
-	defer dest1Master.StopActionLoop(t)
+	dest1Main.StartActionLoop(t, wr)
+	defer dest1Main.StopActionLoop(t)
 
 	// // dest2Rdonly will see the refresh
 	dest2Rdonly.StartActionLoop(t, wr)
@@ -365,8 +365,8 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	dest2Replica.StartActionLoop(t, wr)
 	defer dest2Replica.StopActionLoop(t)
 
-	dest2Master.StartActionLoop(t, wr)
-	defer dest2Master.StopActionLoop(t)
+	dest2Main.StartActionLoop(t, wr)
+	defer dest2Main.StopActionLoop(t)
 
 	// Now let's kick off the process for the second shard.
 
@@ -378,9 +378,9 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	source2Replica.StartActionLoop(t, wr)
 	defer source2Replica.StopActionLoop(t)
 
-	// sourceMaster will see the refresh, and has to respond to it
+	// sourceMain will see the refresh, and has to respond to it
 	// also will be asked about its replication position.
-	source2Master.FakeMysqlDaemon.CurrentMasterPosition = mysql.Position{
+	source2Main.FakeMysqlDaemon.CurrentMainPosition = mysql.Position{
 		GTIDSet: mysql.MariadbGTIDSet{
 			mysql.MariadbGTID{
 				Domain:   5,
@@ -389,8 +389,8 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 			},
 		},
 	}
-	source2Master.StartActionLoop(t, wr)
-	defer source2Master.StopActionLoop(t)
+	source2Main.StartActionLoop(t, wr)
+	defer source2Main.StopActionLoop(t)
 
 	// dest3Rdonly will see the refresh
 	dest3Rdonly.StartActionLoop(t, wr)
@@ -400,8 +400,8 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	dest3Replica.StartActionLoop(t, wr)
 	defer dest3Replica.StopActionLoop(t)
 
-	dest3Master.StartActionLoop(t, wr)
-	defer dest3Master.StopActionLoop(t)
+	dest3Main.StartActionLoop(t, wr)
+	defer dest3Main.StopActionLoop(t)
 
 	// dest4Rdonly will see the refresh
 	dest4Rdonly.StartActionLoop(t, wr)
@@ -411,16 +411,16 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	dest4Replica.StartActionLoop(t, wr)
 	defer dest4Replica.StopActionLoop(t)
 
-	dest4Master.StartActionLoop(t, wr)
-	defer dest4Master.StopActionLoop(t)
+	dest4Main.StartActionLoop(t, wr)
+	defer dest4Main.StopActionLoop(t)
 
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient1 := binlogplayer.NewMockDBClient(t)
 	dbClientFactory1 := func() binlogplayer.DBClient { return dbClient1 }
-	dest1Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest1Master.FakeMysqlDaemon, dbClientFactory1, "db")
+	dest1Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest1Main.FakeMysqlDaemon, dbClientFactory1, "db")
 	// select * from _vt.vreplication during Open
 	dbClient1.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest1Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest1Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	// select pos, state, message from _vt.vreplication
@@ -434,10 +434,10 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient2 := binlogplayer.NewMockDBClient(t)
 	dbClientFactory2 := func() binlogplayer.DBClient { return dbClient2 }
-	dest2Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest2Master.FakeMysqlDaemon, dbClientFactory2, "db")
+	dest2Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest2Main.FakeMysqlDaemon, dbClientFactory2, "db")
 	// select * from _vt.vreplication during Open
 	dbClient2.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest2Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest2Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -489,9 +489,9 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	checkShardSourceShards(t, ts, "-40", 1)
 	checkShardSourceShards(t, ts, "40-80", 1)
 
-	// migrate master over
-	if err := vp.Run([]string{"MigrateServedTypes", "ks/-80", "master"}); err != nil {
-		t.Fatalf("MigrateServedType(master) failed: %v", err)
+	// migrate main over
+	if err := vp.Run([]string{"MigrateServedTypes", "ks/-80", "main"}); err != nil {
+		t.Fatalf("MigrateServedType(main) failed: %v", err)
 	}
 
 	checkShardServedTypes(t, ts, "-80", 0)
@@ -505,10 +505,10 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient1 = binlogplayer.NewMockDBClient(t)
 	dbClientFactory1 = func() binlogplayer.DBClient { return dbClient1 }
-	dest3Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest3Master.FakeMysqlDaemon, dbClientFactory1, "db")
+	dest3Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest3Main.FakeMysqlDaemon, dbClientFactory1, "db")
 	// select * from _vt.vreplication during Open
 	dbClient1.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest3Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest3Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	// select pos, state, message from _vt.vreplication
@@ -522,10 +522,10 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	// Override with a fake VREngine after Agent is initialized in action loop.
 	dbClient2 = binlogplayer.NewMockDBClient(t)
 	dbClientFactory2 = func() binlogplayer.DBClient { return dbClient2 }
-	dest4Master.Agent.VREngine = vreplication.NewEngine(ts, "", dest4Master.FakeMysqlDaemon, dbClientFactory2, "db")
+	dest4Main.Agent.VREngine = vreplication.NewEngine(ts, "", dest4Main.FakeMysqlDaemon, dbClientFactory2, "db")
 	// select * from _vt.vreplication during Open
 	dbClient2.ExpectRequest("select * from _vt.vreplication where db_name='db'", &sqltypes.Result{}, nil)
-	if err := dest4Master.Agent.VREngine.Open(context.Background()); err != nil {
+	if err := dest4Main.Agent.VREngine.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -571,9 +571,9 @@ func TestMultiShardMigrateServedTypes(t *testing.T) {
 	checkShardSourceShards(t, ts, "80-c0", 1)
 	checkShardSourceShards(t, ts, "c0-", 1)
 
-	// // migrate master over
-	if err := vp.Run([]string{"MigrateServedTypes", "ks/80-", "master"}); err != nil {
-		t.Fatalf("MigrateServedType(master) failed: %v", err)
+	// // migrate main over
+	if err := vp.Run([]string{"MigrateServedTypes", "ks/80-", "main"}); err != nil {
+		t.Fatalf("MigrateServedType(main) failed: %v", err)
 	}
 
 	checkShardServedTypes(t, ts, "80-", 0)

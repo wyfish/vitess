@@ -441,9 +441,9 @@ func (scw *SplitCloneWorker) run(ctx context.Context) error {
 		return err
 	}
 
-	// Phase 2: Find destination master tablets.
-	if err := scw.findDestinationMasters(ctx); err != nil {
-		return vterrors.Wrap(err, "findDestinationMasters() failed")
+	// Phase 2: Find destination main tablets.
+	if err := scw.findDestinationMains(ctx); err != nil {
+		return vterrors.Wrap(err, "findDestinationMains() failed")
 	}
 	if err := checkDone(ctx); err != nil {
 		return err
@@ -477,8 +477,8 @@ func (scw *SplitCloneWorker) run(ctx context.Context) error {
 		scw.wr.Logger().Infof("Offline clone will be run now.")
 		if scw.online {
 			// Wait until the inserts from the online clone were propagated
-			// from the destination master to the rdonly tablets.
-			// TODO(mberlin): Remove the sleep and get the destination master position
+			// from the destination main to the rdonly tablets.
+			// TODO(mberlin): Remove the sleep and get the destination main position
 			// instead and wait until all selected destination tablets have reached
 			// it.
 			time.Sleep(1 * time.Second)
@@ -783,13 +783,13 @@ func (scw *SplitCloneWorker) findOfflineSourceTablets(ctx context.Context) error
 		scw.sourceTablets[i] = ti.Tablet
 
 		shortCtx, cancel = context.WithTimeout(ctx, *remoteActionsTimeout)
-		err = scw.wr.TabletManagerClient().StopSlave(shortCtx, scw.sourceTablets[i])
+		err = scw.wr.TabletManagerClient().StopSubordinate(shortCtx, scw.sourceTablets[i])
 		cancel()
 		if err != nil {
 			return vterrors.Wrapf(err, "cannot stop replication on tablet %v", topoproto.TabletAliasString(alias))
 		}
 
-		wrangler.RecordStartSlaveAction(scw.cleaner, scw.sourceTablets[i])
+		wrangler.RecordStartSubordinateAction(scw.cleaner, scw.sourceTablets[i])
 	}
 
 	return nil
@@ -836,11 +836,11 @@ func (scw *SplitCloneWorker) findTransactionalSources(ctx context.Context) error
 	return nil
 }
 
-// findDestinationMasters finds for each destination shard the current master.
-func (scw *SplitCloneWorker) findDestinationMasters(ctx context.Context) error {
+// findDestinationMains finds for each destination shard the current main.
+func (scw *SplitCloneWorker) findDestinationMains(ctx context.Context) error {
 	scw.setState(WorkerStateFindTargets)
 
-	// Make sure we find a master for each destination shard and log it.
+	// Make sure we find a main for each destination shard and log it.
 	scw.wr.Logger().Infof("Finding a MASTER tablet for each destination shard...")
 	for _, si := range scw.destinationShards {
 		waitCtx, waitCancel := context.WithTimeout(ctx, *waitForHealthyTabletsTimeout)
@@ -849,19 +849,19 @@ func (scw *SplitCloneWorker) findDestinationMasters(ctx context.Context) error {
 		if err != nil {
 			return vterrors.Wrapf(err, "cannot find MASTER tablet for destination shard for %v/%v (in cell: %v)", si.Keyspace(), si.ShardName(), scw.cell)
 		}
-		masters := scw.tsc.GetHealthyTabletStats(si.Keyspace(), si.ShardName(), topodatapb.TabletType_MASTER)
-		if len(masters) == 0 {
+		mains := scw.tsc.GetHealthyTabletStats(si.Keyspace(), si.ShardName(), topodatapb.TabletType_MASTER)
+		if len(mains) == 0 {
 			return vterrors.Errorf(vtrpc.Code_FAILED_PRECONDITION, "cannot find MASTER tablet for destination shard for %v/%v (in cell: %v) in HealthCheck: empty TabletStats list", si.Keyspace(), si.ShardName(), scw.cell)
 		}
-		master := masters[0]
+		main := mains[0]
 
 		// Get the MySQL database name of the tablet.
 		keyspaceAndShard := topoproto.KeyspaceShardString(si.Keyspace(), si.ShardName())
-		scw.destinationDbNames[keyspaceAndShard] = topoproto.TabletDbName(master.Tablet)
+		scw.destinationDbNames[keyspaceAndShard] = topoproto.TabletDbName(main.Tablet)
 
-		scw.wr.Logger().Infof("Using tablet %v as destination master for %v/%v", topoproto.TabletAliasString(master.Tablet.Alias), si.Keyspace(), si.ShardName())
+		scw.wr.Logger().Infof("Using tablet %v as destination main for %v/%v", topoproto.TabletAliasString(main.Tablet.Alias), si.Keyspace(), si.ShardName())
 	}
-	scw.wr.Logger().Infof("NOTE: The used master of a destination shard might change over the course of the copy e.g. due to a reparent. The HealthCheck module will track and log master changes and any error message will always refer the actually used master address.")
+	scw.wr.Logger().Infof("NOTE: The used main of a destination shard might change over the course of the copy e.g. due to a reparent. The HealthCheck module will track and log main changes and any error message will always refer the actually used main address.")
 
 	return nil
 }
@@ -1141,7 +1141,7 @@ func (scw *SplitCloneWorker) startCloningData(ctx context.Context, state StatusW
 }
 
 // copy phase:
-//	- copy the data from source tablets to destination masters (with replication on)
+//	- copy the data from source tablets to destination mains (with replication on)
 // Assumes that the schema has already been created on each destination tablet
 // (probably from vtctl's CopySchemaShard)
 func (scw *SplitCloneWorker) clone(ctx context.Context, state StatusWorkerState) error {
@@ -1246,7 +1246,7 @@ func (scw *SplitCloneWorker) setUpVReplication(ctx context.Context) error {
 	} else {
 		for shardIndex := range scw.sourceShards {
 			shortCtx, cancel := context.WithTimeout(ctx, *remoteActionsTimeout)
-			status, err := scw.wr.TabletManagerClient().SlaveStatus(shortCtx, scw.sourceTablets[shardIndex])
+			status, err := scw.wr.TabletManagerClient().SubordinateStatus(shortCtx, scw.sourceTablets[shardIndex])
 			cancel()
 			if err != nil {
 				return err
@@ -1353,7 +1353,7 @@ func (scw *SplitCloneWorker) createKeyResolver(td *tabletmanagerdatapb.TableDefi
 	return newV2Resolver(scw.destinationKeyspaceInfo, td)
 }
 
-// StatsUpdate receives replication lag updates for each destination master
+// StatsUpdate receives replication lag updates for each destination main
 // and forwards them to the respective throttler instance.
 // It also forwards any update to the TabletStatsCache to keep it up to date.
 // It is part of the discovery.HealthCheckStatsListener interface.

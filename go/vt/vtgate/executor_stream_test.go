@@ -90,7 +90,7 @@ func executorStreamMessages(executor *Executor, sql string) (qr *sqltypes.Result
 	err = executor.StreamExecute(
 		ctx,
 		"TestExecuteStream",
-		NewSafeSession(masterSession),
+		NewSafeSession(mainSession),
 		sql,
 		nil,
 		querypb.Target{

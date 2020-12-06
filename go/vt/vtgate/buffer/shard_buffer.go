@@ -88,8 +88,8 @@ type shardBuffer struct {
 	// lastReparent is the last time we saw that the tablet alias of the MASTER
 	// changed i.e. we definitely reparented to a different tablet.
 	lastReparent time.Time
-	// currentMaster is tracked to determine when to update "lastReparent".
-	currentMaster *topodatapb.TabletAlias
+	// currentMain is tracked to determine when to update "lastReparent".
+	currentMain *topodatapb.TabletAlias
 	// timeoutThread will be set while a failover is in progress and the object is
 	// in the BUFFERING state.
 	timeoutThread *timeoutThread
@@ -175,7 +175,7 @@ func (sb *shardBuffer) waitForFailoverEnd(ctx context.Context, keyspace, shard s
 
 		// a) Buffering was stopped recently.
 		// This can happen when we stop buffering while MySQL is not ready yet
-		// (read-only mode is not cleared yet on the new master).
+		// (read-only mode is not cleared yet on the new main).
 		lastBufferingStopped := now.Sub(sb.lastEnd)
 		if !sb.lastEnd.IsZero() && lastBufferingStopped < *minTimeBetweenFailovers {
 			sb.mu.Unlock()
@@ -197,7 +197,7 @@ func (sb *shardBuffer) waitForFailoverEnd(ctx context.Context, keyspace, shard s
 		// This can happen when we see the end of the reparent *before* the first
 		// request failure caused by the reparent. This is possible if the QPS is
 		// very low. If we do not skip buffering here, we would start buffering but
-		// not stop because we already observed the promotion of the new master.
+		// not stop because we already observed the promotion of the new main.
 		lastReparentAgo := now.Sub(sb.lastReparent)
 		if !sb.lastReparent.IsZero() && lastReparentAgo < *minTimeBetweenFailovers {
 			sb.mu.Unlock()
@@ -345,7 +345,7 @@ func (sb *shardBuffer) bufferRequestLocked(ctx context.Context) (*entry, error) 
 // If releaseSlot is true, the buffer semaphore will be decreased by 1 when
 // the request retried and finished.
 // If blockingWait is true, this call will block until the request retried and
-// finished. This mode is used during the drain (to avoid flooding the master)
+// finished. This mode is used during the drain (to avoid flooding the main)
 // while the non-blocking mode is used when a) evicting a request (e.g. because
 // the buffer is full or it exceeded the buffering window) or b) when the
 // request was canceled from outside and we removed it.
@@ -420,7 +420,7 @@ func (sb *shardBuffer) evictOldestEntry(e *entry) {
 	// timeout thread as fast as possible. However, the slot of the evicted
 	// request is only returned after it has finished i.e. the buffer may stay
 	// full in the meantime. This is a design tradeoff to keep things simple and
-	// avoid additional pressure on the master tablet.
+	// avoid additional pressure on the main tablet.
 	sb.unblockAndWait(e, nil /* err */, true /* releaseSlot */, false /* blockingWait */)
 	sb.queue = sb.queue[1:]
 	statsKeyWithReason := append(sb.statsKey, evictedWindowExceeded)
@@ -473,8 +473,8 @@ func (sb *shardBuffer) recordExternallyReparentedTimestamp(timestamp int64, alia
 	sb.mu.RLock()
 	if timestamp <= sb.externallyReparented {
 		// Do nothing. Equal values are reported if the MASTER has not changed.
-		// Smaller values can be reported during the failover by the old master
-		// after the new master already took over.
+		// Smaller values can be reported during the failover by the old main
+		// after the new main already took over.
 		sb.mu.RUnlock()
 		return
 	}
@@ -490,11 +490,11 @@ func (sb *shardBuffer) recordExternallyReparentedTimestamp(timestamp int64, alia
 	}
 
 	sb.externallyReparented = timestamp
-	if !topoproto.TabletAliasEqual(alias, sb.currentMaster) {
-		if sb.currentMaster != nil {
+	if !topoproto.TabletAliasEqual(alias, sb.currentMain) {
+		if sb.currentMain != nil {
 			sb.lastReparent = sb.now()
 		}
-		sb.currentMaster = alias
+		sb.currentMain = alias
 	}
 	sb.stopBufferingLocked(stopFailoverEndDetected, "failover end detected")
 }

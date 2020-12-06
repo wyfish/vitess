@@ -119,7 +119,7 @@ func (me *Engine) Subscribe(ctx context.Context, name string, send func(*sqltype
 	me.mu.Lock()
 	defer me.mu.Unlock()
 	if !me.isOpen {
-		return nil, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "messager engine is closed, probably because this is not a master any more")
+		return nil, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "messager engine is closed, probably because this is not a main any more")
 	}
 	mm := me.managers[name]
 	if mm == nil {

@@ -48,8 +48,8 @@ func createSetup(ctx context.Context, t *testing.T) (*topo.Server, *topo.Server)
 			Cell: "test_cell",
 			Uid:  123,
 		},
-		Hostname:      "masterhost",
-		MysqlHostname: "masterhost",
+		Hostname:      "mainhost",
+		MysqlHostname: "mainhost",
 		PortMap: map[string]int32{
 			"vt":   8101,
 			"gprc": 8102,
@@ -62,7 +62,7 @@ func createSetup(ctx context.Context, t *testing.T) (*topo.Server, *topo.Server)
 	}
 	topoproto.SetMysqlPort(tablet1, 3306)
 	if err := fromTS.CreateTablet(ctx, tablet1); err != nil {
-		t.Fatalf("cannot create master tablet: %v", err)
+		t.Fatalf("cannot create main tablet: %v", err)
 	}
 	tablet2 := &topodatapb.Tablet{
 		Alias: &topodatapb.TabletAlias{
@@ -73,8 +73,8 @@ func createSetup(ctx context.Context, t *testing.T) (*topo.Server, *topo.Server)
 			"vt":   8101,
 			"grpc": 8102,
 		},
-		Hostname:      "slavehost",
-		MysqlHostname: "slavehost",
+		Hostname:      "subordinatehost",
+		MysqlHostname: "subordinatehost",
 
 		Keyspace:       "test_keyspace",
 		Shard:          "0",
@@ -84,7 +84,7 @@ func createSetup(ctx context.Context, t *testing.T) (*topo.Server, *topo.Server)
 	}
 	topoproto.SetMysqlPort(tablet2, 3306)
 	if err := fromTS.CreateTablet(ctx, tablet2); err != nil {
-		t.Fatalf("cannot create slave tablet: %v", err)
+		t.Fatalf("cannot create subordinate tablet: %v", err)
 	}
 
 	rr := &vschemapb.RoutingRules{

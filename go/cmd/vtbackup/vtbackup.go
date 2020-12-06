@@ -35,9 +35,9 @@ Whatever system launches vtbackup is responsible for the following:
 The process vtbackup follows to take a new backup is as follows:
 1. Restore from the most recent backup.
 2. Start a mysqld instance (but no vttablet) from the restored data.
-3. Instruct mysqld to connect to the current shard master and replicate any
+3. Instruct mysqld to connect to the current shard main and replicate any
    transactions that are new since the last backup.
-4. Ask the master for its current replication position and set that as the goal
+4. Ask the main for its current replication position and set that as the goal
    for catching up on replication before taking the backup, so the goalposts
    don't move.
 5. Wait until replication is caught up to the goal position or beyond.
@@ -89,7 +89,7 @@ import (
 
 const (
 	// operationTimeout is the timeout for individual operations like fetching
-	// the master position. This does not impose an overall timeout on
+	// the main position. This does not impose an overall timeout on
 	// long-running processes like taking the backup. It only applies to
 	// steps along the way that should complete quickly. This ensures we don't
 	// place a hard cap on the overall time for a backup, while also not waiting
@@ -251,8 +251,8 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 	// In initial_backup mode, just take a backup of this empty database.
 	if *initialBackup {
 		// Take a backup of this empty DB without restoring anything.
-		// First, initialize it the way InitShardMaster would, so this backup
-		// produces a result that can be used to skip InitShardMaster entirely.
+		// First, initialize it the way InitShardMain would, so this backup
+		// produces a result that can be used to skip InitShardMain entirely.
 		// This involves resetting replication (to erase any history) and then
 		// creating the main database and some Vitess system tables.
 		if err := mysqld.ResetReplication(ctx); err != nil {
@@ -313,33 +313,33 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 		return fmt.Errorf("error starting replication: %v", err)
 	}
 
-	// Get the current master replication position, and wait until we catch up
-	// to that point. We do this instead of looking at Seconds_Behind_Master
+	// Get the current main replication position, and wait until we catch up
+	// to that point. We do this instead of looking at Seconds_Behind_Main
 	// (replication lag reported by SHOW SLAVE STATUS) because that value can
 	// sometimes lie and tell you there's 0 lag when actually replication is
 	// stopped. Also, if replication is making progress but is too slow to ever
 	// catch up to live changes, we'd rather take a backup of something rather
 	// than timing out.
 	tmc := tmclient.NewTabletManagerClient()
-	// Keep retrying if we can't contact the master. The master might be
+	// Keep retrying if we can't contact the main. The main might be
 	// changing, moving, or down temporarily.
-	var masterPos mysql.Position
+	var mainPos mysql.Position
 	err = retryOnError(ctx, func() error {
-		// Add a per-operation timeout so we re-read topo if the master is unreachable.
+		// Add a per-operation timeout so we re-read topo if the main is unreachable.
 		opCtx, cancel := context.WithTimeout(ctx, operationTimeout)
 		defer cancel()
-		pos, err := getMasterPosition(opCtx, tmc, topoServer)
+		pos, err := getMainPosition(opCtx, tmc, topoServer)
 		if err != nil {
-			return fmt.Errorf("can't get the master replication position: %v", err)
+			return fmt.Errorf("can't get the main replication position: %v", err)
 		}
-		masterPos = pos
+		mainPos = pos
 		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	// Remember the time when we fetched the master position, not when we caught
+	// Remember the time when we fetched the main position, not when we caught
 	// up to it, so the timestamp on our backup is honest (assuming we make it
 	// to the goal position).
 	backupParams.BackupTime = time.Now()
@@ -353,18 +353,18 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 		case <-time.After(time.Second):
 		}
 
-		status, statusErr := mysqld.SlaveStatus()
+		status, statusErr := mysqld.SubordinateStatus()
 		if statusErr != nil {
 			log.Warningf("Error getting replication status: %v", statusErr)
 			continue
 		}
-		if status.Position.AtLeast(masterPos) {
-			// We're caught up on replication to at least the point the master
+		if status.Position.AtLeast(mainPos) {
+			// We're caught up on replication to at least the point the main
 			// was at when this vtbackup run started.
 			log.Infof("Replication caught up to %v after %v", status.Position, time.Since(waitStartTime))
 			break
 		}
-		if !status.SlaveRunning() {
+		if !status.SubordinateRunning() {
 			log.Warning("Replication has stopped before backup could be taken. Trying to restart replication.")
 			if err := startReplication(ctx, mysqld, topoServer); err != nil {
 				log.Warningf("Failed to restart replication: %v", err)
@@ -373,12 +373,12 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 	}
 
 	// Did we make any progress?
-	status, err := mysqld.SlaveStatus()
+	status, err := mysqld.SubordinateStatus()
 	if err != nil {
 		return fmt.Errorf("can't get replication status: %v", err)
 	}
 	log.Infof("Replication caught up to at least %v", status.Position)
-	if !status.Position.AtLeast(masterPos) && status.Position.Equal(restorePos) {
+	if !status.Position.AtLeast(mainPos) && status.Position.Equal(restorePos) {
 		return fmt.Errorf("not taking backup: replication did not make any progress from restore point: %v", restorePos)
 	}
 
@@ -389,8 +389,8 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 
 	// Return a non-zero exit code if we didn't meet the replication position
 	// goal, even though we took a backup that pushes the high-water mark up.
-	if !status.Position.AtLeast(masterPos) {
-		return fmt.Errorf("replication caught up to %v but didn't make it to the goal of %v; a backup was taken anyway to save partial progress, but the operation should still be retried since not all expected data is backed up", status.Position, masterPos)
+	if !status.Position.AtLeast(mainPos) {
+		return fmt.Errorf("replication caught up to %v but didn't make it to the goal of %v; a backup was taken anyway to save partial progress, but the operation should still be retried since not all expected data is backed up", status.Position, mainPos)
 	}
 	log.Info("Backup successful.")
 	return nil
@@ -399,17 +399,17 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 func resetReplication(ctx context.Context, pos mysql.Position, mysqld mysqlctl.MysqlDaemon) error {
 	cmds := []string{
 		"STOP SLAVE",
-		"RESET SLAVE ALL", // "ALL" makes it forget master host:port.
+		"RESET SLAVE ALL", // "ALL" makes it forget main host:port.
 	}
 	if err := mysqld.ExecuteSuperQueryList(ctx, cmds); err != nil {
-		return vterrors.Wrap(err, "failed to reset slave")
+		return vterrors.Wrap(err, "failed to reset subordinate")
 	}
 
 	// Check if we have a position to resume from, if not reset to the beginning of time
 	if !pos.IsZero() {
-		// Set the position at which to resume from the master.
-		if err := mysqld.SetSlavePosition(ctx, pos); err != nil {
-			return vterrors.Wrap(err, "failed to set slave position")
+		// Set the position at which to resume from the main.
+		if err := mysqld.SetSubordinatePosition(ctx, pos); err != nil {
+			return vterrors.Wrap(err, "failed to set subordinate position")
 		}
 	} else {
 		if err := mysqld.ResetReplication(ctx); err != nil {
@@ -424,46 +424,46 @@ func startReplication(ctx context.Context, mysqld mysqlctl.MysqlDaemon, topoServ
 	if err != nil {
 		return vterrors.Wrap(err, "can't read shard")
 	}
-	if topoproto.TabletAliasIsZero(si.MasterAlias) {
+	if topoproto.TabletAliasIsZero(si.MainAlias) {
 		// Normal tablets will sit around waiting to be reparented in this case.
 		// Since vtbackup is a batch job, we just have to fail.
-		return fmt.Errorf("can't start replication after restore: shard %v/%v has no master", *initKeyspace, *initShard)
+		return fmt.Errorf("can't start replication after restore: shard %v/%v has no main", *initKeyspace, *initShard)
 	}
 	// TODO(enisoc): Support replicating from another replica, preferably in the
-	//   same cell, preferably rdonly, to reduce load on the master.
-	ti, err := topoServer.GetTablet(ctx, si.MasterAlias)
+	//   same cell, preferably rdonly, to reduce load on the main.
+	ti, err := topoServer.GetTablet(ctx, si.MainAlias)
 	if err != nil {
-		return vterrors.Wrapf(err, "Cannot read master tablet %v", si.MasterAlias)
+		return vterrors.Wrapf(err, "Cannot read main tablet %v", si.MainAlias)
 	}
 
-	// Stop slave (in case we're restarting), set master, and start slave.
-	if err := mysqld.SetMaster(ctx, topoproto.MysqlHostname(ti.Tablet), int(topoproto.MysqlPort(ti.Tablet)), true /* slaveStopBefore */, true /* slaveStartAfter */); err != nil {
-		return vterrors.Wrap(err, "MysqlDaemon.SetMaster failed")
+	// Stop subordinate (in case we're restarting), set main, and start subordinate.
+	if err := mysqld.SetMain(ctx, topoproto.MysqlHostname(ti.Tablet), int(topoproto.MysqlPort(ti.Tablet)), true /* subordinateStopBefore */, true /* subordinateStartAfter */); err != nil {
+		return vterrors.Wrap(err, "MysqlDaemon.SetMain failed")
 	}
 	return nil
 }
 
-func getMasterPosition(ctx context.Context, tmc tmclient.TabletManagerClient, ts *topo.Server) (mysql.Position, error) {
+func getMainPosition(ctx context.Context, tmc tmclient.TabletManagerClient, ts *topo.Server) (mysql.Position, error) {
 	si, err := ts.GetShard(ctx, *initKeyspace, *initShard)
 	if err != nil {
 		return mysql.Position{}, vterrors.Wrap(err, "can't read shard")
 	}
-	if topoproto.TabletAliasIsZero(si.MasterAlias) {
+	if topoproto.TabletAliasIsZero(si.MainAlias) {
 		// Normal tablets will sit around waiting to be reparented in this case.
 		// Since vtbackup is a batch job, we just have to fail.
-		return mysql.Position{}, fmt.Errorf("shard %v/%v has no master", *initKeyspace, *initShard)
+		return mysql.Position{}, fmt.Errorf("shard %v/%v has no main", *initKeyspace, *initShard)
 	}
-	ti, err := ts.GetTablet(ctx, si.MasterAlias)
+	ti, err := ts.GetTablet(ctx, si.MainAlias)
 	if err != nil {
-		return mysql.Position{}, fmt.Errorf("can't get master tablet record %v: %v", topoproto.TabletAliasString(si.MasterAlias), err)
+		return mysql.Position{}, fmt.Errorf("can't get main tablet record %v: %v", topoproto.TabletAliasString(si.MainAlias), err)
 	}
-	posStr, err := tmc.MasterPosition(ctx, ti.Tablet)
+	posStr, err := tmc.MainPosition(ctx, ti.Tablet)
 	if err != nil {
-		return mysql.Position{}, fmt.Errorf("can't get master replication position: %v", err)
+		return mysql.Position{}, fmt.Errorf("can't get main replication position: %v", err)
 	}
 	pos, err := mysql.DecodePosition(posStr)
 	if err != nil {
-		return mysql.Position{}, fmt.Errorf("can't decode master replication position %q: %v", posStr, err)
+		return mysql.Position{}, fmt.Errorf("can't decode main replication position %q: %v", posStr, err)
 	}
 	return pos, nil
 }

@@ -320,7 +320,7 @@ func (ts *txThrottlerState) deallocateResources() {
 func (ts *txThrottlerState) StatsUpdate(tabletStats *discovery.TabletStats) {
 	// Ignore MASTER and RDONLY stats.
 	// We currently do not monitor RDONLY tablets for replication lag. RDONLY tablets are not
-	// candidates for becoming master during failover, and it's acceptable to serve somewhat
+	// candidates for becoming main during failover, and it's acceptable to serve somewhat
 	// stale date from these.
 	// TODO(erez): If this becomes necessary, we can add a configuration option that would
 	// determine whether we consider RDONLY tablets here, as well.

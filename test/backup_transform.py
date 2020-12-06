@@ -29,7 +29,7 @@ import utils
 from mysql_flavor import mysql_flavor
 
 use_mysqlctld = False
-tablet_master = None
+tablet_main = None
 tablet_replica1 = None
 tablet_replica2 = None
 new_init_db = ''
@@ -38,9 +38,9 @@ db_credentials_file = ''
 
 def setUpModule():
   global new_init_db, db_credentials_file
-  global tablet_master, tablet_replica1, tablet_replica2
+  global tablet_main, tablet_replica1, tablet_replica2
 
-  tablet_master = tablet.Tablet(use_mysqlctld=use_mysqlctld,
+  tablet_main = tablet.Tablet(use_mysqlctld=use_mysqlctld,
                                 vt_dba_passwd='VtDbaPass')
   tablet_replica1 = tablet.Tablet(use_mysqlctld=use_mysqlctld,
                                   vt_dba_passwd='VtDbaPass')
@@ -62,19 +62,19 @@ def setUpModule():
       fd.write(json.dumps(credentials))
 
     # Determine which column is used for user passwords in this MySQL version.
-    proc = tablet_master.init_mysql()
+    proc = tablet_main.init_mysql()
     if use_mysqlctld:
-      tablet_master.wait_for_mysqlctl_socket()
+      tablet_main.wait_for_mysqlctl_socket()
     else:
       utils.wait_procs([proc])
     try:
-      tablet_master.mquery('mysql', 'select password from mysql.user limit 0',
+      tablet_main.mquery('mysql', 'select password from mysql.user limit 0',
                            user='root')
       password_col = 'password'
     except MySQLdb.DatabaseError:
       password_col = 'authentication_string'
-    utils.wait_procs([tablet_master.teardown_mysql()])
-    tablet_master.remove_tree(ignore_options=True)
+    utils.wait_procs([tablet_main.teardown_mysql()])
+    tablet_main.remove_tree(ignore_options=True)
 
     # Create a new init_db.sql file that sets up passwords for all users.
     # Then we use a db-credentials-file with the passwords.
@@ -87,7 +87,7 @@ def setUpModule():
 
     # start mysql instance external to the test
     setup_procs = [
-        tablet_master.init_mysql(init_db=new_init_db,
+        tablet_main.init_mysql(init_db=new_init_db,
                                  extra_args=['-db-credentials-file',
                                              db_credentials_file]),
         tablet_replica1.init_mysql(init_db=new_init_db,
@@ -98,7 +98,7 @@ def setUpModule():
                                                db_credentials_file]),
     ]
     if use_mysqlctld:
-      tablet_master.wait_for_mysqlctl_socket()
+      tablet_main.wait_for_mysqlctl_socket()
       tablet_replica1.wait_for_mysqlctl_socket()
       tablet_replica2.wait_for_mysqlctl_socket()
     else:
@@ -114,7 +114,7 @@ def tearDownModule():
     return
 
   teardown_procs = [
-      tablet_master.teardown_mysql(extra_args=['-db-credentials-file',
+      tablet_main.teardown_mysql(extra_args=['-db-credentials-file',
                                                db_credentials_file]),
       tablet_replica1.teardown_mysql(extra_args=['-db-credentials-file',
                                                  db_credentials_file]),
@@ -127,7 +127,7 @@ def tearDownModule():
   utils.kill_sub_processes()
   utils.remove_tmp_files()
 
-  tablet_master.remove_tree()
+  tablet_main.remove_tree()
   tablet_replica1.remove_tree()
   tablet_replica2.remove_tree()
 
@@ -135,10 +135,10 @@ def tearDownModule():
 class TestBackupTransform(unittest.TestCase):
 
   def setUp(self):
-    for t in tablet_master, tablet_replica1:
+    for t in tablet_main, tablet_replica1:
       t.create_db('vt_test_keyspace')
 
-    tablet_master.init_tablet('replica', 'test_keyspace', '0', start=True,
+    tablet_main.init_tablet('replica', 'test_keyspace', '0', start=True,
                               supports_backups=True,
                               extra_args=['-db-credentials-file',
                                            db_credentials_file])
@@ -146,18 +146,18 @@ class TestBackupTransform(unittest.TestCase):
                                 supports_backups=True,
                                 extra_args=['-db-credentials-file',
                                              db_credentials_file])
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/0',
-                     tablet_master.tablet_alias])
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/0',
+                     tablet_main.tablet_alias])
 
   def tearDown(self):
-    for t in tablet_master, tablet_replica1, tablet_replica2:
+    for t in tablet_main, tablet_replica1, tablet_replica2:
       t.kill_vttablet()
 
     tablet.Tablet.check_vttablet_count()
     environment.topo_server().wipe()
-    for t in [tablet_master, tablet_replica1, tablet_replica2]:
+    for t in [tablet_main, tablet_replica1, tablet_replica2]:
       t.reset_replication()
-      t.set_semi_sync_enabled(master=False, slave=False)
+      t.set_semi_sync_enabled(main=False, subordinate=False)
       t.clean_dbs()
 
     for backup in self._list_backups():
@@ -205,11 +205,11 @@ class TestBackupTransform(unittest.TestCase):
 
     # check semi-sync is enabled for replica, disabled for rdonly.
     if tablet_type == 'replica':
-      t.check_db_var('rpl_semi_sync_slave_enabled', 'ON')
-      t.check_db_status('rpl_semi_sync_slave_status', 'ON')
+      t.check_db_var('rpl_semi_sync_subordinate_enabled', 'ON')
+      t.check_db_status('rpl_semi_sync_subordinate_status', 'ON')
     else:
-      t.check_db_var('rpl_semi_sync_slave_enabled', 'OFF')
-      t.check_db_status('rpl_semi_sync_slave_status', 'OFF')
+      t.check_db_var('rpl_semi_sync_subordinate_enabled', 'OFF')
+      t.check_db_status('rpl_semi_sync_subordinate_status', 'OFF')
 
   def _reset_tablet_dir(self, t):
     """Stop mysql, delete everything including tablet dir, restart mysql."""
@@ -241,9 +241,9 @@ class TestBackupTransform(unittest.TestCase):
   def test_backup_transform(self):
     """Use a transform, tests we backup and restore properly."""
 
-    # Insert data on master, make sure slave gets it.
-    tablet_master.mquery('vt_test_keyspace', self._create_vt_insert_test)
-    self._insert_data(tablet_master, 1)
+    # Insert data on main, make sure subordinate gets it.
+    tablet_main.mquery('vt_test_keyspace', self._create_vt_insert_test)
+    self._insert_data(tablet_main, 1)
     self._check_data(tablet_replica1, 1, 'replica1 tablet getting data')
 
     # Restart the replica with the transform parameter.
@@ -261,8 +261,8 @@ class TestBackupTransform(unittest.TestCase):
     # Take a backup, it should work.
     utils.run_vtctl(['Backup', tablet_replica1.tablet_alias], auto_log=True)
 
-    # Insert more data on the master.
-    self._insert_data(tablet_master, 2)
+    # Insert more data on the main.
+    self._insert_data(tablet_main, 2)
 
     # Make sure we have the TransformHook in the MANIFEST, and that
     # every file starts with 'header'.
@@ -286,7 +286,7 @@ class TestBackupTransform(unittest.TestCase):
     # as it is read from the MANIFEST.
     self._restore(tablet_replica2)
 
-    # Check the new slave has all the data.
+    # Check the new subordinate has all the data.
     self._check_data(tablet_replica2, 2, 'replica2 tablet getting data')
 
   def test_backup_transform_error(self):

@@ -29,15 +29,15 @@ import utils
 
 
 # range '' - 80
-shard_0_master = tablet.Tablet(use_mysqlctld=True)
+shard_0_main = tablet.Tablet(use_mysqlctld=True)
 shard_0_replica = tablet.Tablet(use_mysqlctld=True)
 shard_0_rdonly = tablet.Tablet(use_mysqlctld=True)
-all_shard_0_tablets = (shard_0_master, shard_0_replica, shard_0_rdonly)
+all_shard_0_tablets = (shard_0_main, shard_0_replica, shard_0_rdonly)
 # range 80 - ''
-shard_1_master = tablet.Tablet(use_mysqlctld=True)
+shard_1_main = tablet.Tablet(use_mysqlctld=True)
 shard_1_replica = tablet.Tablet(use_mysqlctld=True)
 shard_1_rdonly = tablet.Tablet(use_mysqlctld=True)
-all_shard_1_tablets = (shard_1_master, shard_1_replica, shard_1_rdonly)
+all_shard_1_tablets = (shard_1_main, shard_1_replica, shard_1_rdonly)
 # all tablets
 all_tablets = all_shard_0_tablets + all_shard_1_tablets
 
@@ -77,19 +77,19 @@ class TestSchemaSwap(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls._start_tablets('-80',
-                       [shard_0_master, shard_0_replica],
+                       [shard_0_main, shard_0_replica],
                        [shard_0_rdonly])
     cls._start_tablets('80-',
-                       [shard_1_master, shard_1_replica],
+                       [shard_1_main, shard_1_replica],
                        [shard_1_rdonly])
 
     for t in all_tablets:
       t.wait_for_vttablet_state('NOT_SERVING')
 
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/-80',
-                     shard_0_master.tablet_alias], auto_log=True)
-    utils.run_vtctl(['InitShardMaster', '-force', 'test_keyspace/80-',
-                     shard_1_master.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/-80',
+                     shard_0_main.tablet_alias], auto_log=True)
+    utils.run_vtctl(['InitShardMain', '-force', 'test_keyspace/80-',
+                     shard_1_main.tablet_alias], auto_log=True)
 
     utils.run_vtctl(['RebuildKeyspaceGraph', 'test_keyspace'], auto_log=True)
 
@@ -129,20 +129,20 @@ class TestSchemaSwap(unittest.TestCase):
   final_schema_check_string = '`t` text,'
   initial_schema_check_string = 'CREATE TABLE `test`'
 
-  def _get_schema(self, source=shard_0_master):
+  def _get_schema(self, source=shard_0_main):
     return source.mquery(self.keyspace, self.show_schema_sql)[0][1]
 
   def _check_schema(self, contents):
     """Check that schema of test table matches the given string."""
-    schema_0 = self._get_schema(shard_0_master)
-    schema_1 = self._get_schema(shard_1_master)
+    schema_0 = self._get_schema(shard_0_main)
+    schema_1 = self._get_schema(shard_1_main)
     logging.debug('shard 0 schema: %s', schema_0)
     logging.debug('shard 1 schema: %s', schema_0)
     self.assertEqual(schema_0, schema_1)
     self.assertIn(contents, schema_0)
 
   def _wait_for_schema_propagation(self,
-                                   source=shard_0_master,
+                                   source=shard_0_main,
                                    targets=all_tablets):
     """Wait until the current schema has propagated to all tablets."""
     schema = self._get_schema(source)
@@ -160,10 +160,10 @@ class TestSchemaSwap(unittest.TestCase):
     self._check_schema(self.initial_schema_check_string)
     self._wait_for_schema_propagation()
 
-    for t in [shard_0_master, shard_1_master]:
+    for t in [shard_0_main, shard_1_main]:
       tablet_info = utils.run_vtctl_json(['GetTablet', t.tablet_alias])
       if tablet_info['type'] != topodata_pb2.MASTER:
-        utils.run_vtctl(['InitShardMaster', '-force',
+        utils.run_vtctl(['InitShardMain', '-force',
                          'test_keyspace/' + t.shard, t.tablet_alias],
                         auto_log=True)
         tablet_info = utils.run_vtctl_json(['GetTablet', t.tablet_alias])
@@ -412,14 +412,14 @@ class TestSchemaSwap(unittest.TestCase):
 
   def _test_init_error(self, use_retry):
     """Schema swap interrupted by an error during initialization."""
-    # By marking the master read-only we cause an error when schema swap tries
+    # By marking the main read-only we cause an error when schema swap tries
     # to write shard metadata during initialization.
-    shard_1_master.mquery('', 'SET GLOBAL read_only = 1')
+    shard_1_main.mquery('', 'SET GLOBAL read_only = 1')
     swap_uuid = self._start_swap(self.schema_swap_sql)
     err = self._wait_for_success_or_error(swap_uuid)
     self.assertIn('running with the --read-only option', err)
 
-    shard_1_master.mquery('', 'SET GLOBAL read_only = 0')
+    shard_1_main.mquery('', 'SET GLOBAL read_only = 0')
     swap_uuid = self._retry_or_restart_swap(swap_uuid, use_retry=use_retry)
     err = self._wait_for_success_or_error(swap_uuid, reset_error=True)
     self.assertEqual(err, 'Schema swap is finished')
@@ -437,15 +437,15 @@ class TestSchemaSwap(unittest.TestCase):
     # Renaming the test table to cause ALTER TABLE executed during schema swap
     # to fail.
     logging.debug('running in shard 1: "RENAME TABLE test TO test2"')
-    shard_1_master.mquery(self.keyspace, 'RENAME TABLE test TO test2')
-    # self._wait_for_schema_propagation(shard_1_master, all_shard_1_tablets)
+    shard_1_main.mquery(self.keyspace, 'RENAME TABLE test TO test2')
+    # self._wait_for_schema_propagation(shard_1_main, all_shard_1_tablets)
     swap_uuid = self._start_swap(self.schema_swap_sql)
     err = self._wait_for_success_or_error(swap_uuid)
     self.assertIn("Table '"+self.keyspace+".test' doesn't exist", err)
 
     logging.debug('running in shard 1: "RENAME TABLE test2 TO test"')
-    shard_1_master.mquery(self.keyspace, 'RENAME TABLE test2 TO test')
-    # self._wait_for_schema_propagation(shard_1_master, all_shard_1_tablets)
+    shard_1_main.mquery(self.keyspace, 'RENAME TABLE test2 TO test')
+    # self._wait_for_schema_propagation(shard_1_main, all_shard_1_tablets)
     swap_uuid = self._retry_or_restart_swap(swap_uuid, use_retry=use_retry)
     err = self._wait_for_success_or_error(swap_uuid, reset_error=True)
     self.assertEqual(err, 'Schema swap is finished')

@@ -1405,7 +1405,7 @@ type ExecuteBatchShardsRequest struct {
 	TabletType topodata.TabletType `protobuf:"varint,4,opt,name=tablet_type,json=tabletType,proto3,enum=topodata.TabletType" json:"tablet_type,omitempty"`
 	// as_transaction will execute the queries in this batch in a single transaction per shard, created for this purpose.
 	// (this can be seen as adding a 'begin' before and 'commit' after the queries).
-	// Only makes sense if tablet_type is master. If set, the Session is ignored.
+	// Only makes sense if tablet_type is main. If set, the Session is ignored.
 	AsTransaction bool `protobuf:"varint,5,opt,name=as_transaction,json=asTransaction,proto3" json:"as_transaction,omitempty"`
 	// options
 	Options              *query.ExecuteOptions `protobuf:"bytes,6,opt,name=options,proto3" json:"options,omitempty"`
@@ -1617,7 +1617,7 @@ type ExecuteBatchKeyspaceIdsRequest struct {
 	TabletType topodata.TabletType `protobuf:"varint,4,opt,name=tablet_type,json=tabletType,proto3,enum=topodata.TabletType" json:"tablet_type,omitempty"`
 	// as_transaction will execute the queries in this batch in a single transaction per shard, created for this purpose.
 	// (this can be seen as adding a 'begin' before and 'commit' after the queries).
-	// Only makes sense if tablet_type is master. If set, the Session is ignored.
+	// Only makes sense if tablet_type is main. If set, the Session is ignored.
 	AsTransaction bool `protobuf:"varint,5,opt,name=as_transaction,json=asTransaction,proto3" json:"as_transaction,omitempty"`
 	// options
 	Options              *query.ExecuteOptions `protobuf:"bytes,6,opt,name=options,proto3" json:"options,omitempty"`
@@ -2913,7 +2913,7 @@ var xxx_messageInfo_ResolveTransactionResponse proto.InternalMessageInfo
 // obtained from executing the original query on the same snapshot
 // with the rows containing NULL values in any of the split_column's excluded.
 //
-// This is typically called by the MapReduce master when reading from Vitess.
+// This is typically called by the MapReduce main when reading from Vitess.
 // There it's desirable that the sets of rows returned by the query-parts
 // have roughly the same size.
 type SplitQueryRequest struct {

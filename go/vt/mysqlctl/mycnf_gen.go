@@ -82,10 +82,10 @@ func NewMycnf(tabletUID uint32, mysqlPort int32) *Mycnf {
 	cnf.RelayLogInfoPath = path.Join(tabletDir, relayLogDir, "relay-log.info")
 	cnf.BinLogPath = path.Join(tabletDir, binLogDir,
 		fmt.Sprintf("vt-%010d-bin", tabletUID))
-	cnf.MasterInfoFile = path.Join(tabletDir, "master.info")
+	cnf.MainInfoFile = path.Join(tabletDir, "main.info")
 	cnf.PidFile = path.Join(tabletDir, "mysql.pid")
 	cnf.TmpDir = path.Join(tabletDir, "tmp")
-	cnf.SlaveLoadTmpDir = cnf.TmpDir
+	cnf.SubordinateLoadTmpDir = cnf.TmpDir
 	return cnf
 }
 
@@ -155,14 +155,14 @@ func (cnf *Mycnf) fillMycnfTemplate(tmplSrc string) (string, error) {
 //
 // The value assigned to ServerID will be in the range [100, 2^31):
 // - It avoids 0 because that's reserved for mysqlbinlog dumps.
-// - It also avoids 1-99 because low numbers are used for fake slave
-// connections.  See NewSlaveConnection() in binlog/slave_connection.go
+// - It also avoids 1-99 because low numbers are used for fake subordinate
+// connections.  See NewSubordinateConnection() in binlog/subordinate_connection.go
 // for more on that.
 // - It avoids the 2^31 - 2^32-1 range, as there seems to be some
 // confusion there. The main MySQL documentation at:
 // http://dev.mysql.com/doc/refman/5.7/en/replication-options.html
 // implies serverID is a full 32 bits number. The semi-sync log line
-// at startup '[Note] Start semi-sync binlog_dump to slave ...'
+// at startup '[Note] Start semi-sync binlog_dump to subordinate ...'
 // interprets the server_id as signed 32-bit (shows negative numbers
 // for that range).
 // Such an ID may also be responsible for a mysqld crash in semi-sync code,

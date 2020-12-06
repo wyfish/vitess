@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package buffer provides a buffer for MASTER traffic during failovers.
 //
-// Instead of returning an error to the application (when the vttablet master
+// Instead of returning an error to the application (when the vttablet main
 // becomes unavailable), the buffer will automatically retry buffered requests
 // after the end of the failover was detected.
 //
@@ -45,7 +45,7 @@ import (
 )
 
 var (
-	bufferFullError      = vterrors.New(vtrpcpb.Code_UNAVAILABLE, "master buffer is full")
+	bufferFullError      = vterrors.New(vtrpcpb.Code_UNAVAILABLE, "main buffer is full")
 	entryEvictedError    = vterrors.New(vtrpcpb.Code_UNAVAILABLE, "buffer full: request evicted for newer request")
 	contextCanceledError = vterrors.New(vtrpcpb.Code_UNAVAILABLE, "context was canceled before failover finished")
 )
@@ -214,7 +214,7 @@ func (b *Buffer) WaitForFailoverEnd(ctx context.Context, keyspace, shard string,
 }
 
 // StatsUpdate keeps track of the "tablet_externally_reparented_timestamp" of
-// each master. This way we can detect the end of a failover.
+// each main. This way we can detect the end of a failover.
 // It is part of the discovery.HealthCheckStatsListener interface.
 func (b *Buffer) StatsUpdate(ts *discovery.TabletStats) {
 	if ts.Target.TabletType != topodatapb.TabletType_MASTER {
@@ -223,7 +223,7 @@ func (b *Buffer) StatsUpdate(ts *discovery.TabletStats) {
 
 	timestamp := ts.TabletExternallyReparentedTimestamp
 	if timestamp == 0 {
-		// Masters where TabletExternallyReparented was never called will return 0.
+		// Mains where TabletExternallyReparented was never called will return 0.
 		// Ignore them.
 		return
 	}

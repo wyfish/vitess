@@ -159,7 +159,7 @@ func TestOpen_InvalidJson(t *testing.T) {
 }
 
 func TestBeginIsolation(t *testing.T) {
-	db, err := Open(testAddress, "@master")
+	db, err := Open(testAddress, "@main")
 	if err != nil {
 		t.Error(err)
 	}
@@ -544,7 +544,7 @@ func TestTx(t *testing.T) {
 	c := Configuration{
 		Protocol: "grpc",
 		Address:  testAddress,
-		Target:   "@master",
+		Target:   "@main",
 	}
 
 	db, err := OpenWithConfiguration(c)

@@ -212,7 +212,7 @@ func commandVtGateExecuteShards(ctx context.Context, wr *wrangler.Wrangler, subF
 
 	server := subFlags.String("server", "", "VtGate server to connect to")
 	bindVariables := newBindvars(subFlags)
-	tabletType := subFlags.String("tablet_type", "master", "tablet type to query")
+	tabletType := subFlags.String("tablet_type", "main", "tablet type to query")
 	keyspace := subFlags.String("keyspace", "", "keyspace to send query to")
 	shardsStr := subFlags.String("shards", "", "comma-separated list of shards to send query to")
 	options := subFlags.String("options", "", "execute options values as a text encoded proto of the ExecuteOptions structure")
@@ -266,7 +266,7 @@ func commandVtGateExecuteKeyspaceIds(ctx context.Context, wr *wrangler.Wrangler,
 
 	server := subFlags.String("server", "", "VtGate server to connect to")
 	bindVariables := newBindvars(subFlags)
-	tabletType := subFlags.String("tablet_type", "master", "tablet type to query")
+	tabletType := subFlags.String("tablet_type", "main", "tablet type to query")
 	keyspace := subFlags.String("keyspace", "", "keyspace to send query to")
 	keyspaceIDsStr := subFlags.String("keyspace_ids", "", "comma-separated list of keyspace ids (in hex) that will map into shards to send query to")
 	options := subFlags.String("options", "", "execute options values as a text encoded proto of the ExecuteOptions structure")
